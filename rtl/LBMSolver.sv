@@ -213,7 +213,6 @@ module LBMSolver (
             end
             WRITE:
             begin
-                cdir_mem_write = 1'b1;
                 next_stream_state = IDLE;
             end
         endcase
