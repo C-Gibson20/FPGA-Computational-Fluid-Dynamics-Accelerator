@@ -191,11 +191,25 @@ module LBMSolver (
         case(stream_state)
             IDLE: next_stream_state = READ;
             READ:
-            begin 
+            begin
+                //all modulo signs are placeholders as modulo operations are expensive, once I properly implement a counter I will make a column count from there 
                 next_stream_state = WRITE;
                 cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
                 cn_next_mem_write = (index>= `WIDTH);
-                cne_next_write_address = (index >= `WIDTH && index)
+                cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
+                cne_next_mem_write = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
+                ce_next_write_address = ((index%`WIDTH) != `WIDTH-1) ? index+1: 0;
+                ce_next_mem_write = ((index%`WIDTH) != `WIDTH-1);
+                cse_next_write_address = (index <= `DEPTH-`WIDTH-1 && ((index%`WIDTH) != `WIDTH-1)) ? index+`WIDTH+1: 0;
+                cse_next_mem_write = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
+                cs_next_write_address = (index <= `DEPTH-`WIDTH-1) ? index+`WIDTH : 0;
+                cs_next_mem_write = (index <= `DEPTH-`WIDTH-1);
+                csw_next_write_address = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0)) ? index+`WIDTH-1 : 0;
+                csw_next_mem_write = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
+                cw_next_write_address = (index%`WIDTH != 0) ? index - 1 : 0;
+                cw_next_mem_write = (index%`WIDTH != 0);
+                cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
+                cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
             end
             WRITE:
             begin
