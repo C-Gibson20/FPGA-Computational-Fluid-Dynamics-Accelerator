@@ -42,12 +42,12 @@ for file in "${files[@]}"; do
                 -y ${RTL_FOLDER} \
                 --prefix "Vdut" \
                 -o Vdut \
-                -CFLAGS "-isystem /opt/homebrew/Cellar/googletest/1.15.2/include"\
+                -CFLAGS "-isystem /opt/homebrew/Cellar/googletest/1.15.2/include" \
                 -LDFLAGS "-L/opt/homebrew/Cellar/googletest/1.15.2/lib -lgtest -lgtest_main -lpthread" \
-
                 --Wno-UNUSED \
                 --Wno-WIDTH \
                 --Wno-SELRANGE
+
 
     # Build C++ project with automatically generated Makefile
     make -j -C obj_dir/ -f Vdut.mk
