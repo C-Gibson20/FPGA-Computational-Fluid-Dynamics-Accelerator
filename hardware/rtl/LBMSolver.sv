@@ -169,8 +169,20 @@ module LBMSolver (
             csw_write_address <= csw_next_write_address;
             cw_write_address <= cw_next_write_address;
             cnw_write_address <= cnw_next_write_address;
+            if(sim_state == WRITE_BOUNCE && barriers[index] == 1'b1)
+            begin
+                cn_data_in  <= cs_data_out;
+                cne_data_in <= csw_data_out;
+                ce_data_in  <= cw_data_out;
+                cse_data_in <= cnw_data_out;
+                cs_data_in  <= cn_data_out;
+                csw_data_in <= cne_data_out;
+                cw_data_in  <= ce_data_out;
+                cnw_data_in <= cse_data_out;
+            end
         end
     end
+
 
     //Stream state
     always @(*) begin
@@ -218,11 +230,8 @@ module LBMSolver (
                 next_sim_state = IDLE;
             end
             READ_BOUNCE:
-                next_sim_state = WRITE_STREAM;
-                if(barriers[index] == 1'b1)
-                begin
-                    
-                end
+            begin
+                next_sim_state = WRITE_BOUNCE;
                 cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
                 cn_next_mem_write = (index>= `WIDTH);
                 cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
@@ -239,9 +248,9 @@ module LBMSolver (
                 cw_next_mem_write = (index%`WIDTH != 0);
                 cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
                 cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
-            begin
                 
             end
+
         endcase
     end
 
