@@ -8,3 +8,6 @@ Implemented the streaming stage, in our implementation we assume the boundaries 
 
 $$(\frac{frequency}{cycles\ per\ cell*resolution}) = framerate$$
 $$\therefore cycles\ per\ cell < \frac{50*10^6}{60*30000} = 27.8 $$
+
+## 26 May 2025
+Implemented bouncing stage and started to implement collision stage. For the bouncing stage we have an input signal of barriers which has the same number of bits as depth. If a bit in the barrier signal is one then at that index there is a barrier. In the case of a barrier we push all the vectors out of the cell and reflect them back to where they came from, this is simply done by swapping the data out for the next stage of the cycle with the opposite side's data in. We then loop through the cells one more time and any barrier cells have all their densities set to 0. Now for the streaming and bouncing phases the **number of cycles per cell is 5**, 2 for streaming (read then write) and 3 for bouncing (read, write, set barrier cells to 0). Meaning according to our earlier calculation I have 22 cycles left for the collision phase in order to meet 60 fps. I will make use of these as multiplies are expensive, so the best way to deal with them is pipelining, meaning I will use more cycles per cell, but I will reduce the critical path.

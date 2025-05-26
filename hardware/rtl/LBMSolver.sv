@@ -14,65 +14,77 @@ module LBMSolver (
     localparam WRITE_BOUNCE = 3'd4;
     localparam ZERO_BOUNCE = 3'd5;
 
+    reg signed [`DATA_WIDTH-1:0] rho;
+    reg signed [`DATA_WIDTH-1:0] rho_m_1;
+    reg signed [`DATA_WIDTH-1:0] one_9th_rho;
+    reg signed [`DATA_WIDTH-1:0] one_36th_rho;
+    reg signed [`DATA_WIDTH-1:0] rho_inv;
+
+    reg signed [`DATA_WIDTH-1:0] ux;
+    reg signed [`DATA_WIDTH-1:0] uy;
+    reg signed [`DATA_WIDTH-1:0] vx3;
+    reg signed [`DATA_WIDTH-1:0] vy3;
+    reg signed [`DATA_WIDTH-1:0] vxvy2;
+
     reg [1:0] sim_state, next_sim_state;
     reg [ADDRESS_WIDTH-1:0] index;
     reg [ADDRESS_WIDTH-1:0] next_index;
 
     logic [`DATA_WIDTH-1:0] c0_data_in, c0_data_out;
     logic c0_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] c0_write_address,c0_read_address;
+    logic [`ADDRESS_WIDTH-1:0] c0_write_address;
 
     logic [`DATA_WIDTH-1:0] cn_data_in , cn_data_out;
     reg cn_mem_write, cn_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cn_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cn_read_address;
     reg [`ADDRESS_WIDTH-1:0] cn_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cn_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cne_data_in, cne_data_out;
     reg cne_mem_write, cne_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cne_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cne_read_address;
     reg [`ADDRESS_WIDTH-1:0] cne_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cne_next_write_address;
 
     logic [`DATA_WIDTH-1:0] ce_data_in ,ce_data_out;
     reg ce_mem_write, ce_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] ce_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] ce_read_address;
     reg [`ADDRESS_WIDTH-1:0] ce_write_address; 
     reg [`ADDRESS_WIDTH-1:0] ce_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cse_data_in , cse_data_out;
     reg cse_mem_write, , cse_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cse_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cse_read_address;
     reg [`ADDRESS_WIDTH-1:0] cse_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cse_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cs_data_in, cs_data_out;
     reg cs_mem_write, , cs_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cs_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cs_read_address;
     reg [`ADDRESS_WIDTH-1:0] cs_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cs_next_write_address;
 
     logic [`DATA_WIDTH-1:0] csw_data_in, csw_data_out;
     reg csw_mem_write, csw_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] csw_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] csw_read_address;
     reg [`ADDRESS_WIDTH-1:0] csw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] csw_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cw_data_in, cw_data_out;
     reg cw_mem_write, cw_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cw_write_address, cw_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cw_write_address, cw_read_address;
     reg [`ADDRESS_WIDTH-1:0] cw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cw_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cnw_data_in, cnw_data_out;
     reg cnw_mem_write, cnw_next_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] cnw_read_address;
+    // logic [`ADDRESS_WIDTH-1:0] cnw_read_address;
     reg [`ADDRESS_WIDTH-1:0] cnw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_address;
 
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     RAM C0(
-        .read_address(c0_read_address),
+        .read_address(index),
         .write_address(c0_write_address),
         .data_in(c0_data_in),
         .clk(clk),
@@ -81,7 +93,7 @@ module LBMSolver (
     );
 
     RAM CN(
-        .read_address(cn_read_address),
+        .read_address(index),
         .write_address(cn_write_address),
         .data_in(cn_data_in),
         .clk(clk),
@@ -99,7 +111,7 @@ module LBMSolver (
     );
 
     RAM CE(
-        .read_address(ce_read_address),
+        .read_address(index),
         .write_address(ce_write_address),
         .data_in(ce_data_in),
         .clk(clk),
@@ -117,7 +129,7 @@ module LBMSolver (
     );
 
     RAM CS(
-        .read_address(cs_read_address),
+        .read_address(index),
         .write_address(cs_write_address),
         .data_in(cs_data_in),
         .clk(clk),
@@ -135,7 +147,7 @@ module LBMSolver (
     );
 
     RAM CW(
-        .read_address(cw_read_address),
+        .read_address(index),
         .write_address(cw_write_address),
         .data_in(cw_data_in),
         .clk(clk),
@@ -325,10 +337,14 @@ module LBMSolver (
                 if(next_index > `DEPTH-1)
                 begin
                     next_index = 0;
-                    next_sim_state = PLACEHOLDER;
+                    next_sim_state = COLLISION_READ;
                 end
                 else
                     next_sim_state = ZERO_BOUNCE;
+            end
+            COLLISION_READ: //needs to be multiple stages or else this won't be clocked very fast
+            begin
+                rho = c0_data_out + cn_data_out + cne_data_out + ce_data_out + cse_data_out + cs_data_out + csw_data_out + cw_data_out + cnw_data_out;
             end
         endcase
     end
