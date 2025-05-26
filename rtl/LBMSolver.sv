@@ -2,15 +2,17 @@
 
 module LBMSolver (
     input logic clk,
-    input logic rst, 
+    input logic rst,
+    input logic barriers [0:`DEPTH-1],
     input logic en
 );
 
-    localparam IDLE = 2'd0;
-    localparam READ = 2'd1;
-    localparam WRITE = 2'd2;
+    localparam IDLE = 3'd0;
+    localparam READ_STREAM = 3'd1;
+    localparam WRITE_STREAM = 3'd2;
+    localparam READ_BOUNCE = 3'd3;
 
-    reg [1:0] stream_state, next_stream_state;
+    reg [1:0] sim_state, next_sim_state;
     reg [ADDRESS_WIDTH-1:0] index;
 
     logic [`DATA_WIDTH-1:0] c0_data_in, c0_data_out;
@@ -152,13 +154,13 @@ module LBMSolver (
     begin
         if(rst) 
         begin
-            stream_state <= IDLE;
+            sim_state <= IDLE;
             index <= 0;
             cn_write_address <= 0;
         end
         else 
         begin
-            stream_state <= next_stream_state;
+            sim_state <= next_sim_state;
             cn_write_address <= cn_next_write_address;
             cne_write_address <= cne_next_write_address;
             ce_write_address <= ce_next_write_address;
@@ -188,12 +190,12 @@ module LBMSolver (
         cw_next_mem_write = 0;
         cnw_next_write_address = 0;
         cnw_next_mem_write = 0;
-        case(stream_state)
-            IDLE: next_stream_state = READ;
-            READ:
+        case(sim_state)
+            IDLE: next_sim_state = READ_STREAM;
+            READ_STREAM:
             begin
                 //all modulo signs are placeholders as modulo operations are expensive, once I properly implement a counter I will make a column count from there 
-                next_stream_state = WRITE;
+                next_sim_state = WRITE_STREAM;
                 cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
                 cn_next_mem_write = (index>= `WIDTH);
                 cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
@@ -211,9 +213,34 @@ module LBMSolver (
                 cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
                 cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
             end
-            WRITE:
+            WRITE_STREAM:
             begin
-                next_stream_state = IDLE;
+                next_sim_state = IDLE;
+            end
+            READ_BOUNCE:
+                next_sim_state = WRITE_STREAM;
+                if(barriers[index] == 1'b1)
+                begin
+                    
+                end
+                cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
+                cn_next_mem_write = (index>= `WIDTH);
+                cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
+                cne_next_mem_write = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
+                ce_next_write_address = ((index%`WIDTH) != `WIDTH-1) ? index+1: 0;
+                ce_next_mem_write = ((index%`WIDTH) != `WIDTH-1);
+                cse_next_write_address = (index <= `DEPTH-`WIDTH-1 && ((index%`WIDTH) != `WIDTH-1)) ? index+`WIDTH+1: 0;
+                cse_next_mem_write = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
+                cs_next_write_address = (index <= `DEPTH-`WIDTH-1) ? index+`WIDTH : 0;
+                cs_next_mem_write = (index <= `DEPTH-`WIDTH-1);
+                csw_next_write_address = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0)) ? index+`WIDTH-1 : 0;
+                csw_next_mem_write = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
+                cw_next_write_address = (index%`WIDTH != 0) ? index - 1 : 0;
+                cw_next_mem_write = (index%`WIDTH != 0);
+                cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
+                cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
+            begin
+                
             end
         endcase
     end
