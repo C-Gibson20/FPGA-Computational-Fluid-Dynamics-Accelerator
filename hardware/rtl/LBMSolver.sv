@@ -28,57 +28,57 @@ module LBMSolver (
     reg signed [`DATA_WIDTH-1:0] vxvy2;
 
     reg [1:0] sim_state, next_sim_state;
-    reg [ADDRESS_WIDTH-1:0] index;
-    reg [ADDRESS_WIDTH-1:0] next_index;
+    reg [`ADDRESS_WIDTH-1:0] index;
+    reg [`ADDRESS_WIDTH-1:0] next_index;
 
-    logic [`DATA_WIDTH-1:0] c0_data_in, c0_data_out;
-    logic c0_mem_write;
-    logic [`ADDRESS_WIDTH-1:0] c0_write_address;
+    logic [`DATA_WIDTH-1:0] c0_data_in = 0, c0_data_out;
+    logic c0_write_en = 0;
+    logic [`ADDRESS_WIDTH-1:0] c0_write_address = 0;
 
     logic [`DATA_WIDTH-1:0] cn_data_in , cn_data_out;
-    reg cn_mem_write, cn_next_mem_write;
+    reg cn_write_en, cn_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cn_read_address;
     reg [`ADDRESS_WIDTH-1:0] cn_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cn_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cne_data_in, cne_data_out;
-    reg cne_mem_write, cne_next_mem_write;
+    reg cne_write_en, cne_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cne_read_address;
     reg [`ADDRESS_WIDTH-1:0] cne_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cne_next_write_address;
 
     logic [`DATA_WIDTH-1:0] ce_data_in ,ce_data_out;
-    reg ce_mem_write, ce_next_mem_write;
+    reg ce_write_en, ce_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] ce_read_address;
     reg [`ADDRESS_WIDTH-1:0] ce_write_address; 
     reg [`ADDRESS_WIDTH-1:0] ce_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cse_data_in , cse_data_out;
-    reg cse_mem_write, cse_next_mem_write;
+    reg cse_write_en, cse_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cse_read_address;
     reg [`ADDRESS_WIDTH-1:0] cse_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cse_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cs_data_in, cs_data_out;
-    reg cs_mem_write, cs_next_mem_write;
+    reg cs_write_en, cs_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cs_read_address;
     reg [`ADDRESS_WIDTH-1:0] cs_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cs_next_write_address;
 
     logic [`DATA_WIDTH-1:0] csw_data_in, csw_data_out;
-    reg csw_mem_write, csw_next_mem_write;
+    reg csw_write_en, csw_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] csw_read_address;
     reg [`ADDRESS_WIDTH-1:0] csw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] csw_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cw_data_in, cw_data_out;
-    reg cw_mem_write, cw_next_mem_write;
+    reg cw_write_en, cw_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cw_write_address, cw_read_address;
     reg [`ADDRESS_WIDTH-1:0] cw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cw_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cnw_data_in, cnw_data_out;
-    reg cnw_mem_write, cnw_next_mem_write;
+    reg cnw_write_en, cnw_next_write_en;
     // logic [`ADDRESS_WIDTH-1:0] cnw_read_address;
     reg [`ADDRESS_WIDTH-1:0] cnw_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_address;
@@ -89,7 +89,7 @@ module LBMSolver (
         .write_address(c0_write_address),
         .data_in(c0_data_in),
         .clk(clk),
-        .mem_write(c0_mem_write),
+        .write_en(c0_write_en),
         .data_out(c0_data_out)
     );
 
@@ -98,16 +98,16 @@ module LBMSolver (
         .write_address(cn_write_address),
         .data_in(cn_data_in),
         .clk(clk),
-        .mem_write(cn_mem_write),
+        .write_en(cn_write_en),
         .data_out(cn_data_out)
     );
 
     RAM CNE(
-        .read_address(cne_read_address),
+        .read_address(index),
         .write_address(cne_write_address),
         .data_in(cne_data_in),
         .clk(clk),
-        .mem_write(cne_mem_write),
+        .write_en(cne_write_en),
         .data_out(cne_data_out)
     );
 
@@ -116,16 +116,16 @@ module LBMSolver (
         .write_address(ce_write_address),
         .data_in(ce_data_in),
         .clk(clk),
-        .mem_write(ce_mem_write),
+        .write_en(ce_write_en),
         .data_out(ce_data_out)
     );
 
     RAM CSE(
-        .read_address(cse_read_address),
+        .read_address(index),
         .write_address(cse_write_address),
         .data_in(cse_data_in),
         .clk(clk),
-        .mem_write(cse_mem_write),
+        .write_en(cse_write_en),
         .data_out(cse_data_out)
     );
 
@@ -134,16 +134,16 @@ module LBMSolver (
         .write_address(cs_write_address),
         .data_in(cs_data_in),
         .clk(clk),
-        .mem_write(cs_mem_write),
+        .write_en(cs_write_en),
         .data_out(cs_data_out)
     );
 
     RAM CSW(
-        .read_address(csw_read_address),
+        .read_address(index),
         .write_address(csw_write_address),
         .data_in(csw_data_in),
         .clk(clk),
-        .mem_write(csw_mem_write),
+        .write_en(csw_write_en),
         .data_out(csw_data_out)
     );
 
@@ -152,16 +152,16 @@ module LBMSolver (
         .write_address(cw_write_address),
         .data_in(cw_data_in),
         .clk(clk),
-        .mem_write(cw_mem_write),
+        .write_en(cw_write_en),
         .data_out(cw_data_out)
     );
 
     RAM CNW(
-        .read_address(cnw_read_address),
+        .read_address(index),
         .write_address(cnw_write_address),
         .data_in(cnw_data_in),
         .clk(clk),
-        .mem_write(cnw_mem_write),
+        .write_en(cnw_write_en),
         .data_out(cnw_data_out)
     );
 
@@ -178,21 +178,21 @@ module LBMSolver (
             sim_state <= next_sim_state;
             index <= next_index;
             cn_write_address <= cn_next_write_address;
-            cn_mem_write <= cn_next_mem_write;
+            cn_write_en <= cn_next_write_en;
             cne_write_address <= cne_next_write_address;
-            cne_mem_write <= cne_next_mem_write;
+            cne_write_en <= cne_next_write_en;
             ce_write_address <= ce_next_write_address;
-            ce_mem_write <= ce_next_mem_write;
+            ce_write_en <= ce_next_write_en;
             cse_write_address <= cse_next_write_address;
-            cse_mem_write <= cse_next_mem_write;
+            cse_write_en <= cse_next_write_en;
             cs_write_address <= cs_next_write_address;
-            cs_mem_write <= cs_next_mem_write;
+            cs_write_en <= cs_next_write_en;
             csw_write_address <= csw_next_write_address;
-            csw_mem_write <= csw_next_mem_write;
+            csw_write_en <= csw_next_write_en;
             cw_write_address <= cw_next_write_address;
-            cw_mem_write <= cw_next_mem_write;
+            cw_write_en <= cw_next_write_en;
             cnw_write_address <= cnw_next_write_address;
-            cnw_mem_write <= cnw_next_mem_write;
+            cnw_write_en <= cnw_next_write_en;
             if(sim_state == WRITE_BOUNCE && barriers[index] == 1'b1)
             begin
                 cn_data_in  <= cs_data_out;
@@ -231,23 +231,24 @@ module LBMSolver (
 
 
     //Stream state
-    always @(*) begin
+    always_comb begin
         cn_next_write_address = 0;
-        cn_next_mem_write = 0;
+        cn_next_write_en = 0;
         cne_next_write_address = 0;
-        cne_next_mem_write = 0;
+        cne_next_write_en = 0;
         ce_next_write_address = 0;
-        ce_next_mem_write = 0;
+        ce_next_write_en = 0;
         cse_next_write_address = 0;
-        cse_next_mem_write = 0;
+        cse_next_write_en = 0;
         cs_next_write_address = 0;
-        cs_next_mem_write = 0;
+        cs_next_write_en = 0;
         csw_next_write_address = 0;
-        csw_next_mem_write = 0;
+        csw_next_write_en = 0;
         cw_next_write_address = 0;
-        cw_next_mem_write = 0;
+        cw_next_write_en = 0;
         cnw_next_write_address = 0;
-        cnw_next_mem_write = 0;
+        cnw_next_write_en = 0;
+        next_index = 0;
         case(sim_state)
             IDLE: next_sim_state = READ_STREAM;
             READ_STREAM:
@@ -255,21 +256,21 @@ module LBMSolver (
                 //all modulo signs are placeholders as modulo operations are expensive, once I properly implement a counter I will make a column count from there 
                 next_sim_state = WRITE_STREAM;
                 cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
-                cn_next_mem_write = (index>= `WIDTH);
+                cn_next_write_en = (index>= `WIDTH);
                 cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
-                cne_next_mem_write = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
+                cne_next_write_en = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
                 ce_next_write_address = ((index%`WIDTH) != `WIDTH-1) ? index+1: 0;
-                ce_next_mem_write = ((index%`WIDTH) != `WIDTH-1);
+                ce_next_write_en = ((index%`WIDTH) != `WIDTH-1);
                 cse_next_write_address = (index <= `DEPTH-`WIDTH-1 && ((index%`WIDTH) != `WIDTH-1)) ? index+`WIDTH+1: 0;
-                cse_next_mem_write = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
+                cse_next_write_en = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
                 cs_next_write_address = (index <= `DEPTH-`WIDTH-1) ? index+`WIDTH : 0;
-                cs_next_mem_write = (index <= `DEPTH-`WIDTH-1);
+                cs_next_write_en = (index <= `DEPTH-`WIDTH-1);
                 csw_next_write_address = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0)) ? index+`WIDTH-1 : 0;
-                csw_next_mem_write = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
+                csw_next_write_en = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
                 cw_next_write_address = (index%`WIDTH != 0) ? index - 1 : 0;
-                cw_next_mem_write = (index%`WIDTH != 0);
+                cw_next_write_en = (index%`WIDTH != 0);
                 cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
-                cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
+                cnw_next_write_en = (index >= `WIDTH && (index%`WIDTH != 0));
             end
             WRITE_STREAM:
             begin
@@ -284,25 +285,25 @@ module LBMSolver (
             end
             READ_BOUNCE:
             begin
+                next_sim_state = WRITE_BOUNCE;
                 if(barriers[index] == 1'b1)
                 begin
-                    next_sim_state = WRITE_BOUNCE;
                     cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
-                    cn_next_mem_write = (index>= `WIDTH);
+                    cn_next_write_en = (index>= `WIDTH);
                     cne_next_write_address = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1)) ? index-`WIDTH+1 : 0;
-                    cne_next_mem_write = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
+                    cne_next_write_en = (index >= `WIDTH && ((index%`WIDTH) != `WIDTH-1));
                     ce_next_write_address = ((index%`WIDTH) != `WIDTH-1) ? index+1: 0;
-                    ce_next_mem_write = ((index%`WIDTH) != `WIDTH-1);
+                    ce_next_write_en = ((index%`WIDTH) != `WIDTH-1);
                     cse_next_write_address = (index <= `DEPTH-`WIDTH-1 && ((index%`WIDTH) != `WIDTH-1)) ? index+`WIDTH+1: 0;
-                    cse_next_mem_write = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
+                    cse_next_write_en = (index <= `DEPTH-`WIDTH-1  && ((index%`WIDTH) != `WIDTH-1));
                     cs_next_write_address = (index <= `DEPTH-`WIDTH-1) ? index+`WIDTH : 0;
-                    cs_next_mem_write = (index <= `DEPTH-`WIDTH-1);
+                    cs_next_write_en = (index <= `DEPTH-`WIDTH-1);
                     csw_next_write_address = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0)) ? index+`WIDTH-1 : 0;
-                    csw_next_mem_write = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
+                    csw_next_write_en = (index <= `DEPTH-`WIDTH-1 && (index%`WIDTH != 0));
                     cw_next_write_address = (index%`WIDTH != 0) ? index - 1 : 0;
-                    cw_next_mem_write = (index%`WIDTH != 0);
+                    cw_next_write_en = (index%`WIDTH != 0);
                     cnw_next_write_address = (index >= `WIDTH && (index%`WIDTH != 0)) ? index - 1 - `WIDTH : 0;
-                    cnw_next_mem_write = (index >= `WIDTH && (index%`WIDTH != 0));
+                    cnw_next_write_en = (index >= `WIDTH && (index%`WIDTH != 0));
                 end
             end
             WRITE_BOUNCE:
@@ -320,33 +321,35 @@ module LBMSolver (
             begin
                 next_index++;
                 cn_next_write_address = index;
-                cn_next_mem_write = 1'b1;
+                cn_next_write_en = 1'b1;
                 cne_next_write_address = index;
-                cne_next_mem_write = 1'b1;
+                cne_next_write_en = 1'b1;
                 ce_next_write_address = index;
-                ce_next_mem_write = 1'b1;
+                ce_next_write_en = 1'b1;
                 cse_next_write_address = index;
-                cse_next_mem_write = 1'b1;
+                cse_next_write_en = 1'b1;
                 cs_next_write_address = index;
-                cs_next_mem_write = 1'b1;
+                cs_next_write_en = 1'b1;
                 csw_next_write_address = index;
-                csw_next_mem_write = 1'b1;
+                csw_next_write_en = 1'b1;
                 cw_next_write_address = index;
-                cw_next_mem_write = 1'b1;
+                cw_next_write_en = 1'b1;
                 cnw_next_write_address = index;
-                cnw_next_mem_write = 1'b1;
+                cnw_next_write_en = 1'b1;
                 if(next_index > `DEPTH-1)
                 begin
                     next_index = 0;
-                    next_sim_state = COLLISION_READ;
+                    next_sim_state = IDLE; //WRONG
                 end
                 else
                     next_sim_state = ZERO_BOUNCE;
             end
-            COLLISION_READ: //needs to be multiple stages or else this won't be clocked very fast
-            begin
-                rho = c0_data_out + cn_data_out + cne_data_out + ce_data_out + cse_data_out + cs_data_out + csw_data_out + cw_data_out + cnw_data_out;
-            end
+            //COLLISION_READ: //needs to be multiple stages or else this won't be clocked very fast
+            // begin
+            //     rho = c0_data_out + cn_data_out + cne_data_out + ce_data_out + cse_data_out + cs_data_out + csw_data_out + cw_data_out + cnw_data_out;
+            // end
+            default:
+                next_sim_state = IDLE;
         endcase
     end
 
