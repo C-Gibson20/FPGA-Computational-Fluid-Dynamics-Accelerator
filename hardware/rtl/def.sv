@@ -2,8 +2,8 @@
 `define DEF
 
 `define DATA_WIDTH 16
-`define HEIGHT 300
-`define WIDTH 100
+`define HEIGHT 50
+`define WIDTH 50
 `define DEPTH (`HEIGHT*`WIDTH)
 `define ADDRESS_WIDTH ($clog2(`DEPTH))
 `define FIXED_ONE 16'sh_2000
