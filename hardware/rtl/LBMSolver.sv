@@ -14,6 +14,8 @@ module LBMSolver (
     localparam READ_BOUNCE = 3'd3;
     localparam WRITE_BOUNCE = 3'd4;
     localparam ZERO_BOUNCE = 3'd5;
+    localparam READ_COLLISION = 3'd6;
+    localparam WRITE_COLLISION = 3'd7;
 
     // reg signed [`DATA_WIDTH-1:0] rho;
     // reg signed [`DATA_WIDTH-1:0] rho_m_1;
@@ -521,7 +523,7 @@ module LBMSolver (
                 if(next_index > `DEPTH-1)
                 begin
                     next_index = 0;
-                    next_sim_state = IDLE; //WRONG
+                    next_sim_state = COLLISION_READ; //RIGHT
                 end
                 else
                     next_sim_state = ZERO_BOUNCE;
