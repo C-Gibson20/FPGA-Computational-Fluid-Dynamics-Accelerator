@@ -141,7 +141,7 @@ def collide():
                 # Conserve mass
                 n0[i]   = rho[i] - (nE[i]+nW[i]+nN[i]+nS[i]+nNE[i]+nSE[i]+nNW[i]+nSW[i])
 
-def initialize(xtop, ytop, yheight, u0=u0):
+def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
     xcoord = 0
     ycoord = 0
     
@@ -162,9 +162,21 @@ def initialize(xtop, ytop, yheight, u0=u0):
         ux[i]  = (nE[i] + nNE[i] + nSE[i] - nW[i] - nNW[i] - nSW[i]) * (1-(rho[i]-1)+((rho[i]-1)**2.))
         uy[i]  = (nN[i] + nNE[i] + nNW[i] - nS[i] - nSE[i] - nSW[i]) * (1-(rho[i]-1)+((rho[i]-1)**2.))
         
-        if (xcoord==xtop):
-            if (ycoord >= ytop):
-                if (ycoord < (ytop+yheight)):
+        if (xcoord==x1top):
+            if (ycoord >= y1top):
+                if (ycoord < (y1top+y1height)):
+                    count += 1
+                    bar[ycoord*width + xcoord] = 1
+
+        if (xcoord==x2top):
+            if (ycoord >= y1top):
+                if (ycoord < (y1top+y1height)):
+                    count += 1
+                    bar[ycoord*width + xcoord] = 1
+
+        if (xcoord==x3top):
+            if (ycoord >= y1top):
+                if (ycoord < (y1top+y1height)):
                     count += 1
                     bar[ycoord*width + xcoord] = 1
         
@@ -172,14 +184,14 @@ def initialize(xtop, ytop, yheight, u0=u0):
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 60
+fps = 600
 nSeconds = 15
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(25, 11, 10)
+initialize(25, 11, 10, 50, 150)
 
 # Don't animate first few frames
 for i in range(10):
@@ -211,5 +223,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=60) 
+writervideo = animation.FFMpegWriter(fps=600) 
 anim.save(f, writer=writervideo)
