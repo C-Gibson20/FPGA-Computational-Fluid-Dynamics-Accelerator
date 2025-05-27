@@ -7,6 +7,7 @@ module LBMSolver (
     input logic en
 );
 
+    //States
     localparam IDLE = 3'd0;
     localparam READ_STREAM = 3'd1;
     localparam WRITE_STREAM = 3'd2;
@@ -53,13 +54,13 @@ module LBMSolver (
     reg [`ADDRESS_WIDTH-1:0] ce_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cse_data_in , cse_data_out;
-    reg cse_mem_write, , cse_next_mem_write;
+    reg cse_mem_write, cse_next_mem_write;
     // logic [`ADDRESS_WIDTH-1:0] cse_read_address;
     reg [`ADDRESS_WIDTH-1:0] cse_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cse_next_write_address;
 
     logic [`DATA_WIDTH-1:0] cs_data_in, cs_data_out;
-    reg cs_mem_write, , cs_next_mem_write;
+    reg cs_mem_write, cs_next_mem_write;
     // logic [`ADDRESS_WIDTH-1:0] cs_read_address;
     reg [`ADDRESS_WIDTH-1:0] cs_write_address; 
     reg [`ADDRESS_WIDTH-1:0] cs_next_write_address;
@@ -165,7 +166,7 @@ module LBMSolver (
     );
 
     //Update stream state
-    alway @(posedge clk or posedge rst)
+    always @(posedge clk or posedge rst)
     begin
         if(rst) 
         begin
