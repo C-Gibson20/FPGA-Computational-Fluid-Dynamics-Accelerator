@@ -485,29 +485,37 @@ module LBMSolver (
                 next_index = index + 1;
                 next_width_count = next_width_count + 1;
                 if(barriers[index] == 1'b1) //this is where you left off 
-                cn_next_write_address = index;
-                cn_next_write_en = 1'b1;
+                    cn_next_write_address = index;
+                    cn_next_write_en = 1'b1;
+                    cn_next_data_in = 1'b0;
 
-                cne_next_write_address = index;
-                cne_next_write_en = 1'b1;
+                    cne_next_write_address = index;
+                    cne_next_write_en = 1'b1;
+                    cne_next_data_in = 1'b0;
 
-                ce_next_write_address = index;
-                ce_next_write_en = 1'b1;
+                    ce_next_write_address = index;
+                    ce_next_write_en = 1'b1;
+                    ce_next_data_in = 1'b0;
 
-                cse_next_write_address = index;
-                cse_next_write_en = 1'b1;
+                    cse_next_write_address = index;
+                    cse_next_write_en = 1'b1;
+                    cse_next_data_in = 1'b0;
 
-                cs_next_write_address = index;
-                cs_next_write_en = 1'b1;
+                    cs_next_write_address = index;
+                    cs_next_write_en = 1'b1;
+                    cs_next_data_in = 1'b0;
 
-                csw_next_write_address = index;
-                csw_next_write_en = 1'b1;
+                    csw_next_write_address = index;
+                    csw_next_write_en = 1'b1;
+                    csw_next_data_in = 1'b0;
 
-                cw_next_write_address = index;
-                cw_next_write_en = 1'b1;
+                    cw_next_write_address = index;
+                    cw_next_write_en = 1'b1;
+                    cw_next_data_in = 1'b0;
 
-                cnw_next_write_address = index;
-                cnw_next_write_en = 1'b1;
+                    cnw_next_write_address = index;
+                    cnw_next_write_en = 1'b1;
+                    cnw_next_data_in = 1'b0;
 
                 if(next_index > `DEPTH-1)
                 begin
