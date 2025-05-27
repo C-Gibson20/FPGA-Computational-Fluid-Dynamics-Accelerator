@@ -485,6 +485,7 @@ module LBMSolver (
                 next_index = index + 1;
                 next_width_count = next_width_count + 1;
                 if(barriers[index] == 1'b1) //this is where you left off 
+                begin
                     cn_next_write_address = index;
                     cn_next_write_en = 1'b1;
                     cn_next_data_in = 1'b0;
@@ -516,7 +517,7 @@ module LBMSolver (
                     cnw_next_write_address = index;
                     cnw_next_write_en = 1'b1;
                     cnw_next_data_in = 1'b0;
-
+                end
                 if(next_index > `DEPTH-1)
                 begin
                     next_index = 0;
