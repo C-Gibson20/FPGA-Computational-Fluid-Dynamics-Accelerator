@@ -20,7 +20,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 // This should calculate the update rule Feq = weight_i * rho * (1 + 3*c_i*u + 9/2*(c_i * u)**2 - 3/2(u*u))
-// Fnew = 2Feq - F
 
 module collider(
 input wire [15:0] f_null,
@@ -45,16 +44,16 @@ output wire [15:0] new_f_nw,
 
 output wire collider_busy,
 output wire newval_ready,
-output wire velocity_density_ready,
+output wire axi_ready,
 
 output wire [15:0] u_x,
 output wire [15:0] u_y,
 output wire [15:0] rho
 );
 
-assign collider_busy = 1'b1;
+assign collider_busy = 1'b0;
 assign newval_ready = 1'b1;
-assign velocity_density_ready = 1'b1;
+assign axi_ready = 1'b1;
 
 reg [15:0] w_side = 16'h038e; // 1/9 in Q3.13
 reg [15:0] w_diag = 16'h00e4; // 1/36 in Q3.13
