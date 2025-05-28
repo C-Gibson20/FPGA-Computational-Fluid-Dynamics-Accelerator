@@ -9,5 +9,6 @@
 `define FIXED_ONE 16'sh_2000
 `define FIXED_ONE_9TH 16'sh_38e
 `define FIXED_ONE_36TH 16'sh_e4
+`define RAM_READ_WAIT 1
 
 `endif
