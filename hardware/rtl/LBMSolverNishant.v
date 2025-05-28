@@ -32,14 +32,12 @@ module LBMSolver (
     // BRAM c0
     output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
-    output reg                          c0_en,
     output reg                          c0_write_en,
     input  wire [`DATA_WIDTH-1:0]       c0_data_out,
 
     // BRAM c0_n
     output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_n_data_in, 
-    output reg                          c0_n_en,
     output reg                          c0_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       c0_n_data_out,
     
@@ -47,14 +45,12 @@ module LBMSolver (
     // BRAM cn
     output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
     output reg  [`DATA_WIDTH-1:0]       cn_data_in, 
-    output reg                          cn_en,
     output reg                          cn_write_en,
     input  wire [`DATA_WIDTH-1:0]       cn_data_out,
 
     // BRAM cn_n
     output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cn_n_data_in, 
-    output reg                          cn_n_en,
     output reg                          cn_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cn_n_data_out,
     
@@ -62,14 +58,12 @@ module LBMSolver (
     // BRAM cne
     output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
     output reg  [`DATA_WIDTH-1:0]       cne_data_in, 
-    output reg                          cne_en,
     output reg                          cne_write_en,
     input  wire [`DATA_WIDTH-1:0]       cne_data_out,
 
     // BRAM cne_n
     output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cne_n_data_in, 
-    output reg                          cne_n_en,
     output reg                          cne_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cne_n_data_out,
     
@@ -77,14 +71,12 @@ module LBMSolver (
     // BRAM ce
     output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
     output reg  [`DATA_WIDTH-1:0]       ce_data_in, 
-    output reg                          ce_en,
     output reg                          ce_write_en,
     input  wire [`DATA_WIDTH-1:0]       ce_data_out,
 
     // BRAM ce_n
     output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
     output reg  [`DATA_WIDTH-1:0]       ce_n_data_in, 
-    output reg                          ce_n_en,
     output reg                          ce_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       ce_n_data_out,
     
@@ -92,14 +84,12 @@ module LBMSolver (
     // BRAM cse
     output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
     output reg  [`DATA_WIDTH-1:0]       cse_data_in, 
-    output reg                          cse_en,
     output reg                          cse_write_en,
     input  wire [`DATA_WIDTH-1:0]       cse_data_out,
 
     // BRAM cse_n
     output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cse_n_data_in, 
-    output reg                          cse_n_en,
     output reg                          cse_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cse_n_data_out,
     
@@ -107,14 +97,12 @@ module LBMSolver (
     // BRAM cs
     output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
     output reg  [`DATA_WIDTH-1:0]       cs_data_in, 
-    output reg                          cs_en,
     output reg                          cs_write_en,
     input  wire [`DATA_WIDTH-1:0]       cs_data_out,
 
     // BRAM cs_n
     output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cs_n_data_in, 
-    output reg                          cs_n_en,
     output reg                          cs_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cs_n_data_out,
     
@@ -122,14 +110,12 @@ module LBMSolver (
     // BRAM csw
     output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
     output reg  [`DATA_WIDTH-1:0]       csw_data_in, 
-    output reg                          csw_en,
     output reg                          csw_write_en,
     input  wire [`DATA_WIDTH-1:0]       csw_data_out,
 
     // BRAM csw_n
     output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       csw_n_data_in, 
-    output reg                          csw_n_en,
     output reg                          csw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       csw_n_data_out,
     
@@ -137,14 +123,12 @@ module LBMSolver (
     // BRAM cw
     output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
     output reg  [`DATA_WIDTH-1:0]       cw_data_in, 
-    output reg                          cw_en,
     output reg                          cw_write_en,
     input  wire [`DATA_WIDTH-1:0]       cw_data_out,
 
     // BRAM cw_n
     output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cw_n_data_in, 
-    output reg                          cw_n_en,
     output reg                          cw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cw_n_data_out,
     
@@ -152,14 +136,12 @@ module LBMSolver (
     // BRAM cnw
     output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
     output reg  [`DATA_WIDTH-1:0]       cnw_data_in, 
-    output reg                          cnw_en,
     output reg                          cnw_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_data_out,
 
     // BRAM cnw_n
     output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
-    output reg                          cnw_n_en,
     output reg                          cnw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
     
@@ -343,47 +325,12 @@ module LBMSolver (
             cnw_n_write_en <= cnw_n_next_write_en;
             cnw_data_in <= cnw_next_data_in;
             cnw_n_data_in <= cnw_next_data_in;
-
-
-            // if(sim_state == WRITE_BOUNCE && barriers[index] == 1'b1)
-            // begin
-            //     cn_data_in  <= cs_data_out;
-            //     cne_data_in <= csw_data_out;
-            //     ce_data_in  <= cw_data_out;
-            //     cse_data_in <= cnw_data_out;
-            //     cs_data_in  <= cn_data_out;
-            //     csw_data_in <= cne_data_out;
-            //     cw_data_in  <= ce_data_out;
-            //     cnw_data_in <= cse_data_out;
-            // end
-            // else if(sim_state == ZERO_BOUNCE && barriers[index] == 1'b1)
-            // begin
-            //     cn_data_in  <= 0;
-            //     cne_data_in <= 0;
-            //     ce_data_in  <= 0;
-            //     cse_data_in <= 0;
-            //     cs_data_in  <= 0;
-            //     csw_data_in <= 0;
-            //     cw_data_in  <= 0;
-            //     cnw_data_in <= 0;
-            // end
-            // else
-            // begin
-            //     cn_data_in  <= cn_data_out;
-            //     cne_data_in  <= cne_data_out;
-            //     ce_data_in  <= ce_data_out;
-            //     cse_data_in  <= cse_data_out;
-            //     cs_data_in  <= cs_data_out;
-            //     csw_data_in  <= csw_data_out;
-            //     cw_data_in  <= cw_data_out;
-            //     cnw_data_in  <= cnw_data_out;
-            // end
         end
     end
 
 
     //Stream state
-    always @* begin // verilator gives me a latch warning here but i can't seem to find it
+    always @* begin
         c0_next_write_addr = 0;
         c0_next_write_en = 0;
         c0_n_next_write_en = 0;
@@ -492,19 +439,7 @@ module LBMSolver (
                     cnw_next_data_in = cnw_data_out;
                 end
             end
-            // WRITE_STREAM:
-            // begin
-            //     next_index = index + 1;
-            //     next_width_count = next_width_count + 1;
-            //     if(next_index > `DEPTH-1)
-            //     begin
-            //         next_index = 0;
-            //         next_width_count = 0;
-            //         next_sim_state = READ_BOUNCE;
-            //     end
-            //     else
-            //         next_sim_state = READ_STREAM;
-            // end
+
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
@@ -576,19 +511,6 @@ module LBMSolver (
                 end
             end
 
-            // WRITE_BOUNCE:
-            // begin
-            //     next_index = index + 1;
-            //     next_width_count = next_width_count + 1;
-            //     if(next_index > `DEPTH-1)
-            //     begin
-            //         next_index = 0;
-            //         next_width_count = 0;
-            //         next_sim_state = ZERO_BOUNCE;
-            //     end
-            //     else
-            //         next_sim_state = READ_BOUNCE;
-            // end
             ZERO_BOUNCE:
             begin
                 if(index == `DEPTH-1) 
