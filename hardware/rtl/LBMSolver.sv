@@ -494,35 +494,35 @@ module LBMSolver (
                 begin
                     cn_next_write_address = (index >= `WIDTH) ? index-`WIDTH: 0;
                     cn_n_next_write_en = (index>= `WIDTH);
-                    cn_next_data_in = cs_data_out;
+                    cn_next_data_in = cs_n_data_out;
 
                     cne_next_write_address = (index >= `WIDTH && (width_count == `WIDTH - 1)) ? index-`WIDTH+1 : 0;
                     cne_n_next_write_en = (index >= `WIDTH && (width_count == `WIDTH - 1));
-                    cne_next_data_in = csw_data_out;
+                    cne_next_data_in = csw_n_data_out;
 
                     ce_next_write_address = (width_count == `WIDTH - 1) ? index+1: 0;
                     ce_n_next_write_en = (width_count == `WIDTH - 1);
-                    ce_next_data_in = cw_data_out; 
+                    ce_next_data_in = cw_n_data_out; 
 
                     cse_next_write_address = (index <= `DEPTH-`WIDTH-1 && (width_count == `WIDTH - 1)) ? index+`WIDTH+1: 0;
                     cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count == `WIDTH - 1));
-                    cse_next_data_in = cnw_data_out; 
+                    cse_next_data_in = cnw_n_data_out; 
 
                     cs_next_write_address = (index <= `DEPTH-`WIDTH-1) ? index+`WIDTH : 0;
                     cs_n_next_write_en = (index <= `DEPTH-`WIDTH-1);
-                    cs_next_data_in = cn_data_out; 
+                    cs_next_data_in = cn_n_data_out; 
 
                     csw_next_write_address = (index <= `DEPTH-`WIDTH-1 && (width_count == 0)) ? index+`WIDTH-1 : 0;
                     csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count == 0));
-                    csw_next_data_in = cne_data_out; 
+                    csw_next_data_in = cne_n_data_out; 
 
                     cw_next_write_address = (width_count == 0) ? index - 1 : 0;
                     cw_n_next_write_en = (width_count == 0);
-                    cw_next_data_in = ce_data_out; 
+                    cw_next_data_in = ce_n_data_out; 
 
                     cnw_next_write_address = (index >= `WIDTH && (width_count == 0)) ? index - 1 - `WIDTH : 0;
                     cnw_n_next_write_en = (index >= `WIDTH && (width_count == 0));
-                    cnw_next_data_in = cse_data_out; 
+                    cnw_next_data_in = cse_n_data_out; 
                 end
             end
             // WRITE_BOUNCE:
