@@ -11,7 +11,7 @@ bin_fp = open(out_fname, "wb")
 # Parameters
 height = 100                      # grid height
 width = 100                      # grid width
-viscosity = 0.002                # viscosity
+viscosity = 0.02                # viscosity
 omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 u0 = 0.1                         # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
@@ -37,6 +37,28 @@ rho = numpy.zeros(height*width)    # Cell density
 ux  = numpy.zeros(height*width)    # Cell x-velocity
 uy  = numpy.zeros(height*width)    # Cell y-velocity
 speed2 = numpy.zeros(height*width) # Cell squared velocity
+
+
+def write_frame():
+    for i in range(height * width):
+        if bar[i]:
+            # Use a negative or clearly distinct value to denote a barrier
+            r = -2.0
+            u_x = 0.0
+            u_y = 0.0
+        else:
+            r = rho[i]
+            u_x = ux[i]
+            u_y = uy[i]                     
+        # Convert to Q3.13
+        fixed_scale = 1 << 13
+        i16_rho = numpy.int16(numpy.clip(numpy.round(r  * fixed_scale), -2**15, 2**15 - 1))
+        i16_ux  = numpy.int16(numpy.clip(numpy.round(u_x* fixed_scale), -2**15, 2**15 - 1))
+        i16_uy  = numpy.int16(numpy.clip(numpy.round(u_y* fixed_scale), -2**15, 2**15 - 1))
+        bin_fp.write(i16_rho.tobytes())
+        bin_fp.write(i16_ux.tobytes())
+        bin_fp.write(i16_uy.tobytes())
+
 
 def stream():
     
@@ -99,7 +121,7 @@ def bounce():
                 nSE[y*width + x] = 0
                 nSW[y*width + x] = 0
 
-def collide(write):
+def collide():
     
     # Do not touch cells on top, bottom, or left
     for x in range(1, width-1):
@@ -143,10 +165,6 @@ def collide(write):
                 
                 # Conserve mass
                 n0[i]   = rho[i] - (nE[i]+nW[i]+nN[i]+nS[i]+nNE[i]+nSE[i]+nNW[i]+nSW[i])
-                if(write):
-                    bin_fp.write(numpy.float16(rho[i]).tobytes())
-                    bin_fp.write(numpy.float16(ux[i]).tobytes())
-                    bin_fp.write(numpy.float16(uy[i]).tobytes())
 
 def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
     xcoord = 0
@@ -190,27 +208,34 @@ def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
         xcoord = (xcoord+1) if xcoord<(width-1) else 0
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
+
 # Frames per second, and number of seconds
-fps = 600
-nSeconds = 30
+fps = 60
+nSeconds = 20
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(25, 11, 10, 50, 150)
+# initialize(25, 11, 10, 50, 150)
+initialize(25, 30, 40, 50, 75)
+
 
 # Don't animate first few frames
-for i in range(10):
+for i in range(1000):
     stream()
     # print(n0,nE)
     bounce()
     # print(n0,nE)
-    collide(False)
+    collide()
 
-for i in range(20):
+for i in range(200):
     stream()
     # print(n0,nE)
     bounce()
     # print(n0,nE)
-    collide(True)
+    collide()
+
+    write_frame()
+
+bin_fp.close()
