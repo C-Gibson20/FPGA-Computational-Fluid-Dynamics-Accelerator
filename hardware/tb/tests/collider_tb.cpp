@@ -77,7 +77,6 @@ TEST_F(ColliderTestbench, SmallEastwardSpeed) {
     EXPECT_EQ(collider->new_f_e,    0x067B);
     EXPECT_EQ(collider->new_f_w,    0x0302);
 
-
 }
 
 

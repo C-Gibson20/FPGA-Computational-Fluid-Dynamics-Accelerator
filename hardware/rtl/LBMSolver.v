@@ -29,7 +29,8 @@ module LBMSolver (
     input wire rst,
     input wire [`DEPTH-1:0] barriers,
     input wire en,
-    input wire [32:0] step, // will step until sim value
+    input wire [31:0] step, // will step until sim value
+    input wire signed [15:0] omega, // 1/tau
     
    
     // BRAM c0
@@ -165,7 +166,7 @@ module LBMSolver (
     localparam ZERO_BOUNCE = 3'd4;
     localparam COLLIDE = 3'd5;
 
-    reg [`WIDTH-1:0] width_count, next_width_count;
+    reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index;
     reg [`ADDRESS_WIDTH-1:0] next_index;
@@ -214,7 +215,7 @@ module LBMSolver (
 
     reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    reg [15:0] step_count;
+    reg [15:0] step_count, next_step_count;
 
     wire [`DATA_WIDTH-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
@@ -226,6 +227,7 @@ module LBMSolver (
 
     //Instantiate Nishant's collider
     collider collider(
+        .omega(omega),
         .f_null(c0_n_data_out),
         .f_n(cn_n_data_out),
         .f_ne(cne_n_data_out),
@@ -264,11 +266,11 @@ module LBMSolver (
         end
         else 
         begin
-            if(sim_state == ZERO_BOUNCE) step_count <= step_count + 1;
-            
             sim_state <= next_sim_state;
             index <= next_index;
-            
+            width_count <= next_width_count;
+            step_count <= next_step_count;
+
             c0_addr <= c0_write_en ? c0_next_write_addr : index;
             c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
             c0_write_en <= c0_next_write_en;
@@ -385,6 +387,7 @@ module LBMSolver (
         next_index = 0;
         next_width_count = 0;
 
+        next_step_count = step_count;
         next_ram_wait_count = ram_wait_count;
 
         case(sim_state)
@@ -405,6 +408,7 @@ module LBMSolver (
                 else begin
                     if(index == `DEPTH-1) // if streamed all cells, go to bounce stage
                     begin
+                        next_step_count = step_count + 1;
                         next_index = 0;
                         next_width_count = 0;
                         next_sim_state = BOUNCE;
@@ -413,7 +417,7 @@ module LBMSolver (
                     else // if not, increment index and continue streaming
                     begin
                         next_index = index + 1;
-                        next_width_count = width_count + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                         next_sim_state = STREAM;
                         next_ram_wait_count = `RAM_READ_WAIT;
                     end
@@ -424,15 +428,15 @@ module LBMSolver (
                     cn_next_data_in = cn_data_out;
 
                     cne_next_write_addr = index-`WIDTH+1;
-                    cne_n_next_write_en = (index >= `WIDTH && (width_count == `WIDTH - 1));
+                    cne_n_next_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
                     cne_next_data_in = cne_data_out;
 
                     ce_next_write_addr = index+1;
-                    ce_n_next_write_en = (width_count == `WIDTH - 1);
+                    ce_n_next_write_en = (width_count != `WIDTH - 1);
                     ce_next_data_in = ce_data_out;
 
                     cse_next_write_addr = index+`WIDTH+1;
-                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count == `WIDTH - 1));
+                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
                     cse_next_data_in = cse_data_out;
 
                     cs_next_write_addr = index+`WIDTH;
@@ -440,15 +444,15 @@ module LBMSolver (
                     cs_next_data_in = cs_data_out;
 
                     csw_next_write_addr = index+`WIDTH-1;
-                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count == 0));
+                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
                     csw_next_data_in = csw_data_out;
 
-                    cw_next_write_addr = (width_count == 0) ? index - 1 : 0;
-                    cw_n_next_write_en = (width_count == 0);
+                    cw_next_write_addr = index - 1;
+                    cw_n_next_write_en = (width_count != 0);
                     cw_next_data_in = cw_data_out;
 
                     cnw_next_write_addr = index - 1 - `WIDTH;
-                    cnw_n_next_write_en = (index >= `WIDTH && (width_count == 0));
+                    cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
                     cnw_next_data_in = cnw_data_out;
                 end
             end
@@ -471,7 +475,7 @@ module LBMSolver (
                     else // not a barrier, skip over
                     begin
                         next_index = index + 1;
-                        next_width_count = width_count + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                         next_sim_state = BOUNCE;
                     end
                 end
@@ -489,15 +493,15 @@ module LBMSolver (
                     cn_next_data_in = cs_n_data_out;
 
                     cne_next_write_addr = index-`WIDTH+1;
-                    cne_n_next_write_en = (index >= `WIDTH && (width_count == `WIDTH - 1));
+                    cne_n_next_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
                     cne_next_data_in = csw_n_data_out;
 
                     ce_next_write_addr = index+1;
-                    ce_n_next_write_en = (width_count == `WIDTH - 1);
+                    ce_n_next_write_en = (width_count != `WIDTH - 1);
                     ce_next_data_in = cw_n_data_out; 
 
                     cse_next_write_addr = index+`WIDTH+1;
-                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count == `WIDTH - 1));
+                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
                     cse_next_data_in = cnw_n_data_out; 
 
                     cs_next_write_addr = index+`WIDTH ;
@@ -505,21 +509,21 @@ module LBMSolver (
                     cs_next_data_in = cn_n_data_out; 
 
                     csw_next_write_addr = index+`WIDTH-1;
-                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count == 0));
+                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
                     csw_next_data_in = cne_n_data_out; 
 
                     cw_next_write_addr = index - 1;
-                    cw_n_next_write_en = (width_count == 0);
+                    cw_n_next_write_en = (width_count != 0);
                     cw_next_data_in = ce_n_data_out; 
 
                     cnw_next_write_addr = index - 1 - `WIDTH;
-                    cnw_n_next_write_en = (index >= `WIDTH && (width_count == 0));
+                    cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
                     cnw_next_data_in = cse_n_data_out;
 
 
                     // go back to bounce state
                     next_index = index + 1;
-                    next_width_count = width_count + 1;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                     next_sim_state = BOUNCE; 
                 end
             end
@@ -535,7 +539,7 @@ module LBMSolver (
                 else
                 begin
                     next_index = index + 1;
-                    next_width_count = width_count + 1;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                     next_sim_state = BOUNCE;
                 end
 
@@ -588,7 +592,7 @@ module LBMSolver (
                     else
                     begin
                         next_index = index + 1;
-                        next_width_count = width_count + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                         next_sim_state = COLLIDE;
                     end
                     c0_next_write_addr = index;
