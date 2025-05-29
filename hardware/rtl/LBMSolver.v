@@ -29,7 +29,7 @@ module LBMSolver (
     input wire rst,
     input wire [`DEPTH-1:0] barriers,
     input wire en,
-    input wire [32:0] step, // will step until sim value
+    input wire [31:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
     
    
