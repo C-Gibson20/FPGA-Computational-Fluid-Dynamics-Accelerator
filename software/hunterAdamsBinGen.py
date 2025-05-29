@@ -144,9 +144,9 @@ def collide():
                 # Conserve mass
                 n0[i]   = rho[i] - (nE[i]+nW[i]+nN[i]+nS[i]+nNE[i]+nSE[i]+nNW[i]+nSW[i])
 
-                bin_fp.write(rho[i].tobytes())
-                bin_fp.write(ux[i].tobytes())
-                bin_fp.write(uy[i].tobytes())
+                bin_fp.write(numpy.float16(rho[i]).tobytes())
+                bin_fp.write(numpy.float16(ux[i]).tobytes())
+                bin_fp.write(numpy.float16(uy[i]).tobytes())
 
 def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
     xcoord = 0
