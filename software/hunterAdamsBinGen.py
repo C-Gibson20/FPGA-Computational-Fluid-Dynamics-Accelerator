@@ -99,7 +99,7 @@ def bounce():
                 nSE[y*width + x] = 0
                 nSW[y*width + x] = 0
 
-def collide():
+def collide(write):
     
     # Do not touch cells on top, bottom, or left
     for x in range(1, width-1):
@@ -143,10 +143,10 @@ def collide():
                 
                 # Conserve mass
                 n0[i]   = rho[i] - (nE[i]+nW[i]+nN[i]+nS[i]+nNE[i]+nSE[i]+nNW[i]+nSW[i])
-
-                bin_fp.write(numpy.float16(rho[i]).tobytes())
-                bin_fp.write(numpy.float16(ux[i]).tobytes())
-                bin_fp.write(numpy.float16(uy[i]).tobytes())
+                if(write):
+                    bin_fp.write(numpy.float16(rho[i]).tobytes())
+                    bin_fp.write(numpy.float16(ux[i]).tobytes())
+                    bin_fp.write(numpy.float16(uy[i]).tobytes())
 
 def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
     xcoord = 0
@@ -201,10 +201,16 @@ fig = plt.figure( figsize=(20,5) )
 initialize(25, 11, 10, 50, 150)
 
 # Don't animate first few frames
+for i in range(10):
+    stream()
+    # print(n0,nE)
+    bounce()
+    # print(n0,nE)
+    collide(False)
+
 for i in range(20):
     stream()
     # print(n0,nE)
     bounce()
     # print(n0,nE)
-    collide()
-    print(n0,nE)
+    collide(True)
