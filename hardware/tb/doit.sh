@@ -35,9 +35,22 @@ for file in "${files[@]}"; do
     filename=$(basename "$file")
     name=$(basename "$file" _tb.cpp | cut -f1 -d\-)
 
-    # Translate Verilog -> C++ including testbench
+
+    #Find Verilog or System Verilog file
+    rtl_file="${RTL_FOLDER}/${name}.sv"
+    if [[ ! -f "$rtl_file" ]]; then
+        rtl_file="${RTL_FOLDER}/${name}.v"
+    fi
+
+    if [[ ! -f "$rtl_file" ]]; then
+        echo "Error: Could not find RTL file for module '$name'"
+        exit 1
+    fi
+
+
+    # Translate Verilog/SystemVerilog -> C++ including testbench
     verilator   -Wall --trace \
-                -cc ${RTL_FOLDER}/${name}.sv \
+                -cc "$rtl_file" \
                 --exe ${TEST_FOLDER}/${filename} \
                 -y ${RTL_FOLDER} \
                 --prefix "Vdut" \
