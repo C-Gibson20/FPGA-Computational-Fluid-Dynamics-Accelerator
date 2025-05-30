@@ -13,7 +13,6 @@ protected:
         LBMSolver->en  = 1;
         LBMSolver->step = 0;
         LBMSolver->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
-        LBMSolver->c0_data_out = 0;
 
     }
 };

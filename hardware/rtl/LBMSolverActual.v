@@ -33,121 +33,121 @@ module LBMSolver (
     input wire signed [15:0] omega, // 1/tau
     
    
-    // // BRAM c0
-    // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
-    // output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
-    // output reg                          c0_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       c0_data_out,
+    // BRAM c0
+    output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
+    output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
+    output reg                          c0_write_en,
+    input  wire [`DATA_WIDTH-1:0]       c0_data_out,
 
-    // // BRAM c0_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       c0_n_data_in, 
-    // output reg                          c0_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       c0_n_data_out,
+    // BRAM c0_n
+    output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       c0_n_data_in, 
+    output reg                          c0_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       c0_n_data_out,
     
 
-    // // BRAM cn
-    // output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cn_data_in, 
-    // output reg                          cn_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cn_data_out,
+    // BRAM cn
+    output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
+    output reg  [`DATA_WIDTH-1:0]       cn_data_in, 
+    output reg                          cn_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cn_data_out,
 
-    // // BRAM cn_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cn_n_data_in, 
-    // output reg                          cn_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cn_n_data_out,
+    // BRAM cn_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cn_n_data_in, 
+    output reg                          cn_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cn_n_data_out,
     
 
-    // // BRAM cne
-    // output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cne_data_in, 
-    // output reg                          cne_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cne_data_out,
+    // BRAM cne
+    output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
+    output reg  [`DATA_WIDTH-1:0]       cne_data_in, 
+    output reg                          cne_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cne_data_out,
 
-    // // BRAM cne_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cne_n_data_in, 
-    // output reg                          cne_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cne_n_data_out,
+    // BRAM cne_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cne_n_data_in, 
+    output reg                          cne_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cne_n_data_out,
     
 
-    // // BRAM ce
-    // output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
-    // output reg  [`DATA_WIDTH-1:0]       ce_data_in, 
-    // output reg                          ce_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       ce_data_out,
+    // BRAM ce
+    output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
+    output reg  [`DATA_WIDTH-1:0]       ce_data_in, 
+    output reg                          ce_write_en,
+    input  wire [`DATA_WIDTH-1:0]       ce_data_out,
 
-    // // BRAM ce_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       ce_n_data_in, 
-    // output reg                          ce_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       ce_n_data_out,
+    // BRAM ce_n
+    output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       ce_n_data_in, 
+    output reg                          ce_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       ce_n_data_out,
     
 
-    // // BRAM cse
-    // output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cse_data_in, 
-    // output reg                          cse_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cse_data_out,
+    // BRAM cse
+    output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
+    output reg  [`DATA_WIDTH-1:0]       cse_data_in, 
+    output reg                          cse_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cse_data_out,
 
-    // // BRAM cse_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cse_n_data_in, 
-    // output reg                          cse_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cse_n_data_out,
+    // BRAM cse_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cse_n_data_in, 
+    output reg                          cse_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cse_n_data_out,
     
 
-    // // BRAM cs
-    // output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cs_data_in, 
-    // output reg                          cs_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cs_data_out,
+    // BRAM cs
+    output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
+    output reg  [`DATA_WIDTH-1:0]       cs_data_in, 
+    output reg                          cs_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cs_data_out,
 
-    // // BRAM cs_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cs_n_data_in, 
-    // output reg                          cs_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cs_n_data_out,
+    // BRAM cs_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cs_n_data_in, 
+    output reg                          cs_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cs_n_data_out,
     
 
-    // // BRAM csw
-    // output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
-    // output reg  [`DATA_WIDTH-1:0]       csw_data_in, 
-    // output reg                          csw_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       csw_data_out,
+    // BRAM csw
+    output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
+    output reg  [`DATA_WIDTH-1:0]       csw_data_in, 
+    output reg                          csw_write_en,
+    input  wire [`DATA_WIDTH-1:0]       csw_data_out,
 
-    // // BRAM csw_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       csw_n_data_in, 
-    // output reg                          csw_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       csw_n_data_out,
+    // BRAM csw_n
+    output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       csw_n_data_in, 
+    output reg                          csw_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       csw_n_data_out,
     
 
-    // // BRAM cw
-    // output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cw_data_in, 
-    // output reg                          cw_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cw_data_out,
+    // BRAM cw
+    output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
+    output reg  [`DATA_WIDTH-1:0]       cw_data_in, 
+    output reg                          cw_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cw_data_out,
 
-    // // BRAM cw_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cw_n_data_in, 
-    // output reg                          cw_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cw_n_data_out,
+    // BRAM cw_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cw_n_data_in, 
+    output reg                          cw_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cw_n_data_out,
     
 
-    // // BRAM cnw
-    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cnw_data_in, 
-    // output reg                          cnw_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cnw_data_out,
+    // BRAM cnw
+    output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
+    output reg  [`DATA_WIDTH-1:0]       cnw_data_in, 
+    output reg                          cnw_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cnw_data_out,
 
-    // // BRAM cnw_n
-    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
-    // output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
-    // output reg                          cnw_n_write_en,
-    // input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
+    // BRAM cnw_n
+    output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
+    output reg                          cnw_n_write_en,
+    input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
     
 
     // collider results
@@ -165,177 +165,6 @@ module LBMSolver (
     localparam BOUNCE_WAIT = 3'd3;
     localparam ZERO_BOUNCE = 3'd4;
     localparam COLLIDE = 3'd5;
-
-    // BRAM c0
-    reg  [`ADDRESS_WIDTH-1:0]    c0_addr;
-    reg  [`DATA_WIDTH-1:0]       c0_data_in; 
-    reg                          c0_write_en;
-     wire [`DATA_WIDTH-1:0]       c0_data_out;
-
-    // BRAM c0_n
-    reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr;
-    reg  [`DATA_WIDTH-1:0]       c0_n_data_in; 
-    reg                          c0_n_write_en;
-    wire [`DATA_WIDTH-1:0]       c0_n_data_out;
-    
-
-    // BRAM cn
-    reg  [`ADDRESS_WIDTH-1:0]    cn_addr;
-    reg  [`DATA_WIDTH-1:0]       cn_data_in; 
-    reg                          cn_write_en;
-    wire [`DATA_WIDTH-1:0]       cn_data_out;
-
-    // BRAM cn_n
-    reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cn_n_data_in; 
-    reg                          cn_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cn_n_data_out;
-    
-
-    // BRAM cne
-    reg  [`ADDRESS_WIDTH-1:0]    cne_addr;
-    reg  [`DATA_WIDTH-1:0]       cne_data_in; 
-    reg                          cne_write_en;
-    wire [`DATA_WIDTH-1:0]       cne_data_out;
-
-    // BRAM cne_n
-    reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cne_n_data_in; 
-    reg                          cne_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cne_n_data_out;
-    
-
-    // BRAM ce
-    reg  [`ADDRESS_WIDTH-1:0]    ce_addr;
-    reg  [`DATA_WIDTH-1:0]       ce_data_in; 
-    reg                          ce_write_en;
-    wire [`DATA_WIDTH-1:0]       ce_data_out;
-
-    // BRAM ce_n
-    reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr;
-    reg  [`DATA_WIDTH-1:0]       ce_n_data_in; 
-    reg                          ce_n_write_en;
-    wire [`DATA_WIDTH-1:0]       ce_n_data_out;
-    
-
-    // BRAM cse
-    reg  [`ADDRESS_WIDTH-1:0]    cse_addr;
-    reg  [`DATA_WIDTH-1:0]       cse_data_in; 
-    reg                          cse_write_en;
-    wire [`DATA_WIDTH-1:0]       cse_data_out;
-
-    // BRAM cse_n
-    reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cse_n_data_in; 
-    reg                          cse_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cse_n_data_out;
-    
-
-    // BRAM cs
-    reg  [`ADDRESS_WIDTH-1:0]    cs_addr;
-    reg  [`DATA_WIDTH-1:0]       cs_data_in; 
-    reg                          cs_write_en;
-    wire [`DATA_WIDTH-1:0]       cs_data_out;
-
-    // BRAM cs_n
-    reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cs_n_data_in; 
-    reg                          cs_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cs_n_data_out;
-    
-
-    // BRAM csw
-    reg  [`ADDRESS_WIDTH-1:0]    csw_addr;
-    reg  [`DATA_WIDTH-1:0]       csw_data_in; 
-    reg                          csw_write_en;
-    wire [`DATA_WIDTH-1:0]       csw_data_out;
-
-    // BRAM csw_n
-    reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr;
-    reg  [`DATA_WIDTH-1:0]       csw_n_data_in; 
-    reg                          csw_n_write_en;
-    wire [`DATA_WIDTH-1:0]       csw_n_data_out;
-    
-
-    // BRAM cw
-    reg  [`ADDRESS_WIDTH-1:0]    cw_addr;
-    reg  [`DATA_WIDTH-1:0]       cw_data_in; 
-    reg                          cw_write_en;
-    wire [`DATA_WIDTH-1:0]       cw_data_out;
-
-    // BRAM cw_n
-    reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cw_n_data_in; 
-    reg                          cw_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cw_n_data_out;
-    
-
-    // BRAM cnw
-    reg  [`ADDRESS_WIDTH-1:0]    cnw_addr;
-    reg  [`DATA_WIDTH-1:0]       cnw_data_in; 
-    reg                          cnw_write_en;
-    wire [`DATA_WIDTH-1:0]       cnw_data_out;
-
-    // BRAM cnw_n
-    reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr;
-    reg  [`DATA_WIDTH-1:0]       cnw_n_data_in; 
-    reg                          cnw_n_write_en;
-    wire [`DATA_WIDTH-1:0]       cnw_n_data_out;
-
-    RAM_2500 c0   ( .clk(clk), .addr(c0_addr   ), .data_in(c0_data_in   ),
-                    .write_en(c0_write_en   ), .data_out(c0_data_out   ) );
-
-    RAM_2500 c0_n ( .clk(clk), .addr(c0_n_addr ), .data_in(c0_n_data_in ),
-                    .write_en(c0_n_write_en ), .data_out(c0_n_data_out ) );
-
-    RAM_2500 cn   ( .clk(clk), .addr(cn_addr   ), .data_in(cn_data_in   ),
-                    .write_en(cn_write_en   ), .data_out(cn_data_out   ) );
-
-    RAM_2500 cn_n ( .clk(clk), .addr(cn_n_addr ), .data_in(cn_n_data_in ),
-                    .write_en(cn_n_write_en ), .data_out(cn_n_data_out ) );
-
-    RAM_2500 cne   ( .clk(clk), .addr(cne_addr   ), .data_in(cne_data_in   ),
-                    .write_en(cne_write_en   ), .data_out(cne_data_out   ) );
-
-    RAM_2500 cne_n ( .clk(clk), .addr(cne_n_addr ), .data_in(cne_n_data_in ),
-                    .write_en(cne_n_write_en ), .data_out(cne_n_data_out ) );
-
-    RAM_2500 ce   ( .clk(clk), .addr(ce_addr   ), .data_in(ce_data_in   ),
-                    .write_en(ce_write_en   ), .data_out(ce_data_out   ) );
-
-    RAM_2500 ce_n ( .clk(clk), .addr(ce_n_addr ), .data_in(ce_n_data_in ),
-                    .write_en(ce_n_write_en ), .data_out(ce_n_data_out ) );
-
-    RAM_2500 cse   ( .clk(clk), .addr(cse_addr   ), .data_in(cse_data_in   ),
-                    .write_en(cse_write_en   ), .data_out(cse_data_out   ) );
-
-    RAM_2500 cse_n ( .clk(clk), .addr(cse_n_addr ), .data_in(cse_n_data_in ),
-                    .write_en(cse_n_write_en ), .data_out(cse_n_data_out ) );
-
-    RAM_2500 cs   ( .clk(clk), .addr(cs_addr   ), .data_in(cs_data_in   ),
-                    .write_en(cs_write_en   ), .data_out(cs_data_out   ) );
-
-    RAM_2500 cs_n ( .clk(clk), .addr(cs_n_addr ), .data_in(cs_n_data_in ),
-                    .write_en(cs_n_write_en ), .data_out(cs_n_data_out ) );
-
-    RAM_2500 csw   ( .clk(clk), .addr(csw_addr   ), .data_in(csw_data_in   ),
-                    .write_en(csw_write_en   ), .data_out(csw_data_out   ) );
-
-    RAM_2500 csw_n ( .clk(clk), .addr(csw_n_addr ), .data_in(csw_n_data_in ),
-                    .write_en(csw_n_write_en ), .data_out(csw_n_data_out ) );
-
-    RAM_2500 cw   ( .clk(clk), .addr(cw_addr   ), .data_in(cw_data_in   ),
-                    .write_en(cw_write_en   ), .data_out(cw_data_out   ) );
-
-    RAM_2500 cw_n ( .clk(clk), .addr(cw_n_addr ), .data_in(cw_n_data_in ),
-                    .write_en(cw_n_write_en ), .data_out(cw_n_data_out ) );
-
-    RAM_2500 cnw   ( .clk(clk), .addr(cnw_addr   ), .data_in(cnw_data_in   ),
-                    .write_en(cnw_write_en   ), .data_out(cnw_data_out   ) );
-
-    RAM_2500 cnw_n ( .clk(clk), .addr(cnw_n_addr ), .data_in(cnw_n_data_in ),
-                    .write_en(cnw_n_write_en ), .data_out(cnw_n_data_out ) );
-
 
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
@@ -382,6 +211,7 @@ module LBMSolver (
     reg [`DATA_WIDTH-1:0] cnw_next_data_in;
     reg cnw_next_write_en, cnw_n_next_write_en;
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
+
 
     reg [2:0] ram_wait_count, next_ram_wait_count;
     
