@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module ram_2500 #(
+module RAM_2500 #(
     parameter DATA_WIDTH = 16,        // Default data width
     parameter ADDRESS_WIDTH = 12     // 2^12 = 4096 > 2500
 )(
@@ -13,6 +13,8 @@ module ram_2500 #(
 
     // Memory declaration (2500 words)
     reg [DATA_WIDTH-1:0] mem [0:2499];
+    initial
+        $readmemh("ram.mem", mem, 0, 2499);
 
     // Read operation with 1-cycle latency
     always @(posedge clk) begin
