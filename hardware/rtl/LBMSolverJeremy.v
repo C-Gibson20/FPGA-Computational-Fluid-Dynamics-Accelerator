@@ -76,9 +76,9 @@ module LBMSolverJeremy (
     reg c0_next_write_en, c0_n_next_write_en;
     reg [`ADDRESS_WIDTH-1:0] c0_next_write_addr;
 
-    reg [`DATA_WIDTH-1:0] cn_next_data_in;
-    reg cn_next_write_en, cn_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr;
+    reg [`DATA_WIDTH-1:0]    cn_next_data_in, cn_n_next_data_in;
+    reg                      cn_next_write_en, cn_n_next_write_en;
+    reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr, cn_n_next_write_addr;
 
     reg [`DATA_WIDTH-1:0] cne_next_data_in;
     reg cne_next_write_en, cne_n_next_write_en;
@@ -172,7 +172,7 @@ module LBMSolverJeremy (
             cn_write_en <= cn_next_write_en;
             cn_n_write_en <= cn_n_next_write_en;
             cn_data_in <= cn_next_data_in;
-            cn_n_data_in <= cn_next_data_in;
+            cn_n_data_in <= cn_n_next_data_in;
 
         end
     end
@@ -184,6 +184,7 @@ module LBMSolverJeremy (
         cn_next_write_en = 0;
         cn_n_next_write_en = 0;
         cn_next_data_in = 0;
+        cn_n_next_data_in = 0;
 
         next_index = 0;
         next_width_count = 0;
@@ -226,7 +227,7 @@ module LBMSolverJeremy (
                     // note to self: streaming step reads from cx and writes to cx_n. 
                     cn_next_write_addr = 2*(index-`WIDTH); // write to cell above
                     cn_n_next_write_en = (index >= `WIDTH); // only write if past first row
-                    cn_next_data_in = cn_data_out;
+                    cn_n_next_data_in = cn_data_out;
                 end
             end
 
@@ -284,7 +285,7 @@ module LBMSolverJeremy (
                 begin
                     next_index = index + 1;
                     next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                    next_sim_state = BOUNCE;
+                    next_sim_state = ZERO_BOUNCE;
                 end
 
                 if(barriers[index] == 1'b1) //this is where you left off 
