@@ -1,8 +1,9 @@
 `timescale 1ns / 1ps
+`include "def.vh"
 
 module RAM_2500 #(
-    parameter DATA_WIDTH = 16,        // Default data width
-    parameter ADDRESS_WIDTH = 12,     // 2^12 = 4096 > 2500
+    parameter DATA_WIDTH = `DATA_WIDTH,        // Default data width
+    parameter ADDRESS_WIDTH = `ADDRESS_WIDTH,     // 2^12 = 4096 > 2500
     parameter INIT_FILE = "ram.mem"
 )(
     input wire clk,

@@ -5,7 +5,7 @@
 `define HEIGHT 50
 `define WIDTH 50
 `define DEPTH 2500 // 50*50 manually expanded
-`define ADDRESS_WIDTH 12 // clog2(2500) ≈ 11.3 → rounded up to 12
+`define ADDRESS_WIDTH 14 // clog2(2500) ≈ 11.3 → rounded up to 12
 `define FIXED_ONE 16'sh2000
 `define FIXED_ONE_9TH 16'sh038e
 `define FIXED_ONE_36TH 16'sh00e4
