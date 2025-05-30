@@ -168,8 +168,7 @@ module LBMSolver (
 
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
-    reg [`ADDRESS_WIDTH-1:0] index;
-    reg [`ADDRESS_WIDTH-1:0] next_index;
+    reg [`ADDRESS_WIDTH-1:0] index, next_index;
     
     // collider flags
     wire c_busy;
