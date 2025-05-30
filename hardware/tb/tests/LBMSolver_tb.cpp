@@ -20,7 +20,7 @@ protected:
 TEST_F(LBMSolverTestbench, CanItCompile) {
     runSimulation(1);
     LBMSolver->rst = 0;
-    runSimulation(3000);
+    runSimulation(20000);
     EXPECT_GE(LBMSolver->en, 0);
 }
 

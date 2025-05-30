@@ -339,8 +339,8 @@ module LBMSolver (
 
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
-    reg [`ADDRESS_WIDTH-1:0] index;
-    reg [`ADDRESS_WIDTH-1:0] next_index;
+    reg [`ADDRESS_WIDTH+1:0] index;
+    reg [`ADDRESS_WIDTH+1:0] next_index;
     
     // collider flags
     wire c_busy;
@@ -576,7 +576,7 @@ module LBMSolver (
                 next_sim_state = STREAM;
                 end
                 else begin
-                    if(index == `DEPTH-1) // if streamed all cells, go to bounce stage
+                    if(index == 2*(`DEPTH-1)) // if streamed all cells, go to bounce stage
                     begin
                         next_step_count = step_count + 1;
                         next_index = 0;
@@ -630,7 +630,7 @@ module LBMSolver (
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
-                if(index == `DEPTH-1) 
+                if(index == 2*(`DEPTH-1)) 
                 begin
                     next_index = 0;
                     next_width_count = 0;
@@ -700,7 +700,7 @@ module LBMSolver (
 
             ZERO_BOUNCE:
             begin
-                if(index == `DEPTH-1) 
+                if(index == 2*(`DEPTH-1)) 
                 begin
                     next_index = 0;
                     next_width_count = 0;
@@ -753,7 +753,7 @@ module LBMSolver (
             begin
                 if(nv_ready) 
                 begin
-                    if(index == `DEPTH-1) 
+                    if(index == 2*(`DEPTH-1)) 
                     begin
                         next_index = 0;
                         next_width_count = 0;
