@@ -288,7 +288,7 @@ module LBMSolver (
     RAM_2500 c0_n ( .clk(clk), .addr(c0_n_addr ), .data_in(c0_n_data_in ),
                     .write_en(c0_n_write_en ), .data_out(c0_n_data_out ) );
 
-    RAM_2500 cn   ( .clk(clk), .addr(cn_addr   ), .data_in(cn_data_in   ),
+    RAM_2500 #(.INIT_FILE("ram_test_alt.mem")) cn ( .clk(clk), .addr(cn_addr   ), .data_in(cn_data_in   ),
                     .write_en(cn_write_en   ), .data_out(cn_data_out   ) );
 
     RAM_2500 cn_n ( .clk(clk), .addr(cn_n_addr ), .data_in(cn_n_data_in ),
