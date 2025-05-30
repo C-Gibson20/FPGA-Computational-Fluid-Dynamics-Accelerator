@@ -433,6 +433,7 @@ module LBMSolver (
             index <= 0;
             width_count <= 0;
             ram_wait_count <= `RAM_READ_WAIT;
+            step_count <= 0;
         end
         else 
         begin
