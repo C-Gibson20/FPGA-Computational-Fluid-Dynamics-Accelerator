@@ -573,21 +573,13 @@ module LBMSolver (
             end
             STREAM:
             begin
-                if(ram_wait_count > 1) begin
+                if(ram_wait_count > 0) begin
                     next_ram_wait_count = ram_wait_count - 1;
                     next_sim_state = STREAM;
                     next_index = index;
                     next_width_count = width_count;
 
-                end
-                else if(ram_wait_count == 1) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = STREAM;
-                    next_index = index;
-                    next_width_count = width_count; 
-                    
-                           
-                end
+                end        
                 else begin
                     if(index == 2*(`DEPTH-1)) // if streamed all cells, go to bounce stage
                     begin
@@ -667,10 +659,11 @@ module LBMSolver (
                     end
                     else // not a barrier, skip over
                     begin
-                        next_index = index + 2;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                         next_sim_state = BOUNCE;
                     end
+            
+                    next_index = index + 2;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                 end
             end
 
@@ -685,35 +678,35 @@ module LBMSolver (
 
                 end 
                 else begin
-                    cn_next_write_addr = 2*(index-`WIDTH);
-                    cn_n_next_write_en = (index>= `WIDTH);
+                    cn_next_write_addr = index-2*`WIDTH;
+                    cn_n_next_write_en = (index>= 2*`WIDTH);
                     cn_next_data_in = cs_n_data_out;
 
-                    cne_next_write_addr = 2*(index-`WIDTH+1);
-                    cne_n_next_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                    cne_next_write_addr = index-2*`WIDTH+2;
+                    cne_n_next_write_en = (index >= 2*`WIDTH && (width_count != `WIDTH - 1));
                     cne_next_data_in = csw_n_data_out;
 
-                    ce_next_write_addr = 2*(index+1);
+                    ce_next_write_addr = index+2;
                     ce_n_next_write_en = (width_count != `WIDTH - 1);
                     ce_next_data_in = cw_n_data_out; 
 
-                    cse_next_write_addr = 2*(index+`WIDTH+1);
-                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                    cse_next_write_addr = index+2*`WIDTH+2;
+                    cse_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1)  && (width_count != `WIDTH - 1));
                     cse_next_data_in = cnw_n_data_out; 
 
-                    cs_next_write_addr = 2*(index+`WIDTH);
-                    cs_n_next_write_en = (index <= `DEPTH-`WIDTH-1);
+                    cs_next_write_addr = index+2*(`WIDTH);
+                    cs_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1));
                     cs_next_data_in = cn_n_data_out; 
 
-                    csw_next_write_addr = 2*(index+`WIDTH-1);
-                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                    csw_next_write_addr = index+2*`WIDTH-2;
+                    csw_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1) && (width_count != 0));
                     csw_next_data_in = cne_n_data_out; 
 
-                    cw_next_write_addr = 2*(index - 1);
+                    cw_next_write_addr = index - 2;
                     cw_n_next_write_en = (width_count != 0);
                     cw_next_data_in = ce_n_data_out; 
 
-                    cnw_next_write_addr = 2*(index - 1 - `WIDTH);
+                    cnw_next_write_addr = index - 2*`WIDTH - 2;
                     cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
                     cnw_next_data_in = cse_n_data_out;
 

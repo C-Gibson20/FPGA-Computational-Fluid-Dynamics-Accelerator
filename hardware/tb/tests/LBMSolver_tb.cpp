@@ -17,11 +17,18 @@ protected:
     }
 };
 
-TEST_F(LBMSolverTestbench, CanItCompile) {
-    runSimulation(1);
+// TEST_F(LBMSolverTestbench, CanItCompile) {
+//     runSimulation(1);
+//     LBMSolver->rst = 0;
+//     runSimulation(20000);
+//     EXPECT_GE(LBMSolver->en, 0);
+// }
+
+TEST_F(LBMSolverTestbench, Barriers) {
+    LBMSolver->barriers[0], LBMSolver->barriers[1] = 1;
     LBMSolver->rst = 0;
     runSimulation(20000);
-    EXPECT_GE(LBMSolver->en, 0);
+    EXPECT_GE(LBMSolver->en,0);
 }
 
 int main(int argc, char **argv) {
