@@ -156,7 +156,8 @@ module LBMSolver (
     output wire [`DATA_WIDTH-1:0] rho,
 
     // collider grab flag
-    output wire collider_ready
+    output wire collider_ready,
+    output wire in_collision_state
 
 
 );
@@ -223,6 +224,8 @@ module LBMSolver (
     wire [`DATA_WIDTH-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
 
     assign collider_ready = nv_ready && (sim_state==COLLIDE);
+    assign in_collision_state = (sim_state==COLLIDE);
+
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     //need two rams one for the current time step and one for the next time step
 
