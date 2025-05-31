@@ -34,7 +34,7 @@ TEST_F(LBMSolverTestbench, BarriersBounce) {
 TEST_F(LBMSolverTestbench, BarriersZero) {
     LBMSolver->barriers[0]= 1;
     LBMSolver->rst = 0;
-    runSimulation(10005);
+    runSimulation(10002);
     EXPECT_GE(LBMSolver->testing_cs_n_data_in,0x0);
 }
 

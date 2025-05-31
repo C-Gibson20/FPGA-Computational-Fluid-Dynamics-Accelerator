@@ -557,8 +557,8 @@ module LBMSolver (
         cnw_n_next_write_en = 0;
         cnw_next_data_in = 0;
 
-        next_index = 0;
-        next_width_count = 0;
+        next_index = index;
+        next_width_count = width_count;
 
         next_step_count = step_count;
         next_ram_wait_count = ram_wait_count;
