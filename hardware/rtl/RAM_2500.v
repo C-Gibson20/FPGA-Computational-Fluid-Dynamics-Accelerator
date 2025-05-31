@@ -26,7 +26,7 @@ module RAM_2500 #(
                 mem[addr] <= data_in;
             end
             // Read-during-write behavior: new data appears on next cycle
-            data_out <= data_in;
+            data_out <= mem[addr];
         end else begin
             // Normal read operation
             if (addr < 2500) begin
