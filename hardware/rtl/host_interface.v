@@ -63,12 +63,6 @@ module host_interface(
         if(in_collision_state && host_transmission) accept_new_data <= 0;
     end
     
-    always @(posedge rst) begin
-        if(rst) begin
-            pixel_count <= 0;
-            accept_new_data <= 1;
-        end 
-    end
     
     // data loading
     always @(posedge clk) begin
@@ -81,6 +75,7 @@ module host_interface(
         else begin
             pixel_count <= 0;
         end
+        if(!rst) pixel_count <= 0;
     end
 
     // host transmission
