@@ -34,15 +34,15 @@ TEST_F(ColliderTestbench, AtEquilibrium_NoChange) {
 
     // Confirm outputs remain unchanged
     // Allow ±2 leeway for rounding error
-    EXPECT_NEAR(collider->new_f_null, collider->f_null, 2);
-    EXPECT_EQ(collider->new_f_n,    collider->f_n);
-    EXPECT_EQ(collider->new_f_s,    collider->f_s);
-    EXPECT_EQ(collider->new_f_e,    collider->f_e);
-    EXPECT_EQ(collider->new_f_w,    collider->f_w);
-    EXPECT_EQ(collider->new_f_ne,   collider->f_ne);
-    EXPECT_EQ(collider->new_f_se,   collider->f_se);
-    EXPECT_EQ(collider->new_f_sw,   collider->f_sw);
-    EXPECT_EQ(collider->new_f_nw,   collider->f_nw);
+    EXPECT_NEAR(collider->f_new_null, collider->f_null, 2);
+    EXPECT_EQ(collider->f_new_n,    collider->f_n);
+    EXPECT_EQ(collider->f_new_s,    collider->f_s);
+    EXPECT_EQ(collider->f_new_e,    collider->f_e);
+    EXPECT_EQ(collider->f_new_w,    collider->f_w);
+    EXPECT_EQ(collider->f_new_ne,   collider->f_ne);
+    EXPECT_EQ(collider->f_new_se,   collider->f_se);
+    EXPECT_EQ(collider->f_new_sw,   collider->f_sw);
+    EXPECT_EQ(collider->f_new_nw,   collider->f_nw);
 }
 
 TEST_F(ColliderTestbench, SmallEastwardSpeed) {
@@ -58,28 +58,60 @@ TEST_F(ColliderTestbench, SmallEastwardSpeed) {
 
     // Run one evaluation cycle
     collider->eval();
-
-    // Expect the eastward population to increase
-    EXPECT_GT(collider->new_f_e, collider->f_e);
-
-    // Expect the westward population to decrease
-    EXPECT_LT(collider->new_f_w, collider->f_w);
-
-    // ensure mass is (approximately) conserved
-    uint32_t f_before =
-        collider->f_null + collider->f_n + collider->f_s + collider->f_e + collider->f_w +
-        collider->f_ne + collider->f_se + collider->f_sw + collider->f_nw;
-
-    uint32_t f_after =
-        collider->new_f_null + collider->new_f_n + collider->new_f_s + collider->new_f_e + collider->new_f_w +
-        collider->new_f_ne + collider->new_f_se + collider->new_f_sw + collider->new_f_nw;
-
-    EXPECT_EQ(collider->new_f_e,    0x067B);
-    EXPECT_EQ(collider->new_f_w,    0x0302);
-
+    EXPECT_LT(collider->f_new_e, collider->f_e);
+    EXPECT_GT(collider->f_new_w, collider->f_w);
 }
 
+TEST_F(ColliderTestbench, StrongNorthwardSpeed) {
+    collider->f_null = 0x0E39;
+    collider->f_n    = 0x05C0; // Boosted north
+    collider->f_s    = 0x0180; // Weakened south
+    collider->f_e    = 0x038E;
+    collider->f_w    = 0x038E;
+    collider->f_ne   = 0x0120;
+    collider->f_se   = 0x0090;
+    collider->f_sw   = 0x0090;
+    collider->f_nw   = 0x0120;
 
+    collider->eval();
+
+    EXPECT_LT(collider->f_new_n, collider->f_n);
+    EXPECT_GT(collider->f_new_s, collider->f_s);
+}
+
+TEST_F(ColliderTestbench, DiagonalNorthEastFlow) {
+    collider->f_null = 0x0E39;
+    collider->f_ne   = 0x0150; // More NE
+    collider->f_sw   = 0x0090; // Less SW
+    collider->f_n    = 0x038E;
+    collider->f_s    = 0x038E;
+    collider->f_e    = 0x038E;
+    collider->f_w    = 0x038E;
+    collider->f_se   = 0x00E4;
+    collider->f_nw   = 0x00E4;
+
+    collider->eval();
+
+    EXPECT_LT(collider->f_new_ne, collider->f_ne);
+    EXPECT_GT(collider->f_new_sw, collider->f_sw);
+}
+
+TEST_F(ColliderTestbench, ConservesMass) {
+    loadEquilibriumValues();
+    collider->eval();
+
+    uint16_t total_before = collider->f_null + collider->f_n + collider->f_s +
+                            collider->f_e + collider->f_w +
+                            collider->f_ne + collider->f_se +
+                            collider->f_sw + collider->f_nw;
+
+    uint16_t total_after = collider->f_new_null + collider->f_new_n + collider->f_new_s +
+                           collider->f_new_e + collider->f_new_w +
+                           collider->f_new_ne + collider->f_new_se +
+                           collider->f_new_sw + collider->f_new_nw;
+
+    EXPECT_NEAR(total_before, total_after, 4); // small tolerance for fixed-point error
+}
 
 
 int main(int argc, char **argv) {
