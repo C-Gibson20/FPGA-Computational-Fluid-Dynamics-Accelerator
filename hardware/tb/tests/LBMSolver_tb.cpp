@@ -24,6 +24,20 @@ TEST_F(LBMSolverTestbench, CanItCompile) {
     EXPECT_GE(LBMSolver->en, 0);
 }
 
+TEST_F(LBMSolverTestbench, BarriersBounce) {
+    LBMSolver->barriers[0]= 1;
+    LBMSolver->rst = 0;
+    runSimulation(7502);
+    EXPECT_GE(LBMSolver->testing_cs_n_data_in,0x11);
+}
+
+TEST_F(LBMSolverTestbench, BarriersZero) {
+    LBMSolver->barriers[0]= 1;
+    LBMSolver->rst = 0;
+    runSimulation(10002);
+    EXPECT_GE(LBMSolver->testing_cs_n_data_in,0x0);
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
