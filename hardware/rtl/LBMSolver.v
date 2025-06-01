@@ -153,7 +153,10 @@ module LBMSolver (
     // collider results
     output wire [`DATA_WIDTH-1:0] u_x, 
     output wire [`DATA_WIDTH-1:0] u_y, 
-    output wire [`DATA_WIDTH-1:0] rho
+    output wire [`DATA_WIDTH-1:0] rho,
+
+    output wire collider_ready,
+    output wire in_collision_state
 
 
 );
@@ -396,6 +399,9 @@ module LBMSolver (
     // Add 1 cycle delay for RAM reads - Nishant
     // note to self: cx and cx_n are driven by the same ADDR, DIN ports. just called cx
 
+    assign collider_ready = nv_ready && (sim_state == COLLIDE);
+    assign in_collision_state = (sim_state == COLLIDE);
+
     //Instantiate Nishant's collider
     collider collider(
         .omega(omega),
@@ -426,9 +432,9 @@ module LBMSolver (
     );
 
     //Update stream state
-    always @(posedge clk or posedge rst)
+    always @(posedge clk or negedge rst)
     begin
-        if(rst) 
+        if(!rst) 
         begin
             sim_state <= IDLE;
             index <= 0;
