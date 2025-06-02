@@ -8,8 +8,7 @@ protected:
 
     void initializeInputs() override {
         RAM = top.get();
-        RAM->read_address = 0;
-        RAM->write_address = 0;
+        RAM->addr = 0;
         RAM->data_in = 0;
         RAM->clk = 0;
         RAM->write_en = 0;

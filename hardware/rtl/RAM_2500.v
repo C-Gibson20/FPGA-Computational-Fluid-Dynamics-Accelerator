@@ -1,8 +1,10 @@
 `timescale 1ns / 1ps
+`include "def.vh"
 
-module ram_2500 #(
-    parameter DATA_WIDTH = 16,        // Default data width
-    parameter ADDRESS_WIDTH = 12     // 2^12 = 4096 > 2500
+module RAM_2500 #(
+    parameter DATA_WIDTH = `DATA_WIDTH,        // Default data width
+    parameter ADDRESS_WIDTH = `ADDRESS_WIDTH,     // 2^12 = 4096 > 2500
+    parameter INIT_FILE = "ram.mem"
 )(
     input wire clk,
     input wire [ADDRESS_WIDTH-1:0] addr,
@@ -13,6 +15,8 @@ module ram_2500 #(
 
     // Memory declaration (2500 words)
     reg [DATA_WIDTH-1:0] mem [0:2499];
+    initial
+        $readmemh(INIT_FILE, mem, 0, 2499);
 
     // Read operation with 1-cycle latency
     always @(posedge clk) begin
@@ -22,7 +26,7 @@ module ram_2500 #(
                 mem[addr] <= data_in;
             end
             // Read-during-write behavior: new data appears on next cycle
-            data_out <= data_in;
+            data_out <= mem[addr];
         end else begin
             // Normal read operation
             if (addr < 2500) begin
