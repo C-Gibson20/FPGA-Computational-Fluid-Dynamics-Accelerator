@@ -48,6 +48,8 @@ module host_interface(
     reg [`DATA_WIDTH-1:0] rhos [`DEPTH-1:0];
     reg [`ADDRESS_WIDTH-1:0] pixel_count;
 
+    wire [`DATA_WIDTH-1:0] for_debug [10:0];
+    assign for_debug = uxs[10:0];
     wire host_transmission = GPIOi[`DATA_WIDTH-1]; // MSB is host_active
     reg accept_new_data;
     
@@ -72,8 +74,11 @@ module host_interface(
             rhos[pixel_count] <= rho;
             pixel_count <= pixel_count + 1;
         end
-        else begin
+        else if(!in_collision_state) begin
             pixel_count <= 0;
+        end
+        else begin
+            pixel_count <= pixel_count;
         end
         if(!rst) pixel_count <= 0;
     end
