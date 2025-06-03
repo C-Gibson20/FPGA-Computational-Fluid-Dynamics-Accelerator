@@ -5,8 +5,8 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 32                      # grid height
-width = 512                      # grid width
+height = 100                      # grid height
+width = 100                     # grid width
 viscosity = 0.002                # viscosity
 omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 u0 = 0.1                         # initial in-flow speed (eastward)
@@ -168,17 +168,17 @@ def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
                     count += 1
                     bar[ycoord*width + xcoord] = 1
 
-        if (xcoord==x2top):
-            if (ycoord >= y1top):
-                if (ycoord < (y1top+y1height)):
-                    count += 1
-                    bar[ycoord*width + xcoord] = 1
+        # if (xcoord==x2top):
+        #     if (ycoord >= y1top):
+        #         if (ycoord < (y1top+y1height)):
+        #             count += 1
+        #             bar[ycoord*width + xcoord] = 1
 
-        if (xcoord==x3top):
-            if (ycoord >= y1top):
-                if (ycoord < (y1top+y1height)):
-                    count += 1
-                    bar[ycoord*width + xcoord] = 1
+        # if (xcoord==x3top):
+        #     if (ycoord >= y1top):
+        #         if (ycoord < (y1top+y1height)):
+        #             count += 1
+        #             bar[ycoord*width + xcoord] = 1
         
         xcoord = (xcoord+1) if xcoord<(width-1) else 0
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
@@ -191,7 +191,8 @@ nSeconds = 15
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(25, 11, 10, 50, 150)
+# initialize(25, 11, 10, 50, 150)
+initialize(25, 30, 40, 50, 75)
 
 # Don't animate first few frames
 for i in range(10):
