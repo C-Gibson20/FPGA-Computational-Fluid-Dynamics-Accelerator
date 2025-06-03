@@ -7,7 +7,7 @@ protected:
     Vdut* ColliderPipelined;
     
     void initializeInputs() override {
-        ColliderPipelined = top.get()
+        ColliderPipelined = top.get();
     }
 };
 

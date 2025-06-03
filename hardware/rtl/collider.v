@@ -47,11 +47,8 @@ assign axi_ready     = 1'b1;
 
 assign rho = f_null + f_n + f_ne + f_e + f_se + f_s + f_sw + f_w + f_nw;
 
-wire signed [15:0] rho_ux = f_e - f_w + f_ne - f_sw - f_nw + f_se;
-wire signed [15:0] rho_uy = f_n - f_s + f_ne - f_sw + f_nw - f_se;
-
-wire signed [31:0] scaled_rho_ux = rho_ux <<< 13;
-wire signed [31:0] scaled_rho_uy = rho_uy <<< 13;
+wire signed [31:0] scaled_rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se) <<< 13;
+wire signed [31:0] scaled_rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se) <<< 13;
 
 assign u_x = scaled_rho_ux / rho;
 assign u_y = scaled_rho_uy / rho;
@@ -65,8 +62,8 @@ wire signed [31:0] u_y_squared_intermediate = u_y * u_y;
 wire signed [15:0] u_x_squared = u_x_squared_intermediate >>> 13;
 wire signed [15:0] u_y_squared = u_y_squared_intermediate >>> 13;
 
-wire signed [15:0] u_squared_sum = u_x_squared + u_y_squared;
-wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared_sum;
+wire signed [15:0] u_squared = u_x_squared + u_y_squared;
+wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared;
 wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate >>> 13;
 
 // ----------------------------------------------------------------------------------
@@ -136,15 +133,15 @@ wire signed [15:0] nine_half_x_plus_y_squared              = nine_half_x_plus_y_
 wire signed [31:0] nine_half_x_minus_y_squared_intermediate = nine_quarters * (x_minus_y_squared <<< 1);
 wire signed [15:0] nine_half_x_minus_y_squared              = nine_half_x_minus_y_squared_intermediate >>> 13;
 
-wire signed [15:0] f_eq_ne_polynomial = one + three_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
-wire signed [15:0] f_eq_sw_polynomial = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
-wire signed [15:0] f_eq_nw_polynomial = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
-wire signed [15:0] f_eq_se_polynomial = one - three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_ne = one + three_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_sw = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_nw = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_se = one - three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 
-wire signed [31:0] f_eq_ne_intermediate = w_diag * f_eq_ne_polynomial;
-wire signed [31:0] f_eq_sw_intermediate = w_diag * f_eq_sw_polynomial;
-wire signed [31:0] f_eq_nw_intermediate = w_diag * f_eq_nw_polynomial;
-wire signed [31:0] f_eq_se_intermediate = w_diag * f_eq_se_polynomial;
+wire signed [31:0] f_eq_ne_intermediate = w_diag * polynomial_ne;
+wire signed [31:0] f_eq_sw_intermediate = w_diag * polynomial_sw;
+wire signed [31:0] f_eq_nw_intermediate = w_diag * polynomial_nw;
+wire signed [31:0] f_eq_se_intermediate = w_diag * polynomial_se;
 
 wire signed [15:0] f_eq_ne = f_eq_ne_intermediate >>> 13;
 wire signed [15:0] f_eq_sw = f_eq_sw_intermediate >>> 13;

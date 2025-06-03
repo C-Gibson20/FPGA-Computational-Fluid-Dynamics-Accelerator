@@ -24,10 +24,6 @@ protected:
     }
 };
 
-TEST_F(ColliderTestbench, CanItCompile) {
-    EXPECT_GE(collider->collider_busy, 0);
-}
-
 TEST_F(ColliderTestbench, AtEquilibrium_NoChange) {
     loadEquilibriumValues();
     collider->eval();
