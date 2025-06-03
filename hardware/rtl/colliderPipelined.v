@@ -1,4 +1,4 @@
-module collider_pipelined (
+module colliderPipelined (
     input  wire clk,
     input  wire rst,
 

@@ -7,7 +7,6 @@
 // Design Name: LBM Collider
 // Module Name: collider
 // Description: Computes Feq and relaxation step: f_i^new = f_i + omega * (Feq_i - f_i)
-//
 //////////////////////////////////////////////////////////////////////////////////
 
 module collider(
@@ -35,9 +34,8 @@ wire signed [15:0] w_diag        = 16'h00e4; // 1/36
 
 wire signed [15:0] one           = 16'h2000; // 1.0
 wire signed [15:0] three         = 16'h6000; // 3.0
-wire signed [15:0] three_halfs   = 16'h3000; // 3/2
+wire signed [15:0] three_halves  = 16'h3000; // 3/2
 wire signed [15:0] nine_quarters = 16'h4800; // 9/4
-//wire signed [15:0] nine_halves   = 16'h9000; // 9/2
 
 assign collider_busy = 1'b0;
 assign newval_ready  = 1'b1;
@@ -62,22 +60,22 @@ assign u_y = scaled_rho_uy / rho;
 // Step 2: u^2 and related terms
 // ----------------------------------------------------------------------------------
 
-wire signed [31:0] u_x2_int = u_x * u_x;
-wire signed [31:0] u_y2_int = u_y * u_y;
-wire signed [15:0] u_x2 = u_x2_int >>> 13;
-wire signed [15:0] u_y2 = u_y2_int >>> 13;
+wire signed [31:0] u_x_squared_intermediate = u_x * u_x;
+wire signed [31:0] u_y_squared_intermediate = u_y * u_y;
+wire signed [15:0] u_x_squared = u_x_squared_intermediate >>> 13;
+wire signed [15:0] u_y_squared = u_y_squared_intermediate >>> 13;
 
-wire signed [15:0] u2_sum = u_x2 + u_y2;
-wire signed [31:0] th_u2_int = three_halfs * u2_sum;
-wire signed [15:0] th_u2 = th_u2_int >>> 13;
+wire signed [15:0] u_squared_sum = u_x_squared + u_y_squared;
+wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared_sum;
+wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate >>> 13;
 
 // ----------------------------------------------------------------------------------
 // Step 3: Compute Feq values
 // ----------------------------------------------------------------------------------
 
 // Center
-wire signed [15:0] poly_null = one - th_u2;
-wire signed [31:0] f_eq_null_intermediate = w_null * poly_null;
+wire signed [15:0] polynomial_null = one - three_halves_u_squared;
+wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
 wire signed [15:0] f_eq_null = f_eq_null_intermediate >>> 13;
 
 // Cardinal directions
@@ -88,20 +86,20 @@ wire signed [15:0] three_u_x = three_u_x_intermediate >>> 13;
 wire signed [15:0] three_u_y = three_u_y_intermediate >>> 13;
 
 // 9/2 * u_x^2 and u_y^2
-wire signed [31:0] nine_half_u_x2_intermediate = nine_quarters * (u_x2 <<< 1);
-wire signed [31:0] nine_half_u_y2_intermediate = nine_quarters * (u_y2 <<< 1);
-wire signed [15:0] nine_half_u_x2 = nine_half_u_x2_intermediate >>> 13;
-wire signed [15:0] nine_half_u_y2 = nine_half_u_y2_intermediate >>> 13;
+wire signed [31:0] nine_half_u_x_squared_intermediate = nine_quarters * (u_x_squared <<< 1);
+wire signed [31:0] nine_half_u_y_squared_intermediate = nine_quarters * (u_y_squared <<< 1);
+wire signed [15:0] nine_half_u_x_squared = nine_half_u_x_squared_intermediate >>> 13;
+wire signed [15:0] nine_half_u_y_squared = nine_half_u_y_squared_intermediate >>> 13;
 
-wire signed [15:0] poly_n = one + three_u_y + nine_half_u_y2 - th_u2;
-wire signed [15:0] poly_s = one - three_u_y + nine_half_u_y2 - th_u2;
-wire signed [15:0] poly_e = one + three_u_x + nine_half_u_x2 - th_u2;
-wire signed [15:0] poly_w = one - three_u_x + nine_half_u_x2 - th_u2;
+wire signed [15:0] polynomial_n = one + three_u_y + nine_half_u_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_s = one - three_u_y + nine_half_u_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_e = one + three_u_x + nine_half_u_x_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_w = one - three_u_x + nine_half_u_x_squared - three_halves_u_squared;
 
-wire signed [31:0] f_eq_n_intermediate = w_side * poly_n;
-wire signed [31:0] f_eq_s_intermediate = w_side * poly_s;
-wire signed [31:0] f_eq_e_intermediate = w_side * poly_e;
-wire signed [31:0] f_eq_w_intermediate = w_side * poly_w;
+wire signed [31:0] f_eq_n_intermediate = w_side * polynomial_n;
+wire signed [31:0] f_eq_s_intermediate = w_side * polynomial_s;
+wire signed [31:0] f_eq_e_intermediate = w_side * polynomial_e;
+wire signed [31:0] f_eq_w_intermediate = w_side * polynomial_w;
 
 wire signed [15:0] f_eq_n = f_eq_n_intermediate >>> 13;
 wire signed [15:0] f_eq_s = f_eq_s_intermediate >>> 13;
@@ -138,10 +136,10 @@ wire signed [15:0] nine_half_x_plus_y_squared              = nine_half_x_plus_y_
 wire signed [31:0] nine_half_x_minus_y_squared_intermediate = nine_quarters * (x_minus_y_squared <<< 1);
 wire signed [15:0] nine_half_x_minus_y_squared              = nine_half_x_minus_y_squared_intermediate >>> 13;
 
-wire signed [15:0] f_eq_ne_polynomial = one + three_x_plus_y + nine_half_x_plus_y_squared - th_u2;
-wire signed [15:0] f_eq_sw_polynomial = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - th_u2;
-wire signed [15:0] f_eq_nw_polynomial = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - th_u2;
-wire signed [15:0] f_eq_se_polynomial = one - three_x_minus_y + nine_half_x_minus_y_squared - th_u2;
+wire signed [15:0] f_eq_ne_polynomial = one + three_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
+wire signed [15:0] f_eq_sw_polynomial = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
+wire signed [15:0] f_eq_nw_polynomial = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
+wire signed [15:0] f_eq_se_polynomial = one - three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 
 wire signed [31:0] f_eq_ne_intermediate = w_diag * f_eq_ne_polynomial;
 wire signed [31:0] f_eq_sw_intermediate = w_diag * f_eq_sw_polynomial;
@@ -179,6 +177,5 @@ assign f_new_s    = f_s    + (delta_f_s    >>> 13);
 assign f_new_sw   = f_sw   + (delta_f_sw   >>> 13);
 assign f_new_w    = f_w    + (delta_f_w    >>> 13);
 assign f_new_nw   = f_nw   + (delta_f_nw   >>> 13);
-
 
 endmodule
