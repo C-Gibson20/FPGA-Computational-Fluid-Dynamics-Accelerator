@@ -642,7 +642,7 @@ module LBMSolver (
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = STREAM;
-                            next_ram_wait_count = `RAM_READ_WAIT;
+                            // next_ram_wait_count = `RAM_READ_WAIT;
                             // next_step_count = step_count + 1;
                         end
                         else
@@ -650,43 +650,43 @@ module LBMSolver (
                             next_index = index + 1;
                             next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                             next_sim_state = COLLIDE;
-                            next_ram_wait_count = `RAM_READ_WAIT;
+                            next_ram_wait_count = 2;
                         end
                         c0_next_write_addr = index;
                         c0_next_write_en = 1'b1;
-                        c0_next_data_in = c_c0;
+                        c0_next_data_in = (barriers[index] == 1) ? 0 : c_c0;
 
                         cn_next_write_addr = index;
                         cn_next_write_en = 1'b1;
-                        cn_next_data_in = c_cn;
+                        cn_next_data_in = (barriers[index] == 1) ? 0 : c_cn;
 
                         cne_next_write_addr = index;
                         cne_next_write_en = 1'b1;
-                        cne_next_data_in = c_cne;
+                        cne_next_data_in = (barriers[index] == 1) ? 0 : c_cne;
 
                         ce_next_write_addr = index;
                         ce_next_write_en = 1'b1;
-                        ce_next_data_in = c_ce;
+                        ce_next_data_in = (barriers[index] == 1) ? 0 : c_ce;
 
                         cse_next_write_addr = index;
                         cse_next_write_en = 1'b1;
-                        cse_next_data_in = c_cse;
+                        cse_next_data_in = (barriers[index] == 1) ? 0 : c_cse;
 
                         cs_next_write_addr = index;
                         cs_next_write_en = 1'b1;
-                        cs_next_data_in = c_cs;
+                        cs_next_data_in = (barriers[index] == 1) ? 0 : c_cs;
 
                         csw_next_write_addr = index;
                         csw_next_write_en = 1'b1;
-                        csw_next_data_in = c_csw;
+                        csw_next_data_in = (barriers[index] == 1) ? 0 : c_csw;
 
                         cw_next_write_addr = index;
                         cw_next_write_en = 1'b1;
-                        cw_next_data_in = c_cw;
+                        cw_next_data_in = (barriers[index] == 1) ? 0 : c_cw;
 
                         cnw_next_write_addr = index;
                         cnw_next_write_en = 1'b1;
-                        cnw_next_data_in = c_cnw;
+                        cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
                     end
                 else
                     next_sim_state = COLLIDE;
