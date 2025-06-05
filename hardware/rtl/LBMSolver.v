@@ -434,6 +434,9 @@ module LBMSolver (
                             begin
                             next_ram_wait_count = `RAM_READ_WAIT;
 
+                            c0_next_write_addr = index;
+                            c0_n_next_write_en = 1'b1;
+
                             cn_next_write_addr = index-2*`WIDTH; // write to cell above
                             cn_n_next_write_en = (index>= 2*(`WIDTH)); // only write if past first row
 
@@ -461,6 +464,8 @@ module LBMSolver (
                     end
                     // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
                     // note to self: streaming step reads from cx and writes to cx_n. 
+                    c0_next_data_in = c0_data_out;
+
                     cn_next_data_in = cn_data_out;
 
                     cne_next_data_in = cne_data_out;

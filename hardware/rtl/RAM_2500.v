@@ -22,15 +22,15 @@ module RAM_2500 #(
     always @(posedge clk) begin
         if (write_en) begin
             // Write operation
-            if (addr < `DEPTH) begin
-                mem[addr] <= data_in;
+            if (addr>>1 < `DEPTH) begin
+                mem[addr>>1] <= data_in;
             end
             // Read-during-write behavior: new data appears on next cycle
-            data_out <= mem[addr];
+            data_out <= mem[addr>>1];
         end else begin
             // Normal read operation
             if (addr < `DEPTH) begin
-                data_out <= mem[addr];
+                data_out <= mem[addr>>1];
             end else begin
                 data_out <= 'bx;  // Undefined when out of range
             end
