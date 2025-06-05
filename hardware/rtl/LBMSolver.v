@@ -488,26 +488,24 @@ module LBMSolver (
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
                 
-                if(index == 2*(`DEPTH-1)) 
+                if(barriers[index>>1] == 1'b1) // RAM read, so need to wait for RAM...
+                begin
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_sim_state = BOUNCE_WAIT;
+                    next_index = index;
+                end
+                else if(index == 2*(`DEPTH-1)) 
                 begin
                     next_index = 0;
                     next_width_count = 0;
                     next_sim_state = ZERO_BOUNCE;
                     next_step_count = step_count + 1;
                 end
-                else begin
-                    if(barriers[index>>1] == 1'b1) // RAM read, so need to wait for RAM...
-                    begin
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                        next_sim_state = BOUNCE_WAIT;
-                        next_index = index;
-                    end
-                    else // not a barrier, skip over
-                    begin
-                        next_sim_state = BOUNCE;
-                        next_index = index + 2;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
-                    end
+                else // not a barrier, skip over
+                begin
+                    next_sim_state = BOUNCE;
+                    next_index = index + 2;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                 end
 
             end
@@ -620,63 +618,70 @@ module LBMSolver (
                     cnw_next_data_in = 16'b0;
                 end
             end
-            COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
+        COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
+            // wait for ram read
             begin
-                if(nv_ready) 
-                begin
-                    if(index == 2*(`DEPTH-1)) 
-                    begin
-                        next_index = 0;
-                        next_width_count = 0;
-                        next_sim_state = STREAM;
-                        next_step_count = step_count + 1;
-                    end
-                    else
-                    begin
-                        next_index = index + 2;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                        next_sim_state = COLLIDE;
-                    end
-                    c0_next_write_addr = index;
-                    c0_next_write_en = 1'b1;
-                    c0_next_data_in = c_c0;
-
-                    cn_next_write_addr = index;
-                    cn_next_write_en = 1'b1;
-                    cn_next_data_in = c_cn;
-
-                    cne_next_write_addr = index;
-                    cne_next_write_en = 1'b1;
-                    cne_next_data_in = c_cne;
-
-                    ce_next_write_addr = index;
-                    ce_next_write_en = 1'b1;
-                    ce_next_data_in = c_ce;
-
-                    cse_next_write_addr = index;
-                    cse_next_write_en = 1'b1;
-                    cse_next_data_in = c_cse;
-
-                    cs_next_write_addr = index;
-                    cs_next_write_en = 1'b1;
-                    cs_next_data_in = c_cs;
-
-                    csw_next_write_addr = index;
-                    csw_next_write_en = 1'b1;
-                    csw_next_data_in = c_csw;
-
-                    cw_next_write_addr = index;
-                    cw_next_write_en = 1'b1;
-                    cw_next_data_in = c_cw;
-
-                    cnw_next_write_addr = index;
-                    cnw_next_write_en = 1'b1;
-                    cnw_next_data_in = c_cnw;
-                end
-                else
-                begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
                     next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;
                 end
+                else if(nv_ready) 
+                    begin
+                        if(index == 2*(`DEPTH-1)) 
+                        begin
+                            next_index = 0;
+                            next_width_count = 0;
+                            next_sim_state = STREAM;
+                            next_ram_wait_count = `RAM_READ_WAIT;
+                            // next_step_count = step_count + 1;
+                        end
+                        else
+                        begin
+                            next_index = index + 2;
+                            next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                            next_sim_state = COLLIDE;
+                            next_ram_wait_count = `RAM_READ_WAIT;
+                        end
+                        c0_next_write_addr = index;
+                        c0_next_write_en = 1'b1;
+                        c0_next_data_in = c_c0;
+
+                        cn_next_write_addr = index;
+                        cn_next_write_en = 1'b1;
+                        cn_next_data_in = c_cn;
+
+                        cne_next_write_addr = index;
+                        cne_next_write_en = 1'b1;
+                        cne_next_data_in = c_cne;
+
+                        ce_next_write_addr = index;
+                        ce_next_write_en = 1'b1;
+                        ce_next_data_in = c_ce;
+
+                        cse_next_write_addr = index;
+                        cse_next_write_en = 1'b1;
+                        cse_next_data_in = c_cse;
+
+                        cs_next_write_addr = index;
+                        cs_next_write_en = 1'b1;
+                        cs_next_data_in = c_cs;
+
+                        csw_next_write_addr = index;
+                        csw_next_write_en = 1'b1;
+                        csw_next_data_in = c_csw;
+
+                        cw_next_write_addr = index;
+                        cw_next_write_en = 1'b1;
+                        cw_next_data_in = c_cw;
+
+                        cnw_next_write_addr = index;
+                        cnw_next_write_en = 1'b1;
+                        cnw_next_data_in = c_cnw;
+                    end
+                else
+                    next_sim_state = COLLIDE;
             end
             default: 
             begin
