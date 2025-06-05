@@ -39,117 +39,117 @@ module LBMSolver (
     output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_data_in, 
     output reg                          c0_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_data_out,
 
     // BRAM c0_n
     output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_n_data_in, 
     output reg                          c0_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_n_data_out,
     
 
     // BRAM cn
     output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_data_in, 
     output reg                          cn_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_data_out,
 
     // BRAM cn_n
     output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_n_data_in, 
     output reg                          cn_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_n_data_out,
     
 
     // BRAM cne
     output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_data_in, 
     output reg                          cne_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_data_out,
 
     // BRAM cne_n
     output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_n_data_in, 
     output reg                          cne_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_n_data_out,
     
 
     // BRAM ce
     output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_data_in, 
     output reg                          ce_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_data_out,
 
     // BRAM ce_n
     output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_n_data_in, 
     output reg                          ce_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_n_data_out,
     
 
     // BRAM cse
     output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_data_in, 
     output reg                          cse_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_data_out,
 
     // BRAM cse_n
     output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_n_data_in, 
     output reg                          cse_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_n_data_out,
     
 
     // BRAM cs
     output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_data_in, 
     output reg                          cs_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_data_out,
 
     // BRAM cs_n
     output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_n_data_in, 
     output reg                          cs_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_n_data_out,
     
 
     // BRAM csw
     output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_data_in, 
     output reg                          csw_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_data_out,
 
     // BRAM csw_n
     output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_n_data_in, 
     output reg                          csw_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_n_data_out,
     
 
     // BRAM cw
     output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_data_in, 
     output reg                          cw_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_data_out,
 
     // BRAM cw_n
     output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_n_data_in, 
     output reg                          cw_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_n_data_out,
     
 
     // BRAM cnw
     output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_data_in, 
     output reg                          cnw_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_data_out,
 
     // BRAM cnw_n
     output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
     output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_in, 
     output reg                          cnw_n_write_en,
-    input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_out,
+    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_out,
     
 
     // collider results
