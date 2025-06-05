@@ -10,8 +10,8 @@ module colliderPipelined (
                        f_new_s, f_new_sw, f_new_w, f_new_nw,
 
     output wire collider_busy,
-    output wire newval_ready,
-    output wire axi_ready,
+    output reg newval_ready,
+    // output wire axi_ready,
 
     output reg [15:0] u_x, u_y, rho
 );
@@ -32,7 +32,7 @@ wire signed [15:0] nine_quarters = 16'h4800; // 9/4
 
 assign collider_busy = 1'b0;
 assign newval_ready  = 1'b1;
-assign axi_ready     = 1'b1;
+// assign axi_ready     = 1'b1;
 
 // ------------------------
 // Stage 0: Input Latch
