@@ -227,7 +227,7 @@ module LBMSolver (
     // Add 1 cycle delay for RAM reads - Nishant
     // note to self: cx and cx_n are driven by the same ADDR, DIN ports. just called cx
 
-    assign collider_ready = nv_ready && (sim_state == COLLIDE);
+    assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0);
     assign in_collision_state = (sim_state == COLLIDE);
 
     //Instantiate Nishant's collider

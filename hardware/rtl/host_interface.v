@@ -46,49 +46,43 @@ module host_interface(
     reg [`DATA_WIDTH-1:0] uxs [`DEPTH-1:0];
     reg [`DATA_WIDTH-1:0] uys [`DEPTH-1:0];
     reg [`DATA_WIDTH-1:0] rhos [`DEPTH-1:0];
-    reg [`ADDRESS_WIDTH-1:0] pixel_count;
-
-    wire [`DATA_WIDTH-1:0] for_debug [10:0];
-    assign for_debug = uxs[10:0];
-    wire host_transmission = GPIOi[`DATA_WIDTH-1]; // MSB is host_active
-    reg accept_new_data;
+    reg [`ADDRESS_WIDTH-1:0] count;
     
-    // new data is accepted if:
-    //  not talking with host
-    //  not in the same collision_state as before (if talked to host during a collision state)
-    //  so: in_collision_state = 0 => accept_new_data = 1
-    //  but: in_collision_state = 1 && host_transmission => accept_new_data = 0
+    wire host_transmission;
+    assign host_transmission = GPIOi[`DATA_WIDTH-1]; // MSB is host_active
+//    reg accept_new_data;
+    // IGNORE THESE COMMENTS:
+    //// new data is accepted if:
+    ////  not talking with host
+    ////  not in the same collision_state as before (if talked to host during a collision state)
+    ////  so: in_collision_state = 0 => accept_new_data = 1
+    ////  but: in_collision_state = 1 && host_transmission => accept_new_data = 0
     
-    // update data accept
+    // simple one: add to ux, uy, rho if collider ready and in collidion state
+    // if not in collision state reset count to zero
+    
     always @(posedge clk) begin
-        if(!in_collision_state) accept_new_data <= 1;
-        if(in_collision_state && host_transmission) accept_new_data <= 0;
-    end
-    
-    
-    // data loading
-    always @(posedge clk) begin
-        if(collider_ready && accept_new_data && !host_transmission) begin
-            uxs[pixel_count] <= u_x;
-            uys[pixel_count] <= u_y;
-            rhos[pixel_count] <= rho;
-            pixel_count <= pixel_count + 1;
+        if(in_collision_state && collider_ready) begin
+            uxs[count] <= u_x;
+            uys[count] <= u_y;
+            rhos[count] <= rho;
+            count <= count + 1;
         end
-        else if(!in_collision_state) begin
-            pixel_count <= 0;
+        else if(in_collision_state) begin
+            count <= count;
         end
         else begin
-            pixel_count <= pixel_count;
+            count <= 0;
         end
-        if(!rst) pixel_count <= 0;
-    end
 
-    // host transmission
-    always @(posedge clk) begin
         if(host_transmission) begin
             GPIOux <= uxs[GPIOi[`ADDRESS_WIDTH-1:0]];
             GPIOuy <= uys[GPIOi[`ADDRESS_WIDTH-1:0]];
             GPIOrho <= rhos[GPIOi[`ADDRESS_WIDTH-1:0]];
+        end
+
+        if(!rst) begin
+            count <= 0;
         end
     end
     
