@@ -414,6 +414,32 @@ module LBMSolver (
                     next_index = index;
                     next_width_count = width_count;
 
+                    c0_next_write_addr = c0_n_addr;
+                    c0_n_next_write_en = c0_n_write_en;
+
+                    cn_next_write_addr = cn_n_addr;
+                    cn_n_next_write_en = cn_n_write_en;
+
+                    cne_next_write_addr = cne_n_addr;
+                    cne_n_next_write_en = cne_n_write_en;
+
+                    ce_next_write_addr = ce_n_addr;
+                    ce_n_next_write_en = ce_n_write_en;
+
+                    cse_next_write_addr = cse_n_addr;
+                    cse_n_next_write_en = cse_n_write_en;
+
+                    cs_next_write_addr = cs_n_addr;
+                    cs_n_next_write_en = cs_n_write_en;
+
+                    csw_next_write_addr = csw_n_addr;
+                    csw_n_next_write_en = csw_n_write_en;
+
+                    cw_next_write_addr = cw_n_addr;
+                    cw_n_next_write_en = cw_n_write_en;
+
+                    cnw_next_write_addr = cnw_n_addr;
+                    cnw_n_next_write_en = cnw_n_write_en;
                 end        
                 else begin
                     if(index == `DEPTH-1) // if streamed all cells, go to bounce stage
@@ -463,24 +489,26 @@ module LBMSolver (
                     end
                     // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
                     // note to self: streaming step reads from cx and writes to cx_n. 
-                    c0_next_data_in = c0_data_out;
 
-                    cn_next_data_in = cn_data_out;
-
-                    cne_next_data_in = cne_data_out;
-
-                    ce_next_data_in = ce_data_out;
-
-                    cse_next_data_in = cse_data_out;
-
-                    cs_next_data_in = cs_data_out;
-
-                    csw_next_data_in = csw_data_out;
-
-                    cw_next_data_in = cw_data_out;
-
-                    cnw_next_data_in = cnw_data_out;
                 end
+
+                c0_next_data_in = c0_data_out;
+
+                cn_next_data_in = cn_data_out;
+
+                cne_next_data_in = cne_data_out;
+
+                ce_next_data_in = ce_data_out;
+
+                cse_next_data_in = cse_data_out;
+
+                cs_next_data_in = cs_data_out;
+
+                csw_next_data_in = csw_data_out;
+
+                cw_next_data_in = cw_data_out;
+
+                cnw_next_data_in = cnw_data_out;
             end
 
             BOUNCE:
@@ -642,7 +670,7 @@ module LBMSolver (
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = STREAM;
-                            // next_ram_wait_count = `RAM_READ_WAIT;
+                            // next_ram_wait_count = 2;
                             // next_step_count = step_count + 1;
                         end
                         else
@@ -650,7 +678,7 @@ module LBMSolver (
                             next_index = index + 1;
                             next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                             next_sim_state = COLLIDE;
-                            next_ram_wait_count = 2;
+                            next_ram_wait_count = `RAM_READ_WAIT;
                         end
                         c0_next_write_addr = index;
                         c0_next_write_en = 1'b1;
