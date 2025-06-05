@@ -28,7 +28,8 @@ TEST_F(TopTestbench, BarriersZero) {
 }
 
 TEST_F(TopTestbench, idk) {
-    runSimulation(100);
+    top->barriers = 0x1EF; 
+    runSimulation(400);
 }
 
 
