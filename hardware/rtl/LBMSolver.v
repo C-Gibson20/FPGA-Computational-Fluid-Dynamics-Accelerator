@@ -424,43 +424,42 @@ module LBMSolver (
                         next_sim_state = BOUNCE;
                         // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
                     end
-                    else // if not, increment index and continue streaming
+                    else 
                     begin
                         next_index = index + 2;
                         next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                         next_sim_state = STREAM;
+                    end
+                    if(barriers[index]==1'b0)
+                        begin
+                        next_ram_wait_count = `RAM_READ_WAIT;
 
-                        if(barriers[index]==1'b0)
-                            begin
-                            next_ram_wait_count = `RAM_READ_WAIT;
+                        c0_next_write_addr = index;
+                        c0_n_next_write_en = 1'b1;
 
-                            c0_next_write_addr = index;
-                            c0_n_next_write_en = 1'b1;
+                        cn_next_write_addr = index-2*`WIDTH; // write to cell above
+                        cn_n_next_write_en = (index>= 2*(`WIDTH)); // only write if past first row
 
-                            cn_next_write_addr = index-2*`WIDTH; // write to cell above
-                            cn_n_next_write_en = (index>= 2*(`WIDTH)); // only write if past first row
+                        cne_next_write_addr = index-2*`WIDTH+2;
+                        cne_n_next_write_en = (index >= 2*(`WIDTH) && (width_count != `WIDTH - 1));
 
-                            cne_next_write_addr = index-2*`WIDTH+2;
-                            cne_n_next_write_en = (index >= 2*(`WIDTH) && (width_count != `WIDTH - 1));
+                        ce_next_write_addr = index+2;
+                        ce_n_next_write_en = (width_count != `WIDTH - 1);
 
-                            ce_next_write_addr = index+2;
-                            ce_n_next_write_en = (width_count != `WIDTH - 1);
+                        cse_next_write_addr = index+2*`WIDTH+2;
+                        cse_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1)  && (width_count != `WIDTH - 1));
 
-                            cse_next_write_addr = index+2*`WIDTH+2;
-                            cse_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1)  && (width_count != `WIDTH - 1));
+                        cs_next_write_addr = index+2*`WIDTH;
+                        cs_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1));
 
-                            cs_next_write_addr = index+2*`WIDTH;
-                            cs_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1));
+                        csw_next_write_addr = index+2*`WIDTH-2;
+                        csw_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1) && (width_count != 0));
 
-                            csw_next_write_addr = index+2*`WIDTH-2;
-                            csw_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1) && (width_count != 0));
+                        cw_next_write_addr = index - 2;
+                        cw_n_next_write_en = (width_count != 0);
 
-                            cw_next_write_addr = index - 2;
-                            cw_n_next_write_en = (width_count != 0);
-
-                            cnw_next_write_addr = index - 2 - 2*`WIDTH;
-                            cnw_n_next_write_en = (index >= 2*`WIDTH && (width_count != 0));
-                        end
+                        cnw_next_write_addr = index - 2 - 2*`WIDTH;
+                        cnw_n_next_write_en = (index >= 2*`WIDTH && (width_count != 0));
                     end
                     // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
                     // note to self: streaming step reads from cx and writes to cx_n. 
