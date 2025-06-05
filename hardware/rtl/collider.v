@@ -33,6 +33,7 @@ wire signed [15:0] w_side        = 16'h038e; // 1/9
 wire signed [15:0] w_diag        = 16'h00e4; // 1/36
 
 wire signed [15:0] one           = 16'h2000; // 1.0
+wire signed [15:0] two           = 16'h4000; // 2.0
 wire signed [15:0] three         = 16'h6000; // 3.0
 wire signed [15:0] three_halves  = 16'h3000; // 3/2
 wire signed [15:0] nine_quarters = 16'h4800; // 9/4
@@ -47,11 +48,40 @@ assign axi_ready     = 1'b1;
 
 assign rho = f_null + f_n + f_ne + f_e + f_se + f_s + f_sw + f_w + f_nw;
 
-wire signed [31:0] scaled_rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se) <<< 13;
-wire signed [31:0] scaled_rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se) <<< 13;
+// wire signed [31:0] scaled_rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se) <<< 13;
+// wire signed [31:0] scaled_rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se) <<< 13;
 
-assign u_x = scaled_rho_ux / rho;
-assign u_y = scaled_rho_uy / rho;
+wire signed [15:0] rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se);
+wire signed [15:0] rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se);
+
+// assign u_x = scaled_rho_ux / rho;
+// assign u_y = scaled_rho_uy / rho;
+
+// Newton-Raphson Reciprocal Approximation (3 iteration) 
+// assuming 0.85 << rho << 1.15
+// x0 = 1
+// x1 = x0 * (2 - rho * x0)
+// wher x0 ≈ 1 / rho
+
+// Initial guess: x0 = 1.0 in Q3.13
+//x1 iteration
+// wire signed [15:0] x1 = two - rho;
+
+//x2 iteration
+wire signed [31:0] rho_x1 = rho * (two - rho);
+wire signed [31:0] x2 = (two - rho) * (two - (rho_x1 >>> 13));
+
+//x3 iteration
+wire signed [31:0] rho_x2 = rho * (x2 >>> 13);
+wire signed [31:0] x3 = (x2 >>> 13) * (two - (rho_x2 >>> 13));
+
+wire signed [31:0] u_x_intermediate = rho_ux * (x3 >>> 13); 
+wire signed [31:0] u_y_intermediate = rho_uy * (x3 >>> 13);
+
+assign u_x = u_x_intermediate >>> 13;
+assign u_y = u_y_intermediate >>> 13;
+
+
 
 // ----------------------------------------------------------------------------------
 // Step 2: u^2 and related terms

@@ -2,9 +2,9 @@
 `define DEF
 
 `define DATA_WIDTH 16
-`define HEIGHT 50
-`define WIDTH 50
-`define DEPTH 2500 // 50*50 manually expanded
+`define HEIGHT 3
+`define WIDTH 3
+`define DEPTH `HEIGHT * `WIDTH
 `define ADDRESS_WIDTH 13 // ≈ 11.3 → rounded up to 12
 `define FIXED_ONE 16'sh2000
 `define FIXED_ONE_9TH 16'sh038e

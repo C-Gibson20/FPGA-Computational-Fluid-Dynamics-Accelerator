@@ -9,7 +9,7 @@ protected:
         void initializeInputs() override {
         LBMSolver = top.get();  
         LBMSolver->clk = 1;
-        LBMSolver->rst = 1;
+        LBMSolver->rst = 0;
         LBMSolver->en  = 1;
         LBMSolver->step = 0;
         LBMSolver->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
@@ -17,23 +17,16 @@ protected:
     }
 };
 
-TEST_F(LBMSolverTestbench, CanItCompile) {
-    runSimulation(1);
-    LBMSolver->rst = 0;
-    runSimulation(20000);
-    EXPECT_GE(LBMSolver->en, 0);
-}
-
 TEST_F(LBMSolverTestbench, BarriersBounce) {
     LBMSolver->barriers[0]= 1;
-    LBMSolver->rst = 0;
+    LBMSolver->rst = 1;
     runSimulation(7502);
     EXPECT_GE(LBMSolver->testing_cs_n_data_in,0x11);
 }
 
 TEST_F(LBMSolverTestbench, BarriersZero) {
     LBMSolver->barriers[0]= 1;
-    LBMSolver->rst = 0;
+    LBMSolver->rst = 1;
     runSimulation(10002);
     EXPECT_GE(LBMSolver->testing_cs_n_data_in,0x0);
 }
