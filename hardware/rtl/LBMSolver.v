@@ -554,9 +554,18 @@ module LBMSolver (
 
 
                     // go back to bounce state
-                    next_index = index + 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
-                    next_sim_state = BOUNCE; 
+                    if(index != `DEPTH-1)
+                    begin
+                        next_index = index + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
+                        next_sim_state = BOUNCE; 
+                    end
+                    else
+                    begin
+                        next_index = 0;
+                        next_width_count = 0;
+                        next_sim_state = ZERO_BOUNCE; 
+                    end
                 end
             end
 
