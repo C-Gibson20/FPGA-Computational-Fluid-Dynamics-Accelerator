@@ -61,7 +61,7 @@ reg signed [15:0] f_null_s1, f_n_s1, f_ne_s1, f_e_s1, f_se_s1;
 reg signed [15:0] f_s_s1, f_sw_s1, f_w_s1, f_nw_s1;
 reg signed [15:0] rho_s1;
 
-reg signed [31:0] rho_u_x_s1, rho_u_y_s1;
+reg signed [15:0] rho_u_x_s1, rho_u_y_s1;
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
@@ -80,8 +80,8 @@ always @(posedge clk or posedge rst) begin
                   f_s_s0   + f_sw_s0 + f_w_s0  + f_nw_s0;
 
         // Compute rho * u
-        rho_u_x_s1 <= (f_e_s0 - f_w_s0 + f_ne_s0 - f_sw_s0 - f_nw_s0 + f_se_s0) <<< 13;
-        rho_u_y_s1 <= (f_n_s0 - f_s_s0 + f_ne_s0 - f_sw_s0 + f_nw_s0 - f_se_s0) <<< 13;
+        rho_u_x_s1 <= f_e_s0 - f_w_s0 + f_ne_s0 - f_sw_s0 - f_nw_s0 + f_se_s0;
+        rho_u_y_s1 <= f_n_s0 - f_s_s0 + f_ne_s0 - f_sw_s0 + f_nw_s0 - f_se_s0;
     end
 end
 
@@ -91,7 +91,7 @@ end
 reg signed [15:0] omega_s2, rho_s2;
 reg signed [15:0] f_null_s2, f_n_s2, f_ne_s2, f_e_s2, f_se_s2;
 reg signed [15:0] f_s_s2, f_sw_s2, f_w_s2, f_nw_s2;
-reg signed [31:0] rho_u_x_s2, rho_u_y_s2;
+reg signed [15:0] rho_u_x_s2, rho_u_y_s2;
 
 reg signed [15:0] u_x_s2, u_y_s2;
 reg signed [31:0] rho_x1_s2;
@@ -119,11 +119,11 @@ end
 // ------------------------
 // Stage 3: Compute x2
 // ------------------------
-reg signed [15:0] x2_s3;
+reg signed [31:0] x2_s3;
 reg signed [15:0] omega_s3, rho_s3;
 reg signed [15:0] f_null_s3, f_n_s3, f_ne_s3, f_e_s3, f_se_s3;
 reg signed [15:0] f_s_s3, f_sw_s3, f_w_s3, f_nw_s3;
-reg signed [31:0] rho_u_x_s3, rho_u_y_s3;
+reg signed [15:0] rho_u_x_s3, rho_u_y_s3;
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
@@ -151,7 +151,7 @@ reg signed [15:0] omega_s4, rho_s4;
 reg signed [15:0] f_null_s4, f_n_s4, f_ne_s4, f_e_s4, f_se_s4;
 reg signed [15:0] f_s_s4, f_sw_s4, f_w_s4, f_nw_s4;
 reg signed [31:0] rho_x2_s4;
-reg signed [31:0] rho_u_x_s4, rho_u_y_s4;
+reg signed [15:0] rho_u_x_s4, rho_u_y_s4;
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
@@ -177,8 +177,8 @@ end
 reg signed [15:0] omega_s5, rho_s5;
 reg signed [15:0] f_null_s5, f_n_s5, f_ne_s5, f_e_s5, f_se_s5;
 reg signed [15:0] f_s_s5, f_sw_s5, f_w_s5, f_nw_s5;
-reg signed [15:0] x3_s5;
-reg signed [31:0] rho_u_x_s5, rho_u_y_s5;
+reg signed [31:0] x3_s5;
+reg signed [15:0] rho_u_x_s5, rho_u_y_s5;
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
@@ -465,9 +465,6 @@ reg signed [31:0] f_eq_null_intermediate_s13, f_eq_n_intermediate_s13, f_eq_s_in
 
 reg signed [15:0] polynomial_ne_s13, polynomial_sw_s13, polynomial_nw_s13, polynomial_se_s13;
 
-// reg signed [31:0] f_eq_null_intermediate_s12, f_eq_n_intermediate_s12, f_eq_s_intermediate_s12, f_eq_e_intermediate_s12, f_eq_w_intermediate_s12;
-// reg signed [31:0] nine_half_x_plus_y_squared_intermediate_s12, nine_half_x_minus_y_squared_intermediate_s12;
-
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         polynomial_ne_s13 <= 0;
@@ -557,15 +554,16 @@ always @(posedge clk or posedge rst) begin
         u_x_s15   <= u_x_s14;
         u_y_s15   <= u_y_s14;
 
-        delta_f_null_s15 <= omega_s14 * (f_eq_null_intermediate_s14 - (f_null_s14 <<< 13));
-        delta_f_n_s15    <= omega_s14 * (f_eq_n_intermediate_s14    - (f_n_s14    <<< 13));
-        delta_f_ne_s15   <= omega_s14 * (f_eq_ne_intermediate_s14   - (f_ne_s14   <<< 13));
-        delta_f_e_s15    <= omega_s14 * (f_eq_e_intermediate_s14    - (f_e_s14    <<< 13));
-        delta_f_se_s15   <= omega_s14 * (f_eq_se_intermediate_s14   - (f_se_s14   <<< 13));
-        delta_f_s_s15    <= omega_s14 * (f_eq_s_intermediate_s14    - (f_s_s14    <<< 13));
-        delta_f_sw_s15   <= omega_s14 * (f_eq_sw_intermediate_s14   - (f_sw_s14   <<< 13));
-        delta_f_w_s15    <= omega_s14 * (f_eq_w_intermediate_s14    - (f_w_s14    <<< 13));
-        delta_f_nw_s15   <= omega_s14 * (f_eq_nw_intermediate_s14   - (f_nw_s14   <<< 13));
+        delta_f_null_s15 <= omega_s14 * ((f_eq_null_intermediate_s14 >>> 13) - f_null_s14);
+        delta_f_n_s15    <= omega_s14 * ((f_eq_n_intermediate_s14    >>> 13) - f_n_s14);
+        delta_f_ne_s15   <= omega_s14 * ((f_eq_ne_intermediate_s14   >>> 13) - f_ne_s14);
+        delta_f_e_s15    <= omega_s14 * ((f_eq_e_intermediate_s14    >>> 13) - f_e_s14);
+        delta_f_se_s15   <= omega_s14 * ((f_eq_se_intermediate_s14   >>> 13) - f_se_s14);
+        delta_f_s_s15    <= omega_s14 * ((f_eq_s_intermediate_s14    >>> 13) - f_s_s14);
+        delta_f_sw_s15   <= omega_s14 * ((f_eq_sw_intermediate_s14   >>> 13) - f_sw_s14);
+        delta_f_w_s15    <= omega_s14 * ((f_eq_w_intermediate_s14    >>> 13) - f_w_s14);
+        delta_f_nw_s15   <= omega_s14 * ((f_eq_nw_intermediate_s14   >>> 13) - f_nw_s14);
+
     end
 end
 
