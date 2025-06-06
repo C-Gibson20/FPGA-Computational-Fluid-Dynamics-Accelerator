@@ -29,7 +29,7 @@ module LBMSolver (
     input wire rst,
     input wire [`DEPTH-1:0] barriers,
     input wire en,
-    input wire [31:0] step, // will step until sim value
+    input wire [15:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
     
     output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
@@ -156,7 +156,8 @@ module LBMSolver (
     output wire [`DATA_WIDTH-1:0] rho,
 
     output wire collider_ready,
-    output wire in_collision_state
+    output wire in_collision_state,
+    output wire [15:0] step_countn
 
 
 );
@@ -169,6 +170,7 @@ module LBMSolver (
     localparam BOUNCE_WAIT = 3'd3;
     localparam ZERO_BOUNCE = 3'd4;
     localparam COLLIDE = 3'd5;
+    localparam MEM_RESET = 3'd6;
     
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
@@ -217,7 +219,8 @@ module LBMSolver (
 
     reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    reg [15:0] step_count, next_step_count;
+    reg [15:0] step_count;
+    reg incr_step;
 
     wire [`DATA_WIDTH-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
@@ -229,6 +232,7 @@ module LBMSolver (
 
     assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0);
     assign in_collision_state = (sim_state == COLLIDE);
+    assign step_countn = step_count;
 
     //Instantiate Nishant's collider
     collider collider(
@@ -264,7 +268,7 @@ module LBMSolver (
     begin
         if(!rst) 
         begin
-            sim_state <= IDLE;
+            sim_state <= MEM_RESET;
             index <= 0;
             width_count <= 0;
             ram_wait_count <= `RAM_READ_WAIT;
@@ -275,7 +279,7 @@ module LBMSolver (
             sim_state <= next_sim_state;
             index <= next_index;
             width_count <= next_width_count;
-            step_count <= next_step_count;
+            step_count <= incr_step ? step_count + 1 : step_count;
             ram_wait_count <= next_ram_wait_count;
 
             c0_addr <= (c0_write_en && sim_state != STREAM) ? c0_next_write_addr : index;
@@ -394,12 +398,12 @@ module LBMSolver (
         next_index = index;
         next_width_count = width_count;
 
-        next_step_count = step_count;
+        incr_step = 0;
         next_ram_wait_count = ram_wait_count;
 
         case(sim_state)
             IDLE: begin
-                if(step >= step_count) begin
+                if(step_count < step) begin
                     next_sim_state = STREAM;
                     next_ram_wait_count = `RAM_READ_WAIT;
                 end
@@ -444,7 +448,6 @@ module LBMSolver (
                 else begin
                     if(index == `DEPTH-1) // if streamed all cells, go to bounce stage
                     begin
-                        next_step_count = step_count + 1;
                         next_index = 0;
                         next_width_count = 0;
                         next_sim_state = BOUNCE;
@@ -526,7 +529,6 @@ module LBMSolver (
                     next_index = 0;
                     next_width_count = 0;
                     next_sim_state = ZERO_BOUNCE;
-                    next_step_count = step_count + 1;
                 end
                 else // not a barrier, skip over
                 begin
@@ -604,7 +606,6 @@ module LBMSolver (
                     next_index = 0;
                     next_width_count = 0;
                     next_sim_state = COLLIDE;
-                    next_step_count = step_count + 1;
                     
                 end
                 else
@@ -696,7 +697,8 @@ module LBMSolver (
                         begin
                             next_index = 0;
                             next_width_count = 0;
-                            next_sim_state = STREAM;
+                            next_sim_state = IDLE;
+                            incr_step = 1;
                             // next_ram_wait_count = 2;
                             // next_step_count = step_count + 1;
                         end
@@ -746,6 +748,61 @@ module LBMSolver (
                 else
                     next_sim_state = COLLIDE;
             end
+
+            MEM_RESET : begin
+                if(index == (`DEPTH-1)) 
+                begin
+                    next_index = 0;
+                    next_width_count = 0;
+                    next_sim_state = IDLE;
+                    // next_step_count = step_count + 1;
+                end
+                else
+                begin
+                    next_index = index + 1;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                    next_sim_state = MEM_RESET;
+                end
+                
+                
+                c0_next_write_en = 1;
+                c0_next_write_addr = index;
+                c0_next_data_in = 0;
+
+                cn_next_write_en = 1;
+                cn_next_write_addr = index;
+                cn_next_data_in = 0;
+
+                cne_next_write_en = 1;
+                cne_next_write_addr = index;
+                cne_next_data_in = 0;
+
+                ce_next_write_en = 1;
+                ce_next_write_addr = index;
+                ce_next_data_in = 16'h1000;
+
+                cse_next_write_en = 1;
+                cse_next_write_addr = index;
+                cse_next_data_in = 0;
+
+                cs_next_write_en = 1;
+                cs_next_write_addr = index;
+                cs_next_data_in = 0;
+
+                csw_next_write_en = 1;
+                csw_next_write_addr = index;
+                csw_next_data_in = 0;
+
+                cw_next_write_en = 1;
+                cw_next_write_addr = index;
+                cw_next_data_in = 0;
+
+                cnw_next_write_en = 1;
+                cnw_next_write_addr = index;
+                cnw_next_data_in = 0;
+
+            end
+
             default: 
             begin
                 next_sim_state = IDLE;

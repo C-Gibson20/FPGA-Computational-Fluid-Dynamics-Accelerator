@@ -9,7 +9,7 @@ protected:
         top->clk = 1;
         top->rst = 1;
         top->en  = 1;
-        top->step = 0;
+        top->step = 3;
         top->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
 
     }
@@ -29,7 +29,7 @@ TEST_F(TopTestbench, BarriersZero) {
 
 TEST_F(TopTestbench, idk) {
     top->barriers = 0x1EF; 
-    runSimulation(400);
+    runSimulation(4000);
 }
 
 
