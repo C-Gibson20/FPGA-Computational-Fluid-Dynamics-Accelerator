@@ -664,32 +664,6 @@ module LBMSolver (
                     next_index = index;
                     next_width_count = width_count;
 
-                    c0_next_write_addr = c0_n_addr;
-                    c0_next_write_en = c0_n_write_en;
-
-                    cn_next_write_addr = cn_n_addr;
-                    cn_next_write_en = cn_n_write_en;
-
-                    cne_next_write_addr = cne_n_addr;
-                    cne_next_write_en = cne_n_write_en;
-
-                    ce_next_write_addr = ce_n_addr;
-                    ce_next_write_en = ce_n_write_en;
-
-                    cse_next_write_addr = cse_n_addr;
-                    cse_next_write_en = cse_n_write_en;
-
-                    cs_next_write_addr = cs_n_addr;
-                    cs_next_write_en = cs_n_write_en;
-
-                    csw_next_write_addr = csw_n_addr;
-                    csw_next_write_en = csw_n_write_en;
-
-                    cw_next_write_addr = cw_n_addr;
-                    cw_next_write_en = cw_n_write_en;
-
-                    cnw_next_write_addr = cnw_n_addr;
-                    cnw_next_write_en = cnw_n_write_en;
                 end
                 else if(nv_ready) 
                     begin
