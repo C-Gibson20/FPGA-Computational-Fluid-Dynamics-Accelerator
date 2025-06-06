@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolver (
+module LBMController (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     // input wire clk,
@@ -171,6 +171,67 @@ module LBMSolver (
     localparam ZERO_BOUNCE = 3'd4;
     localparam COLLIDE = 3'd5;
 
+
+    wire [`ADDRESS_WIDTH-1:0] c0_addr     [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] c0_n_addr   [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cn_addr     [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cn_n_addr   [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cne_addr    [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cne_n_addr  [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] ce_addr     [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] ce_n_addr   [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cse_addr    [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cse_n_addr  [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cs_addr     [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cs_n_addr   [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] csw_addr    [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] csw_n_addr  [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cw_addr     [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cw_n_addr   [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cnw_addr    [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] cnw_n_addr  [0:`RAMS_TO_ACCESS-1];
+
+    // Data-in buses
+    wire [`DATA_WIDTH-1:0] c0_data_in     [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] c0_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cn_data_in     [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cn_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cne_data_in    [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cne_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] ce_data_in     [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] ce_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cse_data_in    [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cse_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cs_data_in     [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cs_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] csw_data_in    [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] csw_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cw_data_in     [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cw_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cnw_data_in    [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] cnw_n_data_in  [0:`RAMS_TO_ACCESS-1];
+
+    // Data-out from collider
+    wire [`DATA_WIDTH-1:0] u_x  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] u_y  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] rho  [0:`RAMS_TO_ACCESS-1];
+
+    // Write-enable and status bits
+    wire c0_write_en     [0:`RAMS_TO_ACCESS-1], c0_n_write_en   [0:`RAMS_TO_ACCESS-1],
+        cn_write_en     [0:`RAMS_TO_ACCESS-1], cn_n_write_en   [0:`RAMS_TO_ACCESS-1],
+        cne_write_en    [0:`RAMS_TO_ACCESS-1], cne_n_write_en  [0:`RAMS_TO_ACCESS-1],
+        ce_write_en     [0:`RAMS_TO_ACCESS-1], ce_n_write_en   [0:`RAMS_TO_ACCESS-1],
+        cse_write_en    [0:`RAMS_TO_ACCESS-1], cse_n_write_en  [0:`RAMS_TO_ACCESS-1],
+        cs_write_en     [0:`RAMS_TO_ACCESS-1], cs_n_write_en   [0:`RAMS_TO_ACCESS-1],
+        csw_write_en    [0:`RAMS_TO_ACCESS-1], csw_n_write_en  [0:`RAMS_TO_ACCESS-1],
+        cw_write_en     [0:`RAMS_TO_ACCESS-1], cw_n_write_en   [0:`RAMS_TO_ACCESS-1],
+        cnw_write_en    [0:`RAMS_TO_ACCESS-1];
+
+    wire collider_ready      [0:`RAMS_TO_ACCESS-1];
+    wire in_collision_state  [0:`RAMS_TO_ACCESS-1];
+    wire next_index          [0:`RAMS_TO_ACCESS-1];
+    wire [2:0] next_sim_state[0:`RAMS_TO_ACCESS-1];
+    wire [`RAMS_TO_ACCESS-1:0] is_bw;
     // reg [15:0] width_count, next_width_count;
     // reg [2:0] sim_state, next_sim_state;
     // reg [`ADDRESS_WIDTH-1:0] index;
@@ -228,25 +289,113 @@ module LBMSolver (
     // assign in_collision_state = (sim_state == COLLIDE);
 
     genvar i;
-    generate;
-        for(i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : LBMSolver
-            LBMSolver LBMSolver(
-                .clk(clk),
-                .rst(rst),
-                .barriers(barriers),
-                .en(en),
-                .step(step),
-                .omega(omega),
-                .sim_state(sim_state),
-                .index(index),
-                .width_count(width_count),
+    generate
+    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_solver
 
-                .c0_addr(c0_addr),
-                .c0_data_in(c0_data_in),
-                .c0_write_en(c0_write_en),
-            )
-        end
+        LBMSolver LBMSolver (
+        .clk         (clk),
+        .rst         (rst),
+        .barriers    (barriers),
+        .en          (en),
+        .step        (step),
+        .omega       (omega),
+        .sim_state   (sim_state),
+        .index       (index+i),
+        .width_count (width_count+i),
+
+        .c0_addr       (c0_addr     [i]),
+        .c0_data_in    (c0_data_in  [i]),
+        .c0_write_en   (c0_write_en [i]),
+
+        .c0_n_addr     (c0_n_addr     [i]),
+        .c0_n_data_in  (c0_n_data_in  [i]),
+        .c0_n_write_en (c0_n_write_en [i]),
+
+        .cn_addr       (cn_addr     [i]),
+        .cn_data_in    (cn_data_in  [i]),
+        .cn_write_en   (cn_write_en [i]),
+
+        .cn_n_addr     (cn_n_addr     [i]),
+        .cn_n_data_in  (cn_n_data_in  [i]),
+        .cn_n_write_en (cn_n_write_en [i]),
+
+        .cne_addr       (cne_addr     [i]),
+        .cne_data_in    (cne_data_in  [i]),
+        .cne_write_en   (cne_write_en [i]),
+
+        .cne_n_addr     (cne_n_addr     [i]),
+        .cne_n_data_in  (cne_n_data_in  [i]),
+        .cne_n_write_en (cne_n_write_en [i]),
+
+        .ce_addr       (ce_addr     [i]),
+        .ce_data_in    (ce_data_in  [i]),
+        .ce_write_en   (ce_write_en [i]),
+
+        .ce_n_addr     (ce_n_addr     [i]),
+        .ce_n_data_in  (ce_n_data_in  [i]),
+        .ce_n_write_en (ce_n_write_en [i]),
+
+        .cse_addr       (cse_addr     [i]),
+        .cse_data_in    (cse_data_in  [i]),
+        .cse_write_en   (cse_write_en [i]),
+
+        .cse_n_addr     (cse_n_addr     [i]),
+        .cse_n_data_in  (cse_n_data_in  [i]),
+        .cse_n_write_en (cse_n_write_en [i]),
+
+        .cs_addr       (cs_addr     [i]),
+        .cs_data_in    (cs_data_in  [i]),
+        .cs_write_en   (cs_write_en [i]),
+
+        .cs_n_addr     (cs_n_addr     [i]),
+        .cs_n_data_in  (cs_n_data_in  [i]),
+        .cs_n_write_en (cs_n_write_en [i]),
+
+        .csw_addr       (csw_addr     [i]),
+        .csw_data_in    (csw_data_in  [i]),
+        .csw_write_en   (csw_write_en [i]),
+
+        .csw_n_addr     (csw_n_addr     [i]),
+        .csw_n_data_in  (csw_n_data_in  [i]),
+        .csw_n_write_en (csw_n_write_en [i]),
+
+        .cw_addr       (cw_addr     [i]),
+        .cw_data_in    (cw_data_in  [i]),
+        .cw_write_en   (cw_write_en [i]),
+
+        .cw_n_addr     (cw_n_addr     [i]),
+        .cw_n_data_in  (cw_n_data_in  [i]),
+        .cw_n_write_en (cw_n_write_en [i]),
+
+        .cnw_addr       (cnw_addr     [i]),
+        .cnw_data_in    (cnw_data_in  [i]),
+        .cnw_write_en   (cnw_write_en [i]),
+
+        .cnw_n_addr     (cnw_n_addr     [i]),
+        .cnw_n_data_in  (cnw_n_data_in  [i]),
+        .cnw_n_write_en (cnw_n_write_en [i]),
+
+        .u_x                (u_x                [i]),
+        .u_y                (u_y                [i]),
+        .rho                (rho                [i]),
+        .collider_ready     (collider_ready     [i]),
+        .in_collision_state (in_collision_state [i]),
+        .next_index         (next_index         [i]),
+        .next_sim_state     (next_sim_state     [i])
+        );
+
+    end
     endgenerate
+
+
+    genvar i;
+    generate
+    for (i = 0; i < N; i = i + 1) begin : g_bw
+        assign is_bw[i] = (next_sim_state[i] == BOUNCE_WAIT);
+    end
+    endgenerate
+
+    wire any_bounce_wait = |is_bw;
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     //need two rams one for the current time step and one for the next time step
 
