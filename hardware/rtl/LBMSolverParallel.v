@@ -161,6 +161,7 @@ module LBMSolverParallel (
     output wire in_collision_state,
     // output wire next_index,
     output wire [2:0] next_sim_state,
+    output wire zero_barrier,
     output wire read_wait
 
 );
@@ -421,7 +422,7 @@ module LBMSolverParallel (
 
         // next_step_count = step_count;
         // next_ram_wait_count = ram_wait_count;
-
+        zero_barrier = 0;
         read_wait = 0;
 
         case(sim_state)
@@ -519,37 +520,61 @@ module LBMSolverParallel (
             begin
                 if(index <= `DEPTH-1)
                 begin
-                    cn_n_addr = index-`WIDTH;
-                    cn_n_write_en = (index>= `WIDTH);
-                    cn_n_data_in = cs_n_data_out;
+                    if(barriers[index == 1'b1])
+                    begin
+                        // cn_n_addr = index-`WIDTH;
+                        cn_n_write_en = (index>= `WIDTH);
+                        cn_n_data_in = cs_n_data_out;
 
-                    cne_n_addr = index-`WIDTH+1;
-                    cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
-                    cne_n_data_in = csw_n_data_out;
+                        // cne_n_addr = index-`WIDTH+1;
+                        cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                        cne_n_data_in = csw_n_data_out;
 
-                    ce_n_addr = index+1;
-                    ce_n_write_en = (width_count != `WIDTH - 1);
-                    ce_n_data_in = cw_n_data_out; 
+                        // ce_n_addr = index+1;
+                        ce_n_write_en = (width_count != `WIDTH - 1);
+                        ce_n_data_in = cw_n_data_out; 
 
-                    cse_n_addr = index+`WIDTH+1;
-                    cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
-                    cse_n_data_in = cnw_n_data_out; 
+                        // cse_n_addr = index+`WIDTH+1;
+                        cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                        cse_n_data_in = cnw_n_data_out; 
 
-                    cs_n_addr = index+`WIDTH;
-                    cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
-                    cs_n_data_in = cn_n_data_out; 
+                        // cs_n_addr = index+`WIDTH;
+                        cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
+                        cs_n_data_in = cn_n_data_out; 
 
-                    csw_n_addr = index+`WIDTH-1;
-                    csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-                    csw_n_data_in = cne_n_data_out; 
+                        // csw_n_addr = index+`WIDTH-1;
+                        csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                        csw_n_data_in = cne_n_data_out; 
 
-                    cw_n_addr = index - 1;
-                    cw_n_write_en = (width_count != 0);
-                    cw_n_data_in = ce_n_data_out; 
+                        // cw_n_addr = index - 1;
+                        cw_n_write_en = (width_count != 0);
+                        cw_n_data_in = ce_n_data_out; 
 
-                    cnw_n_addr = index - `WIDTH - 1;
-                    cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
-                    cnw_n_data_in = cse_n_data_out;
+                        // cnw_n_addr = index - `WIDTH - 1;
+                        cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
+                        cnw_n_data_in = cse_n_data_out;
+                    end
+                    else
+                    begin
+                        // needs an extra step where it reads from the target write address and then compares values to stitch together correct output
+                        // c0_n_data_in = c0_data_out;
+
+                        // cn_n_data_in = cn_data_out;
+
+                        // cne_n_data_in = cne_data_out;
+
+                        // ce_n_data_in = ce_data_out;
+
+                        // cse_n_data_in = cse_data_out;
+
+                        // cs_n_data_in = cs_data_out;
+
+                        // csw_n_data_in = csw_data_out;
+
+                        // cw_n_data_in = cw_data_out;
+
+                        // cnw_n_data_in = cnw_data_out;
+                    end
                 end
 
                 // go back to bounce state
@@ -587,47 +612,50 @@ module LBMSolverParallel (
                 if(index <= `DEPTH-1 && barriers[index] == 1'b1) //this is where you left off 
                 begin
                     // write zeroes to all barrier cells in cx_n
-                    c0_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     c0_n_write_en = 1'b1;
                     c0_n_data_in = 16'b0;
 
-                    cn_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cn_n_write_en = 1'b1;
                     cn_n_data_in = 16'b0;
 
-                    cne_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cne_n_write_en = 1'b1;
                     cne_n_data_in = 16'b0;
 
-                    ce_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     ce_n_write_en = 1'b1;
                     ce_n_data_in = 16'b0;
 
-                    cse_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cse_n_write_en = 1'b1;
                     cse_n_data_in = 16'b0;
 
-                    cs_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cs_n_write_en = 1'b1;
                     cs_n_data_in = 16'b0;
 
-                    csw_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     csw_n_write_en = 1'b1;
                     csw_n_data_in = 16'b0;
 
-                    cw_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cw_n_write_en = 1'b1;
                     cw_n_data_in = 16'b0;
 
-                    cnw_n_addr = index;
+                    //c[0-z]*_addr [ -~]*
                     cnw_n_write_en = 1'b1;
                     cnw_n_data_in = 16'b0;
+
+                    zero_barrier = 1'b1;
                 end
             end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             begin
-                if(nv_ready) 
+                if(nv_ready)
+
                     begin
                         if(index >= `DEPTH-1) 
                         begin
@@ -646,39 +674,39 @@ module LBMSolverParallel (
                         end
                         if(index <= `DEPTH-1) 
                         begin
-                            c0_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             c0_write_en = 1'b1;
                             c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
 
-                            cn_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cn_write_en = 1'b1;
                             cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
 
-                            cne_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cne_write_en = 1'b1;
                             cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
 
-                            ce_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             ce_write_en = 1'b1;
                             ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
 
-                            cse_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cse_write_en = 1'b1;
                             cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
 
-                            cs_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cs_write_en = 1'b1;
                             cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
 
-                            csw_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             csw_write_en = 1'b1;
                             csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
 
-                            cw_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cw_write_en = 1'b1;
                             cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
 
-                            cnw_addr = index;
+                            //c[0-z]*_addr [ -~]*
                             cnw_write_en = 1'b1;
                             cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
                         end
