@@ -36,117 +36,117 @@ module LBMSolverParallel (
     input reg [`ADDRESS_WIDTH-1:0] width_count,
     
     // BRAM c0
-    output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
     output reg                          c0_write_en,
     input  wire [`DATA_WIDTH-1:0]       c0_data_out,
 
     // BRAM c0_n
-    output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_n_data_in, 
     output reg                          c0_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       c0_n_data_out,
     
 
     // BRAM cn
-    output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
     output reg  [`DATA_WIDTH-1:0]       cn_data_in, 
     output reg                          cn_write_en,
     input  wire [`DATA_WIDTH-1:0]       cn_data_out,
 
     // BRAM cn_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cn_n_data_in, 
     output reg                          cn_n_write_en,
     input  wire [`DATA_WIDTH-1:0]      cn_n_data_out,
     
 
     // BRAM cne
-    output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
     output reg  [`DATA_WIDTH-1:0]       cne_data_in, 
     output reg                          cne_write_en,
     input  wire [`DATA_WIDTH-1:0]       cne_data_out,
 
     // BRAM cne_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cne_n_data_in, 
     output reg                          cne_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cne_n_data_out,
     
 
     // BRAM ce
-    output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
     output reg  [`DATA_WIDTH-1:0]       ce_data_in, 
     output reg                          ce_write_en,
     input  wire [`DATA_WIDTH-1:0]       ce_data_out,
 
     // BRAM ce_n
-    output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
     output reg  [`DATA_WIDTH-1:0]       ce_n_data_in, 
     output reg                          ce_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       ce_n_data_out,
     
 
     // BRAM cse
-    output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
     output reg  [`DATA_WIDTH-1:0]       cse_data_in, 
     output reg                          cse_write_en,
     input  wire [`DATA_WIDTH-1:0]       cse_data_out,
 
     // BRAM cse_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cse_n_data_in, 
     output reg                          cse_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cse_n_data_out,
     
 
     // BRAM cs
-    output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
     output reg  [`DATA_WIDTH-1:0]       cs_data_in, 
     output reg                          cs_write_en,
     input  wire [`DATA_WIDTH-1:0]       cs_data_out,
 
     // BRAM cs_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cs_n_data_in, 
     output reg                          cs_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cs_n_data_out,
     
 
     // BRAM csw
-    output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
     output reg  [`DATA_WIDTH-1:0]       csw_data_in, 
     output reg                          csw_write_en,
     input  wire [`DATA_WIDTH-1:0]       csw_data_out,
 
     // BRAM csw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       csw_n_data_in, 
     output reg                          csw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       csw_n_data_out,
     
 
     // BRAM cw
-    output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
     output reg  [`DATA_WIDTH-1:0]       cw_data_in, 
     output reg                          cw_write_en,
     input  wire [`DATA_WIDTH-1:0]       cw_data_out,
 
     // BRAM cw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cw_n_data_in, 
     output reg                          cw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cw_n_data_out,
     
 
     // BRAM cnw
-    output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
     output reg  [`DATA_WIDTH-1:0]       cnw_data_in, 
     output reg                          cnw_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_data_out,
 
     // BRAM cnw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
+    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
     output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
     output reg                          cnw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
@@ -356,64 +356,64 @@ module LBMSolverParallel (
 
     //Stream state
     always @* begin
-        c0_addr = 0;
-        c0_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         c0_write_en = 0;
         c0_n_write_en = 0;
         c0_data_in = 0;
         c0_n_data_in = 0;
 
-        cn_addr = 0;
-        cn_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cn_write_en = 0;
         cn_n_write_en = 0;
         cn_data_in = 0;
         cn_n_data_in = 0;
 
-        cne_addr = 0;
-        cne_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cne_write_en = 0;
         cne_n_write_en = 0;
         cne_data_in = 0;
         cne_n_data_in = 0;
 
-        ce_addr = 0;
-        ce_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         ce_write_en = 0;
         ce_n_write_en = 0;
         ce_data_in = 0;
         ce_n_data_in = 0;
 
-        cse_addr = 0;
-        cse_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cse_write_en = 0;
         cse_n_write_en = 0;
         cse_data_in = 0;
         cse_n_data_in = 0;
 
-        cs_addr = 0;
-        cs_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cs_write_en = 0;
         cs_n_write_en = 0;
         cs_data_in = 0;
         cs_n_data_in = 0;
 
-        csw_addr = 0;
-        csw_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         csw_write_en = 0;
         csw_n_write_en = 0;
         csw_data_in = 0;
         csw_n_data_in = 0;
 
-        cw_addr = 0;
-        cw_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cw_write_en = 0;
         cw_n_write_en = 0;
         cw_data_in = 0;
         cw_n_data_in = 0;
 
-        cnw_addr = 0;
-        cnw_n_addr = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
         cnw_write_en = 0;
         cnw_n_write_en = 0;
         cnw_data_in = 0;
@@ -447,37 +447,29 @@ module LBMSolverParallel (
                 if(index <= `DEPTH-1 && barriers[index]==1'b0)
                 begin
                     read_wait = 1'b1;
-
-                    c0_n_addr = index;
+                    
                     c0_n_write_en = 1'b1;
-
-                    cn_n_addr = index-`WIDTH; // write to cell above
+                    
                     cn_n_write_en = (index>= `WIDTH); // only write if past first row
-
-                    cne_n_addr = index-`WIDTH+1;
+                    
                     cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
-
-                    ce_n_addr = index+1;
+                    
                     ce_n_write_en = (width_count != `WIDTH - 1);
-
-                    cse_n_addr = index+`WIDTH+1;
+                    
                     cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
-
-                    cs_n_addr = index+`WIDTH;
+                    
                     cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
-
-                    csw_n_addr = index+`WIDTH-1;
+                    
                     csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-
-                    cw_n_addr = index - 1;
+                    
                     cw_n_write_en = (width_count != 0);
-
-                    cnw_n_addr = index - 1 - `WIDTH;
+       
                     cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
                 end
                 // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
                     // note to self: streaming step reads from cx and writes to cx_n. 
 
+                
                 c0_n_data_in = c0_data_out;
 
                 cn_n_data_in = cn_data_out;
