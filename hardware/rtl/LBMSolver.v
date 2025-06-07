@@ -148,6 +148,19 @@ module LBMSolver (
     output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
     output reg                          cnw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
+
+    // initial conditions
+    
+    input wire [`DATA_WIDTH-1:0]        init_c0,
+    input wire [`DATA_WIDTH-1:0]        init_cn,
+    input wire [`DATA_WIDTH-1:0]        init_cne,
+    input wire [`DATA_WIDTH-1:0]        init_ce,
+    input wire [`DATA_WIDTH-1:0]        init_cse,
+    input wire [`DATA_WIDTH-1:0]        init_cs,
+    input wire [`DATA_WIDTH-1:0]        init_csw,
+    input wire [`DATA_WIDTH-1:0]        init_cw,
+    input wire [`DATA_WIDTH-1:0]        init_cnw,
+
     
 
     // collider results
@@ -741,39 +754,39 @@ module LBMSolver (
                 //initial eastward direction
                 c0_next_write_en = 1;
                 c0_next_write_addr = index;
-                c0_next_data_in = 16'h0E39;
+                c0_next_data_in = init_c0;
 
                 cn_next_write_en = 1;
                 cn_next_write_addr = index;
-                cn_next_data_in = 16'h038E;
+                cn_next_data_in = init_cn;
 
                 cne_next_write_en = 1;
                 cne_next_write_addr = index;
-                cne_next_data_in = 16'h00E4;
+                cne_next_data_in = init_cne;
 
                 ce_next_write_en = 1;
                 ce_next_write_addr = index;
-                ce_next_data_in = 16'h038E;
+                ce_next_data_in = init_ce;
 
                 cse_next_write_en = 1;
                 cse_next_write_addr = index;
-                cse_next_data_in = 16'h00E4;
+                cse_next_data_in = init_cse;
 
                 cs_next_write_en = 1;
                 cs_next_write_addr = index;
-                cs_next_data_in = 16'h038E;
+                cs_next_data_in = init_cs;
 
                 csw_next_write_en = 1;
                 csw_next_write_addr = index;
-                csw_next_data_in = 16'h00E4;
+                csw_next_data_in = init_csw;
 
                 cw_next_write_en = 1;
                 cw_next_write_addr = index;
-                cw_next_data_in = 16'h038E;
+                cw_next_data_in = init_cw;
 
                 cnw_next_write_en = 1;
                 cnw_next_write_addr = index;
-                cnw_next_data_in = 16'h00E4;
+                cnw_next_data_in = init_cnw;
 
             end
 
