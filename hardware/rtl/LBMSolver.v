@@ -738,42 +738,42 @@ module LBMSolver (
                     next_sim_state = MEM_RESET;
                 end
                 
-                
+                //initial eastward direction
                 c0_next_write_en = 1;
                 c0_next_write_addr = index;
-                c0_next_data_in = 0;
+                c0_next_data_in = 16'h0E39;
 
                 cn_next_write_en = 1;
                 cn_next_write_addr = index;
-                cn_next_data_in = 0;
+                cn_next_data_in = 16'h038E;
 
                 cne_next_write_en = 1;
                 cne_next_write_addr = index;
-                cne_next_data_in = 0;
+                cne_next_data_in = 16'h00E4;
 
                 ce_next_write_en = 1;
                 ce_next_write_addr = index;
-                ce_next_data_in = 16'h1000;
+                ce_next_data_in = 16'h0558;
 
                 cse_next_write_en = 1;
                 cse_next_write_addr = index;
-                cse_next_data_in = 0;
+                cse_next_data_in = 16'h00E4;
 
                 cs_next_write_en = 1;
                 cs_next_write_addr = index;
-                cs_next_data_in = 0;
+                cs_next_data_in = 16'h038E;
 
                 csw_next_write_en = 1;
                 csw_next_write_addr = index;
-                csw_next_data_in = 0;
+                csw_next_data_in = 16'h00E4;
 
                 cw_next_write_en = 1;
                 cw_next_write_addr = index;
-                cw_next_data_in = 0;
+                cw_next_data_in = 16'h01CB;
 
                 cnw_next_write_en = 1;
                 cnw_next_write_addr = index;
-                cnw_next_data_in = 0;
+                cnw_next_data_in = 16'h00E4;
 
             end
 
