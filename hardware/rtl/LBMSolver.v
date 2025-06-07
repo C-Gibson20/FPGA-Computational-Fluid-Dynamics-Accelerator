@@ -753,7 +753,7 @@ module LBMSolver (
 
                 ce_next_write_en = 1;
                 ce_next_write_addr = index;
-                ce_next_data_in = 16'h0558;
+                ce_next_data_in = 16'h038E;
 
                 cse_next_write_en = 1;
                 cse_next_write_addr = index;
@@ -769,7 +769,7 @@ module LBMSolver (
 
                 cw_next_write_en = 1;
                 cw_next_write_addr = index;
-                cw_next_data_in = 16'h01CB;
+                cw_next_data_in = 16'h038E;
 
                 cnw_next_write_en = 1;
                 cnw_next_write_addr = index;
