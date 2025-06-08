@@ -177,13 +177,16 @@ module LBMSolver (
 
     assign testing_cs_n_data_in = cs_n_data_in;
     //States
-    localparam IDLE = 3'd0;
-    localparam STREAM = 3'd1;
-    localparam BOUNCE = 3'd2;
-    localparam BOUNCE_WAIT = 3'd3;
-    localparam ZERO_BOUNCE = 3'd4;
-    localparam COLLIDE = 3'd5;
-    localparam MEM_RESET = 3'd6;
+    localparam IDLE             = 4'd0;
+    localparam STREAM           = 4'd1;
+    localparam STREAM_WAIT      = 4'd2;
+    localparam BOUNDARY         = 4'd3;
+    localparam BOUNDARY_WAIT    = 4'd4;
+    localparam BOUNCE           = 4'd5;
+    localparam BOUNCE_WAIT      = 4'd6;
+    localparam ZERO_BOUNCE      = 4'd7;
+    localparam COLLIDE          = 4'd8;
+    localparam MEM_RESET        = 4'd9;
     
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
@@ -418,114 +421,157 @@ module LBMSolver (
             IDLE: begin
                 if(step_count < step) begin
                     next_sim_state = STREAM;
-                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_ram_wait_count = 0;
                 end
                 else
                     next_sim_state = IDLE;
             end
             STREAM:
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
+                if(barriers[index] == 1'b0) //stream if not barrier
+                begin
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_sim_state = STREAM_WAIT;
+                    next_index = index;
+                end
+                else // don't stream
+                begin
+                    next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
+                    next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
                     next_sim_state = STREAM;
+                end
+
+                if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
+                begin
+                    next_index = 2*`WIDTH+2;
+                    next_width_count = 2;
+                    next_sim_state = BOUNCE;
+                    // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
+                end 
+            end
+
+            STREAM_WAIT : // do the outside too
+            begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
+                    next_sim_state = STREAM_WAIT;
                     next_index = index;
                     next_width_count = width_count;
-
-                    c0_next_write_addr = c0_n_addr;
-                    c0_n_next_write_en = c0_n_write_en;
-
-                    cn_next_write_addr = cn_n_addr;
-                    cn_n_next_write_en = cn_n_write_en;
-
-                    cne_next_write_addr = cne_n_addr;
-                    cne_n_next_write_en = cne_n_write_en;
-
-                    ce_next_write_addr = ce_n_addr;
-                    ce_n_next_write_en = ce_n_write_en;
-
-                    cse_next_write_addr = cse_n_addr;
-                    cse_n_next_write_en = cse_n_write_en;
-
-                    cs_next_write_addr = cs_n_addr;
-                    cs_n_next_write_en = cs_n_write_en;
-
-                    csw_next_write_addr = csw_n_addr;
-                    csw_n_next_write_en = csw_n_write_en;
-
-                    cw_next_write_addr = cw_n_addr;
-                    cw_n_next_write_en = cw_n_write_en;
-
-                    cnw_next_write_addr = cnw_n_addr;
-                    cnw_n_next_write_en = cnw_n_write_en;
-                end        
+                end 
                 else begin
-                    if(index == `DEPTH-1) // if streamed all cells, go to bounce stage
+                    
+                    c0_next_write_addr = index;
+                    c0_n_next_write_en = 1'b1;
+                    c0_next_data_in = c0_data_out;
+
+                    cn_next_write_addr = index-`WIDTH; // write to cell above
+                    cn_n_next_write_en = 1;
+                    cn_next_data_in = cn_data_out;
+
+                    cne_next_write_addr = index-`WIDTH+1;
+                    cne_n_next_write_en = 1;
+                    cne_next_data_in = cne_data_out;
+
+                    ce_next_write_addr = index+1;
+                    ce_n_next_write_en = (width_count != `WIDTH - 1);
+                    ce_next_data_in = ce_data_out;
+
+                    cse_next_write_addr = index+`WIDTH+1;
+                    cse_n_next_write_en = 1;
+                    cse_next_data_in = cse_data_out;
+
+                    cs_next_write_addr = index+`WIDTH;
+                    cs_n_next_write_en = 1;
+                    cs_next_data_in = cs_data_out;
+
+                    csw_next_write_addr = index+`WIDTH-1;
+                    csw_n_next_write_en = 1;
+                    csw_next_data_in = csw_data_out;
+
+                    cw_next_write_addr = index - 1;
+                    cw_n_next_write_en = 1;
+                    cw_next_data_in = cw_data_out;
+
+                    cnw_next_write_addr = index - 1 - `WIDTH;
+                    cnw_n_next_write_en = 1;
+                    cnw_next_data_in = cnw_data_out;
+
+                    if(index == `DEPTH-1-`WIDTH-1) 
                     begin
                         next_index = 2*`WIDTH+2;
                         next_width_count = 2;
                         next_sim_state = BOUNCE;
-                        // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
+                        
                     end
-                    else 
+                    else
                     begin
-                        next_index = index + 1;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
+                        next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
+                        next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
                         next_sim_state = STREAM;
                     end
-                    if(barriers[index]==1'b0)
-                        begin
-                        next_ram_wait_count = `RAM_READ_WAIT;
+                end
+            end
 
-                        c0_next_write_addr = index;
-                        c0_n_next_write_en = 1'b1;
+            // Assert zero gradient (copy inner edge for values facing inward on outer edge) or absorbing (zeroes)
+            BOUNDARY : // iterates across second outermost edge
+            begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
+                    next_sim_state = BOUNDARY;
+                    next_index = index; 
+                    next_width_count = width_count;
+                end
+                else begin
+                    if(index == 2*`WIDTH -2) begin // NE corner
+                        csw_next_write_addr = `WIDTH - 1; 
+                        csw_n_next_write_en = 1;
+                        cs_next_write_addr = `WIDTH - 2;
+                        cs_n_next_write_en = 1;
+                        cw_next_write_addr = 2*`WIDTH - 1;
+                        cw_n_next_write_en = 1;
 
-                        cn_next_write_addr = index-`WIDTH; // write to cell above
-                        cn_n_next_write_en = (index>= `WIDTH); // only write if past first row
-
-                        cne_next_write_addr = index-`WIDTH+1;
-                        cne_n_next_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
-
-                        ce_next_write_addr = index+1;
-                        ce_n_next_write_en = (width_count != `WIDTH - 1);
-
-                        cse_next_write_addr = index+`WIDTH+1;
-                        cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
-
-                        cs_next_write_addr = index+`WIDTH;
-                        cs_n_next_write_en = (index <= `DEPTH-`WIDTH-1);
-
-                        csw_next_write_addr = index+`WIDTH-1;
-                        csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-
-                        cw_next_write_addr = index - 1;
-                        cw_n_next_write_en = (width_count != 0);
-
-                        cnw_next_write_addr = index - 1 - `WIDTH;
-                        cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
+                        csw_next_data_in = csw_data_out;
+                        cs_next_data_in = cs_data_out;
+                        cw_next_data_in = cw_data_out;
                     end
-                    // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
-                    // note to self: streaming step reads from cx and writes to cx_n. 
+                    else if (index == `DEPTH - `WIDTH - 2) begin // SE corner
+                        cnw_next_write_addr = `DEPTH - 1; 
+                        cnw_n_next_write_en = 1;
+                        cn_next_write_addr = `DEPTH - 2; 
+                        cn_n_next_write_en = 1;
+                        cw_next_write_addr = `DEPTH - `WIDTH - 1; 
+                        cw_n_next_write_en = 1;
 
+                        cnw_next_data_in = cnw_data_out;
+                        cn_next_data_in = cn_data_out;
+                        cw_next_data_in = cw_data_out;
+                        
+                    end
+                    else if (index == `DEPTH - 2*`WIDTH + 1) begin // SW corner
+                        cne_next_write_addr = `DEPTH - `WIDTH; 
+                        cne_n_next_write_en = 1;
+                        cne_next_data_in = cne_data_out;
+                        
+                    end
+                    else if(index == `WIDTH + 1) begin // NW corner
+                        cse_next_write_addr = 0;
+                        cse_n_next_write_en = 1;
+                        cse_next_data_in = cse_data_out;
+                    end
+                    else if(`WIDTH + 1 < index < 2*`WIDTH -2) begin // top edge
+                        cs_next_write_addr = index - `WIDTH;
+                        cs_n_next_write_en = 1;
+                        cs_next_data_in = cs_data_out;
+                    end
+                    else if(index >= `DEPTH - `WIDTH ) begin // bottom edge
+                        cn_next_write_addr = index - `WIDTH;
+                        cn_n_next_write_en = 1;
+                        cn_next_data_in = cn_data_out;
+                    end
                 end
 
-                c0_next_data_in = c0_data_out;
-
-                cn_next_data_in = cn_data_out;
-
-                cne_next_data_in = cne_data_out;
-
-                ce_next_data_in = ce_data_out;
-
-                cse_next_data_in = cse_data_out;
-
-                cs_next_data_in = cs_data_out;
-
-                csw_next_data_in = csw_data_out;
-
-                cw_next_data_in = cw_data_out;
-
-                cnw_next_data_in = cnw_data_out;
             end
+
 
             BOUNCE:
             begin
@@ -699,7 +745,7 @@ module LBMSolver (
                             next_sim_state = COLLIDE;
                             next_ram_wait_count = `RAM_READ_WAIT;
                         end
-                        
+
                         if(index >= `WIDTH && index <= `DEPTH-`WIDTH-1 && width_count != 0 && width_count != `WIDTH-1) begin // only do for inside the margin
                             c0_next_write_addr = index;
                             c0_next_write_en = 1'b1;
