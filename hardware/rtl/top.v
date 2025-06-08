@@ -10,6 +10,7 @@ module top (
     input  wire signed [15:0] omega,
     
     output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
+    output wire signed [15:0] testing_c0_data_in,
     output wire [`DATA_WIDTH-1:0] u_x,
     output wire [`DATA_WIDTH-1:0] u_y,
     output wire [`DATA_WIDTH-1:0] rho,
@@ -66,6 +67,7 @@ module top (
     RAM_2500 #(.INIT_FILE("ram00E4.mem")) cnw    (.clk(clk), .addr(cnw_addr),  .data_in(cnw_data_in),  .write_en(cnw_write_en),  .data_out(cnw_data_out));
     RAM_2500 #(.INIT_FILE("ram0.mem")) cnw_n  (.clk(clk), .addr(cnw_n_addr),.data_in(cnw_n_data_in),.write_en(cnw_n_write_en),.data_out(cnw_n_data_out));
 
+    assign testing_c0_data_in = c0_data_in;
     // Instantiate LBMSolver and connect RAM
     LBMSolver lbm (
         .clk(clk),

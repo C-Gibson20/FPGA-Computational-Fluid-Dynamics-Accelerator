@@ -46,12 +46,10 @@ TEST_F(TopTestbench, kii) {
         top->barriers.data()[word] |= (1U << bit);
     };
 
-    // first zero all words
     for (int w = 0; w < (2500+31)/32; ++w) {
         top->barriers.data()[w] = 0;
     }
 
-    // now set the bits you actually want
     for (int i = 0; i < 2500; i++) {
         bool isBarrier = (i < 50) || (i >= 2450) || (i % 50 == 0) || ((i+1) % 50 == 0);
         if (isBarrier) {
@@ -59,8 +57,8 @@ TEST_F(TopTestbench, kii) {
             setBarrierBit(i);
         }
     }
-    runSimulation(80000);
-
+    runSimulation(80099);
+    EXPECT_EQ(top->testing_c0_data_in,0x0E38);
 }
 
 int main(int argc, char **argv) {
