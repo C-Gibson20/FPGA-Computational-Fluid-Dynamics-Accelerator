@@ -147,24 +147,24 @@ def initialize(x1top, y1top, y1height, u0=u0):
     
     count = 0
     for i in range(height*width):
-        # n0[i] = four9ths* (1 - 1.5*(u0**2.))
-        # nN[i] = one9th  * (1 - 1.5*(u0**2.))
-        # nS[i] = one9th  * (1 - 1.5*(u0**2.))
-        # nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        n0[i] = 0
-        nN[i] = 0
-        nS[i] = 0
-        nE[i] = 0
-        nW[i] = 0
-        nNE[i]= 0
-        nSE[i]= 0
-        nNW[i]= 0
-        nSW[i]= 0
+        n0[i] = four9ths* (1 - 1.5*(u0**2.))
+        nN[i] = one9th  * (1 - 1.5*(u0**2.))
+        nS[i] = one9th  * (1 - 1.5*(u0**2.))
+        nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # n0[i] = 0
+        # nN[i] = 0
+        # nS[i] = 0
+        # nE[i] = 0
+        # nW[i] = 0
+        # nNE[i]= 0
+        # nSE[i]= 0
+        # nNW[i]= 0
+        # nSW[i]= 0
         
         rho[i] =  n0[i] + nN[i] + nS[i] + nE[i] + nW[i] + nNE[i] + nSE[i] + nNW[i] + nSW[i]
         
@@ -181,8 +181,8 @@ def initialize(x1top, y1top, y1height, u0=u0):
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 100
-nSeconds = 15
+fps = 60
+nSeconds = 10
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
@@ -213,12 +213,13 @@ print(f"uy[0]  = {to_q313_hex(uy[0])}")
 
 
 # Don't animate first few frames
-for i in range(10):
-    stream()
-    bounce()
-    collide()
+# for i in range(10):
+#     stream()
+#     bounce()
+#     collide()
 
 # Plot which we'll be animating
+collide()
 a = speed2
 im = plt.imshow(a.reshape(height,width))
 
@@ -242,5 +243,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=600) 
+writervideo = animation.FFMpegWriter(fps=60) 
 anim.save(f, writer=writervideo)
