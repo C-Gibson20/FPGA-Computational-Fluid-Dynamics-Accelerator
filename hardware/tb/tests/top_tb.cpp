@@ -36,17 +36,31 @@ protected:
 //     top->barriers = 0x0420; 
 //     runSimulation(8000);
 // }
+// assuming `DEPTH` bits wide, i in [0..DEPTH-1]
 
 TEST_F(TopTestbench, kii) {
-    for(int i = 0; i < 2500; i++){
-        if(i < 50 || i >= 2450 || i%50 || (i+1)%50){
-            top->barriers[i] = 1;
-        }
-        else{
-            top->barriers[i] = 0;
+
+    auto setBarrierBit = [&](int i) {
+        int word = i >> 5;        // divide by 32
+        int bit  = i &  31;       // mod 32
+        top->barriers.data()[word] |= (1U << bit);
+    };
+
+    // first zero all words
+    for (int w = 0; w < (2500+31)/32; ++w) {
+        top->barriers.data()[w] = 0;
+    }
+
+    // now set the bits you actually want
+    for (int i = 0; i < 2500; i++) {
+        bool isBarrier = (i < 50) || (i >= 2450) || (i % 50 == 0) || ((i+1) % 50 == 0);
+        if (isBarrier) {
+            std::cout << "Barrier at " << i << std::endl;
+            setBarrierBit(i);
         }
     }
-    runSimulation(8000);
+    runSimulation(80000);
+
 }
 
 int main(int argc, char **argv) {

@@ -2,8 +2,8 @@
 `define DEF
 
 `define DATA_WIDTH 16
-`define HEIGHT 4
-`define WIDTH 4
+`define HEIGHT 50
+`define WIDTH 50
 `define DEPTH `HEIGHT * `WIDTH
 `define ADDRESS_WIDTH 13 // ≈ 11.3 → rounded up to 12
 `define FIXED_ONE 16'sh2000
