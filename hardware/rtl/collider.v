@@ -101,10 +101,10 @@ wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate 
 // ----------------------------------------------------------------------------------
 
 // Center
-wire signed [15:0] polynomial_null = one - three_halves_u_squared;
-wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
-wire signed [31:0] f_eq_null_intermediate_2 = rho * (f_eq_null_intermediate >>> 13);
-wire signed [15:0] f_eq_null = f_eq_null_intermediate_2 >>> 13;
+// wire signed [15:0] polynomial_null = one - three_halves_u_squared;
+// wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
+// wire signed [31:0] f_eq_null_intermediate_2 = rho * (f_eq_null_intermediate >>> 13);
+// wire signed [15:0] f_eq_null = f_eq_null_intermediate_2 >>> 13;
 
 // Cardinal directions
 // 3 * u_x and 3 * u_y
@@ -195,7 +195,7 @@ wire signed [15:0] f_eq_se = f_eq_se_intermediate_2 >>> 13;
 // ----------------------------------------------------------------------------------
 
 // Intermediate deltas
-wire signed [31:0] delta_f_null = omega * (f_eq_null - f_null);
+// wire signed [31:0] delta_f_null = omega * (f_eq_null - f_null);
 wire signed [31:0] delta_f_n    = omega * (f_eq_n    - f_n);
 wire signed [31:0] delta_f_ne   = omega * (f_eq_ne   - f_ne);
 wire signed [31:0] delta_f_e    = omega * (f_eq_e    - f_e);
@@ -206,7 +206,6 @@ wire signed [31:0] delta_f_w    = omega * (f_eq_w    - f_w);
 wire signed [31:0] delta_f_nw   = omega * (f_eq_nw   - f_nw);
 
 // Final updated values (Q3.13 -> Q3.13)
-assign f_new_null = f_null + (delta_f_null >>> 13);
 assign f_new_n    = f_n    + (delta_f_n    >>> 13);
 assign f_new_ne   = f_ne   + (delta_f_ne   >>> 13);
 assign f_new_e    = f_e    + (delta_f_e    >>> 13);
@@ -215,5 +214,6 @@ assign f_new_s    = f_s    + (delta_f_s    >>> 13);
 assign f_new_sw   = f_sw   + (delta_f_sw   >>> 13);
 assign f_new_w    = f_w    + (delta_f_w    >>> 13);
 assign f_new_nw   = f_nw   + (delta_f_nw   >>> 13);
+assign f_new_null = rho - (f_new_n  + f_new_ne + f_new_e + f_new_se + f_new_s + f_new_sw + f_new_w + f_new_nw);
 
 endmodule
