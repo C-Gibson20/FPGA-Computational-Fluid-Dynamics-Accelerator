@@ -138,6 +138,30 @@ TEST_F(ColliderTestbench, ConservesMass) {
     EXPECT_NEAR(total_before, total_after, 4); // small tolerance for fixed-point error
 }
 
+TEST_F(ColliderTestbench, inputZero) {
+    collider->f_null = 0x0000;
+    collider->f_n    = 0x0000;
+    collider->f_s    = 0x0000;
+    collider->f_e    = 0x0000;
+    collider->f_w    = 0x0000;
+    collider->f_ne   = 0x0000;
+    collider->f_se   = 0x0000;
+    collider->f_sw   = 0x0000;
+    collider->f_nw   = 0x0000;
+
+    collider->eval();
+    tfp->dump(ticks++);
+    EXPECT_EQ(collider->f_new_null, 0);
+    EXPECT_EQ(collider->f_new_n,    0);
+    EXPECT_EQ(collider->f_new_s,    0);
+    EXPECT_EQ(collider->f_new_e,    0);
+    EXPECT_EQ(collider->f_new_w,    0);
+    EXPECT_EQ(collider->f_new_ne,   0);
+    EXPECT_EQ(collider->f_new_se,   0);
+    EXPECT_EQ(collider->f_new_sw,   0);
+    EXPECT_EQ(collider->f_new_nw,   0);
+
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

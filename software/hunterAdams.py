@@ -147,15 +147,24 @@ def initialize(x1top, y1top, y1height, u0=u0):
     
     count = 0
     for i in range(height*width):
-        n0[i] = four9ths* (1 - 1.5*(u0**2.))
-        nN[i] = one9th  * (1 - 1.5*(u0**2.))
-        nS[i] = one9th  * (1 - 1.5*(u0**2.))
-        nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # n0[i] = four9ths* (1 - 1.5*(u0**2.))
+        # nN[i] = one9th  * (1 - 1.5*(u0**2.))
+        # nS[i] = one9th  * (1 - 1.5*(u0**2.))
+        # nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        n0[i] = 0
+        nN[i] = 0
+        nS[i] = 0
+        nE[i] = 0
+        nW[i] = 0
+        nNE[i]= 0
+        nSE[i]= 0
+        nNW[i]= 0
+        nSW[i]= 0
         
         rho[i] =  n0[i] + nN[i] + nS[i] + nE[i] + nW[i] + nNE[i] + nSE[i] + nNW[i] + nSW[i]
         

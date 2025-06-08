@@ -184,10 +184,10 @@ wire signed [31:0] f_eq_sw_intermediate_2 = rho * (f_eq_sw_intermediate >>> 13);
 wire signed [31:0] f_eq_nw_intermediate_2 = rho * (f_eq_nw_intermediate >>> 13);
 wire signed [31:0] f_eq_se_intermediate_2 = rho * (f_eq_se_intermediate >>> 13);
 
-wire signed [15:0] f_eq_ne = f_eq_ne_intermediate >>> 13;
-wire signed [15:0] f_eq_sw = f_eq_sw_intermediate >>> 13;
-wire signed [15:0] f_eq_nw = f_eq_nw_intermediate >>> 13;
-wire signed [15:0] f_eq_se = f_eq_se_intermediate >>> 13;
+wire signed [15:0] f_eq_ne = f_eq_ne_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_sw = f_eq_sw_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_nw = f_eq_nw_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_se = f_eq_se_intermediate_2 >>> 13;
 
 
 // ----------------------------------------------------------------------------------
