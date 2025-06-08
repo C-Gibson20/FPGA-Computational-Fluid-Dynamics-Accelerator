@@ -36,8 +36,7 @@ TEST_F(ColliderTestbench, AtEquilibrium_NoChange) {
     collider->eval();
 
     // Confirm outputs remain unchanged
-    // Allow ±2 leeway for rounding error
-    EXPECT_NEAR(collider->f_new_null, collider->f_null, 2);
+    EXPECT_EQ(collider->f_new_null, collider->f_null);
     EXPECT_EQ(collider->f_new_n,    collider->f_n);
     EXPECT_EQ(collider->f_new_s,    collider->f_s);
     EXPECT_EQ(collider->f_new_e,    collider->f_e);
@@ -62,7 +61,7 @@ TEST_F(ColliderTestbench, SmallEastwardSpeed) {
     // Run one evaluation cycle
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3514, 3);
+    EXPECT_NEAR(collider->f_new_null, 3527, 3); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3514 if skipped
     EXPECT_NEAR(collider->f_new_n,    878, 3);
     EXPECT_NEAR(collider->f_new_s,    878, 3);
     EXPECT_NEAR(collider->f_new_e, 1127, 3);
@@ -86,7 +85,7 @@ TEST_F(ColliderTestbench, StrongNorthwardSpeed) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3322, 3);
+    EXPECT_NEAR(collider->f_new_null, 3338, 3); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3322 if skipped
     EXPECT_NEAR(collider->f_new_n,    1417, 3);
     EXPECT_NEAR(collider->f_new_s,    671, 3);
     EXPECT_NEAR(collider->f_new_e, 831, 3);
@@ -110,7 +109,7 @@ TEST_F(ColliderTestbench, DiagonalNorthEastFlow) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3651, 3);
+    EXPECT_NEAR(collider->f_new_null, 3668, 3); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3651 if skipped
     EXPECT_NEAR(collider->f_new_n,    1045, 3);
     EXPECT_NEAR(collider->f_new_s,    789, 3);
     EXPECT_NEAR(collider->f_new_e, 1045, 3);
@@ -135,9 +134,33 @@ TEST_F(ColliderTestbench, ConservesMass) {
                            collider->f_new_ne + collider->f_new_se +
                            collider->f_new_sw + collider->f_new_nw;
 
-    EXPECT_NEAR(total_before, total_after, 4); // small tolerance for fixed-point error
+    EXPECT_EQ(total_before, total_after);
 }
 
+TEST_F(ColliderTestbench, inputZero) {
+    collider->f_null = 0x0000;
+    collider->f_n    = 0x0000;
+    collider->f_s    = 0x0000;
+    collider->f_e    = 0x0000;
+    collider->f_w    = 0x0000;
+    collider->f_ne   = 0x0000;
+    collider->f_se   = 0x0000;
+    collider->f_sw   = 0x0000;
+    collider->f_nw   = 0x0000;
+
+    collider->eval();
+    tfp->dump(ticks++);
+    EXPECT_EQ(collider->f_new_null, 0);
+    EXPECT_EQ(collider->f_new_n,    0);
+    EXPECT_EQ(collider->f_new_s,    0);
+    EXPECT_EQ(collider->f_new_e,    0);
+    EXPECT_EQ(collider->f_new_w,    0);
+    EXPECT_EQ(collider->f_new_ne,   0);
+    EXPECT_EQ(collider->f_new_se,   0);
+    EXPECT_EQ(collider->f_new_sw,   0);
+    EXPECT_EQ(collider->f_new_nw,   0);
+
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

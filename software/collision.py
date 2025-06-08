@@ -6,15 +6,24 @@ def q313_to_float(x):
 
 # Initial f_i values from testbench (Q3.13)
 f_i_int = {
-    'null': 0x0E38,
-    'n':    0x038E,
-    's':    0x038E,
-    'e':    0x038E,
-    'w':    0x038E,
-    'ne':   0x0150,
-    'se':   0x00E4,
-    'sw':   0x0090,
-    'nw':   0x00E4
+    # 'null': 0x0E38,
+    # 'n':    0x038E,
+    # 's':    0x038E,
+    # 'e':    0x038E,
+    # 'w':    0x038E,
+    # 'ne':   0x0150,
+    # 'se':   0x00E4,
+    # 'sw':   0x0090,
+    # 'nw':   0x00E4
+    'null': 0x0000,
+    'n':    0x0000,
+    's':    0x0000,
+    'e':    0x0000,
+    'w':    0x0000,
+    'ne':   0x0000,
+    'se':   0x0000,
+    'sw':   0x0000,
+    'nw':   0x0000
 }
 f_i = {k: q313_to_float(v) for k, v in f_i_int.items()}
 
@@ -29,8 +38,11 @@ directions = {
 
 # Macroscopic values
 rho = sum(f_i.values())
-u_x = (f_i['e'] + f_i['ne'] + f_i['se'] - f_i['w'] - f_i['nw'] - f_i['sw']) / rho
-u_y = (f_i['n'] + f_i['ne'] + f_i['nw'] - f_i['s'] - f_i['se'] - f_i['sw']) / rho
+rho_x1 = rho * (2 - rho)
+x2 = (2 - rho) * (2 - rho_x1)
+x3 = x2 * (2 - rho * x2)
+u_x = (f_i['e'] + f_i['ne'] + f_i['se'] - f_i['w'] - f_i['nw'] - f_i['sw']) * x3
+u_y = (f_i['n'] + f_i['ne'] + f_i['nw'] - f_i['s'] - f_i['se'] - f_i['sw']) * x3
 
 omega = 2.0  # tau = 0.5
 
