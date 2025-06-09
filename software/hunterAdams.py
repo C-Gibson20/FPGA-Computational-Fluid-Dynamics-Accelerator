@@ -38,8 +38,8 @@ speed2 = numpy.zeros(height*width) # Cell squared velocity
 def stream():
     
     # Stream all internal cells
-    for x in range(0, width-1):
-        for y in range(1, height-1):
+    for x in range(width-1):
+        for y in range(height-1):
             # Movement north (Northwest corner)
             nN[y*width + x] = nN[y*width + x + width]
             # Movement northwest (Northwest corner)
