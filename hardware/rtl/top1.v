@@ -17,7 +17,7 @@ module top (
     output wire signed [15:0] GPIOux, 
     output wire signed [15:0] GPIOuy, 
     output wire signed [15:0] GPIOrho, 
-
+    output wire signed [15:0] GPIOu2, 
     
     input wire [`DATA_WIDTH-1:0]        init_c0,
     input wire [`DATA_WIDTH-1:0]        init_cn,
@@ -58,6 +58,7 @@ module top (
 
     wire [`DATA_WIDTH-1:0] u_x;
     wire [`DATA_WIDTH-1:0] u_y;
+    wire [`DATA_WIDTH-1:0] u_squared;
     wire [`DATA_WIDTH-1:0] rho;
 
     // Instantiate all 18 RAMs
@@ -118,11 +119,12 @@ module top (
         .cnw_addr(cnw_addr), .cnw_data_in(cnw_data_in), .cnw_write_en(cnw_write_en), .cnw_data_out(cnw_data_out),
         .cnw_n_addr(cnw_n_addr), .cnw_n_data_in(cnw_n_data_in), .cnw_n_write_en(cnw_n_write_en), .cnw_n_data_out(cnw_n_data_out),
 
+        .u_squared(u_squared),
         .u_x(u_x),
         .u_y(u_y),
         .rho(rho),
         .collider_ready(collider_ready),
-        .in_collision_state(in_collision_state)
+        .in_collision_state(in_collision_state),
         .init_c0(init_c0),
         .init_cn(init_cn),
         .init_cne(init_cne),
@@ -145,8 +147,10 @@ module top (
         .in_collision_state(in_collision_state),
         .GPIOux(GPIOux),
         .GPIOuy(GPIOuy),
-        .GPIOrho(GPIOrho)
-    )
+        .GPIOrho(GPIOrho),
+        .u_squared(u_squared),
+        .GPIOu2(GPIOu2)
+    );
 
 
 endmodule

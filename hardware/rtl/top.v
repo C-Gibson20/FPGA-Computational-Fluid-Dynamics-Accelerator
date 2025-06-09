@@ -14,6 +14,7 @@ module top (
     output wire [`DATA_WIDTH-1:0] u_x,
     output wire [`DATA_WIDTH-1:0] u_y,
     output wire [`DATA_WIDTH-1:0] rho,
+    output wire [`DATA_WIDTH-1:0] u_squared,
     output wire collider_ready,
     output wire in_collision_state
 );

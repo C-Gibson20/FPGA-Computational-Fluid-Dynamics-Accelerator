@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolver (
+module LBMSolverZ (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -534,9 +534,9 @@ module LBMSolver (
                         cw_next_write_addr = 2*`WIDTH - 1;
                         cw_n_next_write_en = 1;
 
-                        csw_next_data_in = csw_data_out;
-                        cs_next_data_in = cs_data_out;
-                        cw_next_data_in = cw_data_out;
+                        csw_next_data_in = 0;
+                        cs_next_data_in = 0;
+                        cw_next_data_in = 0;
                     end
                     else if (index == `DEPTH - `WIDTH - 2) begin // SE corner
                         cnw_next_write_addr = `DEPTH - 1; 
@@ -546,9 +546,9 @@ module LBMSolver (
                         cw_next_write_addr = `DEPTH - `WIDTH - 1; 
                         cw_n_next_write_en = 1;
 
-                        cnw_next_data_in = cnw_data_out;
-                        cn_next_data_in = cn_data_out;
-                        cw_next_data_in = cw_data_out;
+                        cnw_next_data_in = 0;
+                        cn_next_data_in = 0;
+                        cw_next_data_in = 0;
                         
                     end
                     else if (index == `DEPTH - 2*`WIDTH + 1) begin // SW corner
@@ -559,9 +559,9 @@ module LBMSolver (
                         ce_next_write_addr = `DEPTH - 2*`WIDTH; 
                         ce_n_next_write_en = 1;
 
-                        cne_next_data_in = cne_data_out;
-                        cn_next_data_in = cn_data_out;
-                        ce_next_data_in = ce_data_out;
+                        cne_next_data_in = 0;
+                        cn_next_data_in = 0;
+                        ce_next_data_in = 0;
 
                     end
                     else if(index == `WIDTH + 1) begin // NW corner
@@ -572,30 +572,30 @@ module LBMSolver (
                         ce_next_write_addr = `WIDTH;
                         ce_n_next_write_en = 1;
 
-                        cse_next_data_in = cse_data_out;
-                        cs_next_data_in = cs_data_out;
-                        ce_next_data_in = ce_data_out;
+                        cse_next_data_in = 0;
+                        cs_next_data_in = 0;
+                        ce_next_data_in = 0;
                         
                     end
                     else if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
                         cs_next_write_addr = index - `WIDTH;
                         cs_n_next_write_en = 1;
-                        cs_next_data_in = cs_data_out;
+                        cs_next_data_in = 0;
                     end
                     else if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
                         cn_next_write_addr = index - `WIDTH;
                         cn_n_next_write_en = 1;
-                        cn_next_data_in = cn_data_out;
+                        cn_next_data_in = 0;
                     end
                     else if(width_count == 1) begin // left edge
                         ce_next_write_addr = index - 1;
                         ce_n_next_write_en = 1;
-                        ce_next_data_in = ce_data_out;
+                        ce_next_data_in = 0;
                     end
                     else if(width_count == `WIDTH - 2) begin // right edge 
                         cw_next_write_addr = index + 1;
                         cw_n_next_write_en = 1;
-                        cw_next_data_in = cw_data_out;
+                        cw_next_data_in = 0;
                     end
                     
                     next_ram_wait_count = `RAM_READ_WAIT;

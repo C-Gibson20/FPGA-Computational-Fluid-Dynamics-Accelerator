@@ -5,8 +5,8 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 50                     # grid height
-width = 50                     # grid width
+height = 15                     # grid height
+width = 15                     # grid width
 # viscosity = 0.002                # viscosity
 # omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 omega = 2.
@@ -157,15 +157,6 @@ def initialize(x1top, y1top, y1height, u0=u0):
         nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
         nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
         nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # n0[i] = 0
-        # nN[i] = 0
-        # nS[i] = 0
-        # nE[i] = 0
-        # nW[i] = 0
-        # nNE[i]= 0
-        # nSE[i]= 0
-        # nNW[i]= 0
-        # nSW[i]= 0
         
         rho[i] =  n0[i] + nN[i] + nS[i] + nE[i] + nW[i] + nNE[i] + nSE[i] + nNW[i] + nSW[i]
         
@@ -182,15 +173,14 @@ def initialize(x1top, y1top, y1height, u0=u0):
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 60
+fps = 1
 nSeconds = 10
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-# initialize(25, 11, 10, 50, 150)
-initialize(25, 25, 2)
+initialize(8, 5, 3)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
@@ -230,6 +220,13 @@ def animate_func(i):
     bounce()
     collide()
     im.set_array(speed2.reshape(height, width))
+    
+    # Save speed2 of current frame
+    with open(f"speed2_step{i}.txt", "w") as f:
+        for y in range(height):
+            row = speed2[y * width : (y + 1) * width]
+            f.write(" ".join(f"{val:.6f}" for val in row) + "\n")
+    
     return [im]
 
 # Animation object
@@ -244,5 +241,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=60) 
+writervideo = animation.FFMpegWriter(fps=1) 
 anim.save(f, writer=writervideo)
