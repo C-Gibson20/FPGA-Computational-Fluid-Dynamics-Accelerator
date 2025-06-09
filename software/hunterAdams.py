@@ -5,11 +5,12 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 5                      # grid height
-width = 5                     # grid width
-viscosity = 0.002                # viscosity
-omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
-u0 = 0.01                       # initial in-flow speed (eastward)
+height = 50                     # grid height
+width = 50                     # grid width
+# viscosity = 0.002                # viscosity
+# omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
+omega = 2.
+u0 = 0.005                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
 one36th  = 1./36.                # a constant
@@ -189,7 +190,7 @@ fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
 # initialize(25, 11, 10, 50, 150)
-initialize(3, 3, 0)
+initialize(25, 25, 2)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space

@@ -45,10 +45,10 @@ typedef signed int Fix ;
 ///////////////////////////////////////
 ////// LB PARAMS AND CONSTANTS ////////
 ///////////////////////////////////////
-#define height 32 					// grid height
-#define width 512 					// grid width
+#define height 50 					// grid height
+#define width 50 					// grid width
 Fix omega = f2Fix(1./((3*0.002) + 0.5)) ;	// Relaxation parameter (funct. of viscosity)
-Fix u0 = f2Fix(0.1);				// Initial speed
+Fix u0 = f2Fix(0);				// Initial speed
 Fix four9ths = f2Fix(4./9.);		// 4/9
 Fix one9th   = f2Fix(1./9.);		// 1/9
 Fix one36th  = f2Fix(1./36.);		// 1/36
@@ -111,13 +111,13 @@ void initialize(unsigned int xtop, unsigned int ytop, unsigned int yheight, Fix 
 		*(nSE + i) = mFix(one36th,  fixone + u0_3 + u0sq_4_5 - u0sq_1_5) ;
 
 		// And initialize the barrier
-		if (xcoord == xtop) {
-			if (ycoord >= ytop) {
-				if (ycoord < (ytop+yheight)) {
-					*(bar + ycoord*width + xcoord) = 1 ;
-				}
-			}
-		}
+		// if (xcoord == xtop) {
+		// 	if (ycoord >= ytop) {
+		// 		if (ycoord < (ytop+yheight)) {
+		// 			*(bar + ycoord*width + xcoord) = 1 ;
+		// 		}
+		// 	}
+		// }
 
 		xcoord = (xcoord < (width-1)) ? (xcoord+1) : 0 ;
 		ycoord = (xcoord != 0) ? ycoord : (ycoord+1) ;
@@ -214,7 +214,7 @@ void collide() {
         for(y=1; y<(height-1); y++) {
             
             // # What's our current index?
-            i = (y<<9) + x ;
+            i = y * width + x;
             
             // # Skip over cells containing barriers                
             if (*(bar+i)==0) {
@@ -376,7 +376,7 @@ int main(void)
     initialize(25, 11, 10, u0);
 
     char fname[64];
-    int max_frames = 9000;
+    int max_frames = 9;
 
     for (int frame = 0; frame < max_frames; frame++) {
         stream();

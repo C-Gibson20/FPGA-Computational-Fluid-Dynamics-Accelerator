@@ -167,6 +167,7 @@ module LBMSolver (
     output wire [`DATA_WIDTH-1:0] u_x, 
     output wire [`DATA_WIDTH-1:0] u_y, 
     output wire [`DATA_WIDTH-1:0] rho,
+    output wire [`DATA_WIDTH-1:0] u_squared,
 
     output wire collider_ready,
     output wire in_collision_state,
@@ -276,7 +277,8 @@ module LBMSolver (
         .axi_ready(v_d_ready),
         .u_x(u_x),
         .u_y(u_y),
-        .rho(rho)
+        .rho(rho),
+        .u_squared(u_squared)
     );
 
     //Update stream state
