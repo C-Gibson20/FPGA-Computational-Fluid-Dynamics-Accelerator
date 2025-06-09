@@ -21,7 +21,7 @@ module collider(
     output wire newval_ready,
     output wire axi_ready,
 
-    output wire [15:0] u_x, u_y, rho
+    output wire [15:0] u_x, u_y, rho, u_squared
 );
 
 // ----------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ wire signed [31:0] u_y_squared_intermediate = u_y * u_y;
 wire signed [15:0] u_x_squared = u_x_squared_intermediate >>> 13;
 wire signed [15:0] u_y_squared = u_y_squared_intermediate >>> 13;
 
-wire signed [15:0] u_squared = u_x_squared + u_y_squared;
+assign u_squared = u_x_squared + u_y_squared;
 wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared;
 wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate >>> 13;
 
