@@ -5,11 +5,12 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 100                      # grid height
-width = 100                     # grid width
-viscosity = 0.002                # viscosity
-omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
-u0 = 0.1                         # initial in-flow speed (eastward)
+height = 50                     # grid height
+width = 50                     # grid width
+# viscosity = 0.002                # viscosity
+# omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
+omega = 2.
+u0 = 0.005                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
 one36th  = 1./36.                # a constant
@@ -141,7 +142,7 @@ def collide():
                 # Conserve mass
                 n0[i]   = rho[i] - (nE[i]+nW[i]+nN[i]+nS[i]+nNE[i]+nSE[i]+nNW[i]+nSW[i])
 
-def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
+def initialize(x1top, y1top, y1height, u0=u0):
     xcoord = 0
     ycoord = 0
     
@@ -156,6 +157,15 @@ def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
         nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
         nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
         nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # n0[i] = 0
+        # nN[i] = 0
+        # nS[i] = 0
+        # nE[i] = 0
+        # nW[i] = 0
+        # nNE[i]= 0
+        # nSE[i]= 0
+        # nNW[i]= 0
+        # nSW[i]= 0
         
         rho[i] =  n0[i] + nN[i] + nS[i] + nE[i] + nW[i] + nNE[i] + nSE[i] + nNW[i] + nSW[i]
         
@@ -167,40 +177,50 @@ def initialize(x1top, y1top, y1height, x2top, x3top, u0=u0):
                 if (ycoord < (y1top+y1height)):
                     count += 1
                     bar[ycoord*width + xcoord] = 1
-
-        # if (xcoord==x2top):
-        #     if (ycoord >= y1top):
-        #         if (ycoord < (y1top+y1height)):
-        #             count += 1
-        #             bar[ycoord*width + xcoord] = 1
-
-        # if (xcoord==x3top):
-        #     if (ycoord >= y1top):
-        #         if (ycoord < (y1top+y1height)):
-        #             count += 1
-        #             bar[ycoord*width + xcoord] = 1
         
         xcoord = (xcoord+1) if xcoord<(width-1) else 0
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 600
-nSeconds = 15
+fps = 60
+nSeconds = 10
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
 # initialize(25, 11, 10, 50, 150)
-initialize(25, 30, 40, 50, 75)
+initialize(25, 25, 2)
+
+def to_q313_hex(value):
+    fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
+    return f"0x{fixed_val:04X}"
+
+
+print("Example initialized values (at index 0) in Q3.13 hex:")
+print(f"n0[0]  = {to_q313_hex(n0[0])}")
+print(f"nN[0]  = {to_q313_hex(nN[0])}")
+print(f"nS[0]  = {to_q313_hex(nS[0])}")
+print(f"nE[0]  = {to_q313_hex(nE[0])}")
+print(f"nW[0]  = {to_q313_hex(nW[0])}")
+print(f"nNE[0] = {to_q313_hex(nNE[0])}")
+print(f"nSE[0] = {to_q313_hex(nSE[0])}")
+print(f"nNW[0] = {to_q313_hex(nNW[0])}")
+print(f"nSW[0] = {to_q313_hex(nSW[0])}")
+print(f"rho[0] = {to_q313_hex(rho[0])}")
+print(f"ux[0]  = {to_q313_hex(ux[0])}")
+print(f"uy[0]  = {to_q313_hex(uy[0])}")
+
+
 
 # Don't animate first few frames
-for i in range(10):
-    stream()
-    bounce()
-    collide()
+# for i in range(10):
+#     stream()
+#     bounce()
+#     collide()
 
 # Plot which we'll be animating
+collide()
 a = speed2
 im = plt.imshow(a.reshape(height,width))
 
@@ -224,5 +244,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=600) 
+writervideo = animation.FFMpegWriter(fps=60) 
 anim.save(f, writer=writervideo)

@@ -1,3 +1,4 @@
 /rtl/obj_dir/**
 /hardware/tb/test_out/**
 **/waveform.vcd
+*.txt

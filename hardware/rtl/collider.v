@@ -21,7 +21,7 @@ module collider(
     output wire newval_ready,
     output wire axi_ready,
 
-    output wire [15:0] u_x, u_y, rho
+    output wire [15:0] u_x, u_y, rho, u_squared
 );
 
 // ----------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ wire signed [31:0] u_y_squared_intermediate = u_y * u_y;
 wire signed [15:0] u_x_squared = u_x_squared_intermediate >>> 13;
 wire signed [15:0] u_y_squared = u_y_squared_intermediate >>> 13;
 
-wire signed [15:0] u_squared = u_x_squared + u_y_squared;
+assign u_squared = u_x_squared + u_y_squared;
 wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared;
 wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate >>> 13;
 
@@ -101,9 +101,10 @@ wire signed [15:0] three_halves_u_squared = three_halves_u_squared_intermediate 
 // ----------------------------------------------------------------------------------
 
 // Center
-wire signed [15:0] polynomial_null = one - three_halves_u_squared;
-wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
-wire signed [15:0] f_eq_null = f_eq_null_intermediate >>> 13;
+// wire signed [15:0] polynomial_null = one - three_halves_u_squared;
+// wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
+// wire signed [31:0] f_eq_null_intermediate_2 = rho * (f_eq_null_intermediate >>> 13);
+// wire signed [15:0] f_eq_null = f_eq_null_intermediate_2 >>> 13;
 
 // Cardinal directions
 // 3 * u_x and 3 * u_y
@@ -128,10 +129,15 @@ wire signed [31:0] f_eq_s_intermediate = w_side * polynomial_s;
 wire signed [31:0] f_eq_e_intermediate = w_side * polynomial_e;
 wire signed [31:0] f_eq_w_intermediate = w_side * polynomial_w;
 
-wire signed [15:0] f_eq_n = f_eq_n_intermediate >>> 13;
-wire signed [15:0] f_eq_s = f_eq_s_intermediate >>> 13;
-wire signed [15:0] f_eq_e = f_eq_e_intermediate >>> 13;
-wire signed [15:0] f_eq_w = f_eq_w_intermediate >>> 13;
+wire signed [31:0] f_eq_n_intermediate_2 = rho * (f_eq_n_intermediate >>> 13);
+wire signed [31:0] f_eq_s_intermediate_2 = rho * (f_eq_s_intermediate >>> 13);
+wire signed [31:0] f_eq_e_intermediate_2 = rho * (f_eq_e_intermediate >>> 13);
+wire signed [31:0] f_eq_w_intermediate_2 = rho * (f_eq_w_intermediate >>> 13);
+
+wire signed [15:0] f_eq_n = f_eq_n_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_s = f_eq_s_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_e = f_eq_e_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_w = f_eq_w_intermediate_2 >>> 13;
 
 // Diagonals
 wire signed [15:0] x_plus_y    = u_x + u_y;
@@ -166,17 +172,22 @@ wire signed [15:0] nine_half_x_minus_y_squared              = nine_half_x_minus_
 wire signed [15:0] polynomial_ne = one + three_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_sw = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_nw = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
-wire signed [15:0] polynomial_se = one - three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_se = one + three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 
 wire signed [31:0] f_eq_ne_intermediate = w_diag * polynomial_ne;
 wire signed [31:0] f_eq_sw_intermediate = w_diag * polynomial_sw;
 wire signed [31:0] f_eq_nw_intermediate = w_diag * polynomial_nw;
 wire signed [31:0] f_eq_se_intermediate = w_diag * polynomial_se;
 
-wire signed [15:0] f_eq_ne = f_eq_ne_intermediate >>> 13;
-wire signed [15:0] f_eq_sw = f_eq_sw_intermediate >>> 13;
-wire signed [15:0] f_eq_nw = f_eq_nw_intermediate >>> 13;
-wire signed [15:0] f_eq_se = f_eq_se_intermediate >>> 13;
+wire signed [31:0] f_eq_ne_intermediate_2 = rho * (f_eq_ne_intermediate >>> 13);
+wire signed [31:0] f_eq_sw_intermediate_2 = rho * (f_eq_sw_intermediate >>> 13);
+wire signed [31:0] f_eq_nw_intermediate_2 = rho * (f_eq_nw_intermediate >>> 13);
+wire signed [31:0] f_eq_se_intermediate_2 = rho * (f_eq_se_intermediate >>> 13);
+
+wire signed [15:0] f_eq_ne = f_eq_ne_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_sw = f_eq_sw_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_nw = f_eq_nw_intermediate_2 >>> 13;
+wire signed [15:0] f_eq_se = f_eq_se_intermediate_2 >>> 13;
 
 
 // ----------------------------------------------------------------------------------
@@ -184,7 +195,7 @@ wire signed [15:0] f_eq_se = f_eq_se_intermediate >>> 13;
 // ----------------------------------------------------------------------------------
 
 // Intermediate deltas
-wire signed [31:0] delta_f_null = omega * (f_eq_null - f_null);
+// wire signed [31:0] delta_f_null = omega * (f_eq_null - f_null);
 wire signed [31:0] delta_f_n    = omega * (f_eq_n    - f_n);
 wire signed [31:0] delta_f_ne   = omega * (f_eq_ne   - f_ne);
 wire signed [31:0] delta_f_e    = omega * (f_eq_e    - f_e);
@@ -195,7 +206,6 @@ wire signed [31:0] delta_f_w    = omega * (f_eq_w    - f_w);
 wire signed [31:0] delta_f_nw   = omega * (f_eq_nw   - f_nw);
 
 // Final updated values (Q3.13 -> Q3.13)
-assign f_new_null = f_null + (delta_f_null >>> 13);
 assign f_new_n    = f_n    + (delta_f_n    >>> 13);
 assign f_new_ne   = f_ne   + (delta_f_ne   >>> 13);
 assign f_new_e    = f_e    + (delta_f_e    >>> 13);
@@ -204,5 +214,6 @@ assign f_new_s    = f_s    + (delta_f_s    >>> 13);
 assign f_new_sw   = f_sw   + (delta_f_sw   >>> 13);
 assign f_new_w    = f_w    + (delta_f_w    >>> 13);
 assign f_new_nw   = f_nw   + (delta_f_nw   >>> 13);
+assign f_new_null = rho - (f_new_n  + f_new_ne + f_new_e + f_new_se + f_new_s + f_new_sw + f_new_w + f_new_nw);
 
 endmodule

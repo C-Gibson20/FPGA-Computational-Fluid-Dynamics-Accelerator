@@ -45,10 +45,10 @@ typedef signed int Fix ;
 ///////////////////////////////////////
 ////// LB PARAMS AND CONSTANTS ////////
 ///////////////////////////////////////
-#define height 32 					// grid height
-#define width 512 					// grid width
+#define height 50 					// grid height
+#define width 50 					// grid width
 Fix omega = f2Fix(1./((3*0.002) + 0.5)) ;	// Relaxation parameter (funct. of viscosity)
-Fix u0 = f2Fix(0.1);				// Initial speed
+Fix u0 = f2Fix(0);				// Initial speed
 Fix four9ths = f2Fix(4./9.);		// 4/9
 Fix one9th   = f2Fix(1./9.);		// 1/9
 Fix one36th  = f2Fix(1./36.);		// 1/36
@@ -111,13 +111,13 @@ void initialize(unsigned int xtop, unsigned int ytop, unsigned int yheight, Fix 
 		*(nSE + i) = mFix(one36th,  fixone + u0_3 + u0sq_4_5 - u0sq_1_5) ;
 
 		// And initialize the barrier
-		if (xcoord == xtop) {
-			if (ycoord >= ytop) {
-				if (ycoord < (ytop+yheight)) {
-					*(bar + ycoord*width + xcoord) = 1 ;
-				}
-			}
-		}
+		// if (xcoord == xtop) {
+		// 	if (ycoord >= ytop) {
+		// 		if (ycoord < (ytop+yheight)) {
+		// 			*(bar + ycoord*width + xcoord) = 1 ;
+		// 		}
+		// 	}
+		// }
 
 		xcoord = (xcoord < (width-1)) ? (xcoord+1) : 0 ;
 		ycoord = (xcoord != 0) ? ycoord : (ycoord+1) ;
@@ -214,7 +214,7 @@ void collide() {
         for(y=1; y<(height-1); y++) {
             
             // # What's our current index?
-            i = (y<<9) + x ;
+            i = y * width + x;
             
             // # Skip over cells containing barriers                
             if (*(bar+i)==0) {
@@ -288,46 +288,105 @@ void collide() {
 }
 
 	
-int main(void)
-{   
+// int main(void)
+// {   
   
 
-	// Initialize the simulation
-	initialize(25, 11, 10, u0) ;
+// 	// Initialize the simulation
+// 	initialize(25, 11, 10, u0) ;
 
-	printf("Fixone: %08x\n", fixone) ;
-	printf("1/9: %08x\n", one9th) ;
-	printf("1/36: %08x\n", one36th) ;
-	printf("Naught: %08x\n", *(n0 + 1000)) ;
-	printf("North: %08x\n", *(nN + 1000)) ;
-	printf("South: %08x\n", *(nS + 1000)) ;
-	printf("East: %08x\n", *(nE + 1000)) ;
-	printf("West: %08x\n", *(nW + 1000)) ;
-	printf("Northwest: %08x\n", *(nNW + 1000)) ;
-	printf("Northeast: %08x\n", *(nNE + 1000)) ;
-	printf("Southwest: %08x\n", *(nSW + 1000)) ;
-	printf("Southeast: %08x\n\n", *(nSE + 1000)) ;
+// 	printf("Fixone: %08x\n", fixone) ;
+// 	printf("1/9: %08x\n", one9th) ;
+// 	printf("1/36: %08x\n", one36th) ;
+// 	printf("Naught: %08x\n", *(n0 + 1000)) ;
+// 	printf("North: %08x\n", *(nN + 1000)) ;
+// 	printf("South: %08x\n", *(nS + 1000)) ;
+// 	printf("East: %08x\n", *(nE + 1000)) ;
+// 	printf("West: %08x\n", *(nW + 1000)) ;
+// 	printf("Northwest: %08x\n", *(nNW + 1000)) ;
+// 	printf("Northeast: %08x\n", *(nNE + 1000)) ;
+// 	printf("Southwest: %08x\n", *(nSW + 1000)) ;
+// 	printf("Southeast: %08x\n\n", *(nSE + 1000)) ;
 
-	int j ;
-	char junk[8] ;
+// 	int j ;
+// 	char junk[8] ;
 
 	
-	while(1) 
-	{
+// 	while(1) 
+// 	{
 
-		// Start timer
-		gettimeofday(&t1, NULL);
+// 		// Start timer
+// 		gettimeofday(&t1, NULL);
 
-		// Update all cells
-		stream() ;
-		bounce() ;
-		collide() ;
+// 		// Update all cells
+// 		stream() ;
+// 		bounce() ;
+// 		collide() ;
 	
-		// stop timer, display time
-		gettimeofday(&t2, NULL);
-		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000000.0;      // sec to us
-		elapsedTime += (t2.tv_usec - t1.tv_usec) ;   // us 
-		printf("T = %6.0f uSec  ", elapsedTime);	
+// 		// stop timer, display time
+// 		gettimeofday(&t2, NULL);
+// 		elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000000.0;      // sec to us
+// 		elapsedTime += (t2.tv_usec - t1.tv_usec) ;   // us 
+// 		printf("T = %6.0f uSec  ", elapsedTime);	
 		
-	} // end while(1)
-} // end main
+// 	} // end while(1)
+// } // end main
+
+// ADD AT THE BOTTOM OF FILE
+void dump_rho_to_file(const char *filename) {
+    FILE *f = fopen(filename, "w");
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int i = y * width + x;
+            Fix rho = n0[i] + nN[i] + nE[i] + nS[i] + nW[i] +
+                      nNE[i] + nSE[i] + nSW[i] + nNW[i];
+            fprintf(f, "%f ", Fix2f(rho));
+        }
+        fprintf(f, "\n");
+    }
+    fclose(f);
+}
+
+void dump_speed2_to_file(const char *filename) {
+    FILE *f = fopen(filename, "w");
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int i = y * width + x;
+            if (bar[i]) {
+                fprintf(f, "0 ");
+                continue;
+            }
+            Fix rho = n0[i] + nN[i] + nE[i] + nS[i] + nW[i] +
+                      nNE[i] + nSE[i] + nSW[i] + nNW[i];
+            Fix rho_m1 = rho - fixone;
+            Fix rho_inv = fixone - rho_m1 + mFix(rho_m1, rho_m1);
+            Fix ux = mFix(nE[i] + nNE[i] + nSE[i] - nW[i] - nNW[i] - nSW[i], rho_inv);
+            Fix uy = mFix(nN[i] + nNE[i] + nNW[i] - nS[i] - nSE[i] - nSW[i], rho_inv);
+            Fix speed2 = mFix(ux, ux) + mFix(uy, uy);
+            fprintf(f, "%f ", Fix2f(speed2));
+        }
+        fprintf(f, "\n");
+    }
+    fclose(f);
+}
+
+// MODIFY main()
+int main(void)
+{   
+    initialize(25, 11, 10, u0);
+
+    char fname[64];
+    int max_frames = 9;
+
+    for (int frame = 0; frame < max_frames; frame++) {
+        stream();
+        bounce();
+        collide();
+
+        sprintf(fname, "frames/speed2_frame_%04d.txt", frame);
+        dump_speed2_to_file(fname);
+    }
+
+    printf("Frames written to 'frames/' folder.\n");
+    return 0;
+}

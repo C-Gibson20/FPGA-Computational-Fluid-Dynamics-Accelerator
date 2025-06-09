@@ -17,6 +17,18 @@ module top (
     output wire signed [15:0] GPIOux, 
     output wire signed [15:0] GPIOuy, 
     output wire signed [15:0] GPIOrho, 
+
+    
+    input wire [`DATA_WIDTH-1:0]        init_c0,
+    input wire [`DATA_WIDTH-1:0]        init_cn,
+    input wire [`DATA_WIDTH-1:0]        init_cne,
+    input wire [`DATA_WIDTH-1:0]        init_ce,
+    input wire [`DATA_WIDTH-1:0]        init_cse,
+    input wire [`DATA_WIDTH-1:0]        init_cs,
+    input wire [`DATA_WIDTH-1:0]        init_csw,
+    input wire [`DATA_WIDTH-1:0]        init_cw,
+    input wire [`DATA_WIDTH-1:0]        init_cnw,
+
     
     output wire collider_ready,
     output wire in_collision_state
@@ -111,6 +123,15 @@ module top (
         .rho(rho),
         .collider_ready(collider_ready),
         .in_collision_state(in_collision_state)
+        .init_c0(init_c0),
+        .init_cn(init_cn),
+        .init_cne(init_cne),
+        .init_ce(init_ce),
+        .init_cse(init_cse),
+        .init_cs(init_cs),
+        .init_csw(init_csw),
+        .init_cw(init_cw),
+        .init_cnw(init_cnw)
     );
 
     host_interface host_interface (

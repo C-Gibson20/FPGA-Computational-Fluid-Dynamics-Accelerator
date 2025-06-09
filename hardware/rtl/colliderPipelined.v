@@ -487,7 +487,7 @@ always @(posedge clk or posedge rst) begin
         polynomial_ne_s13 <= one + (three_x_plus_y_intermediate_s12 >>> 13) + (nine_half_x_plus_y_squared_intermediate_s12 >>> 13) - (three_halves_u_squared_intermediate_s12 >>> 13);
         polynomial_sw_s13 <= one + (three_neg_x_plus_y_intermediate_s12 >>> 13) + (nine_half_x_plus_y_squared_intermediate_s12 >>> 13) - (three_halves_u_squared_intermediate_s12 >>> 13);
         polynomial_nw_s13 <= one + (three_neg_x_minus_y_intermediate_s12 >>> 13) + (nine_half_x_minus_y_squared_intermediate_s12 >>> 13) - (three_halves_u_squared_intermediate_s12 >>> 13);
-        polynomial_se_s13 <= one - (three_x_minus_y_intermediate_s12 >>> 13) + (nine_half_x_minus_y_squared_intermediate_s12 >>> 13) - (three_halves_u_squared_intermediate_s12 >>> 13);
+        polynomial_se_s13 <= one + (three_x_minus_y_intermediate_s12 >>> 13) + (nine_half_x_minus_y_squared_intermediate_s12 >>> 13) - (three_halves_u_squared_intermediate_s12 >>> 13);
     end
 end
 

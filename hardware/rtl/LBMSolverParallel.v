@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolver (
+module LBMSolverParallel (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -36,131 +36,133 @@ module LBMSolver (
     input reg [`ADDRESS_WIDTH-1:0] width_count,
     
     // BRAM c0
-    output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
+    output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
     output reg                          c0_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_data_out,
+    input  wire [`DATA_WIDTH-1:0]       c0_data_out,
 
     // BRAM c0_n
-    output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    c0_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       c0_n_data_in, 
     output reg                          c0_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       c0_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       c0_n_data_out,
     
 
     // BRAM cn
-    output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cn_addr,
+    output reg  [`DATA_WIDTH-1:0]       cn_data_in, 
     output reg                          cn_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cn_data_out,
 
     // BRAM cn_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cn_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cn_n_data_in, 
     output reg                          cn_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cn_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]      cn_n_data_out,
     
 
     // BRAM cne
-    output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cne_addr,
+    output reg  [`DATA_WIDTH-1:0]       cne_data_in, 
     output reg                          cne_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cne_data_out,
 
     // BRAM cne_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cne_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cne_n_data_in, 
     output reg                          cne_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cne_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cne_n_data_out,
     
 
     // BRAM ce
-    output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    ce_addr,
+    output reg  [`DATA_WIDTH-1:0]       ce_data_in, 
     output reg                          ce_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_data_out,
+    input  wire [`DATA_WIDTH-1:0]       ce_data_out,
 
     // BRAM ce_n
-    output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    ce_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       ce_n_data_in, 
     output reg                          ce_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       ce_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       ce_n_data_out,
     
 
     // BRAM cse
-    output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cse_addr,
+    output reg  [`DATA_WIDTH-1:0]       cse_data_in, 
     output reg                          cse_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cse_data_out,
 
     // BRAM cse_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cse_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cse_n_data_in, 
     output reg                          cse_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cse_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cse_n_data_out,
     
 
     // BRAM cs
-    output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cs_addr,
+    output reg  [`DATA_WIDTH-1:0]       cs_data_in, 
     output reg                          cs_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cs_data_out,
 
     // BRAM cs_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cs_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cs_n_data_in, 
     output reg                          cs_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cs_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cs_n_data_out,
     
 
     // BRAM csw
-    output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    csw_addr,
+    output reg  [`DATA_WIDTH-1:0]       csw_data_in, 
     output reg                          csw_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_data_out,
+    input  wire [`DATA_WIDTH-1:0]       csw_data_out,
 
     // BRAM csw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    csw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       csw_n_data_in, 
     output reg                          csw_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       csw_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       csw_n_data_out,
     
 
     // BRAM cw
-    output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cw_addr,
+    output reg  [`DATA_WIDTH-1:0]       cw_data_in, 
     output reg                          cw_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cw_data_out,
 
     // BRAM cw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cw_n_data_in, 
     output reg                          cw_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cw_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cw_n_data_out,
     
 
     // BRAM cnw
-    output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_addr,
+    output reg  [`DATA_WIDTH-1:0]       cnw_data_in, 
     output reg                          cnw_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cnw_data_out,
 
     // BRAM cnw_n
-    output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
-    output reg  [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_in, 
+    // output reg  [`ADDRESS_WIDTH-1:0]    cnw_n_addr,
+    output reg  [`DATA_WIDTH-1:0]       cnw_n_data_in, 
     output reg                          cnw_n_write_en,
-    // input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_out,
+    input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
     
 
     // collider results
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
+    output wire [`DATA_WIDTH-1:0] u_x, 
+    output wire [`DATA_WIDTH-1:0] u_y, 
+    output wire [`DATA_WIDTH-1:0] rho,
     
     output wire collider_ready,
     output wire in_collision_state,
-    output wire next_index,
-    output wire [2:0] next_sim_state
+    // output wire next_index,
+    output wire [2:0] next_sim_state,
+    output wire zero_barrier,
+    output wire read_wait
 
 );
 
@@ -182,50 +184,50 @@ module LBMSolver (
     wire nv_ready;
     wire v_d_ready;
         
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c0_next_data_in;
-    reg c0_next_write_en, c0_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] c0_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] c0_next_data_in;
+    // reg c0_next_write_en, c0_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] c0_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cn_next_data_in;
-    reg cn_next_write_en, cn_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cn_next_data_in;
+    // reg cn_next_write_en, cn_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cne_next_data_in;
-    reg cne_next_write_en, cne_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cne_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cne_next_data_in;
+    // reg cne_next_write_en, cne_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cne_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] ce_next_data_in;
-    reg ce_next_write_en, ce_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] ce_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] ce_next_data_in;
+    // reg ce_next_write_en, ce_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] ce_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cse_next_data_in;
-    reg cse_next_write_en, cse_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cse_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cse_next_data_in;
+    // reg cse_next_write_en, cse_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cse_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cs_next_data_in;
-    reg cs_next_write_en, cs_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cs_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cs_next_data_in;
+    // reg cs_next_write_en, cs_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cs_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] csw_next_data_in;
-    reg csw_next_write_en, csw_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] csw_next_write_addr;
+    // reg [`DATA_WIDTH-1:0] csw_next_data_in;
+    // reg csw_next_write_en, csw_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] csw_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cw_next_data_in;
-    reg cw_next_write_en, cw_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cw_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cw_next_data_in;
+    // reg cw_next_write_en, cw_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cw_next_write_addr;
 
-    reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cnw_next_data_in;
-    reg cnw_next_write_en, cnw_n_next_write_en;
-    reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
+    // // reg [`DATA_WIDTH-1:0] cnw_next_data_in;
+    // reg cnw_next_write_en, cnw_n_next_write_en;
+    // reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
 
 
-    reg [2:0] ram_wait_count, next_ram_wait_count;
+    // reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    reg [15:0] step_count, next_step_count;
+    // reg [15:0] step_count, next_step_count;
 
-    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
+    wire [`DATA_WIDTH-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
-    assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
+    assign collider_ready = nv_ready && (sim_state == COLLIDE); // ensure not waiting more on RAM
     assign in_collision_state = (sim_state == COLLIDE);
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     //need two rams one for the current time step and one for the next time step
@@ -272,462 +274,453 @@ module LBMSolver (
     );
 
     //Update stream state
-    always @(posedge clk or negedge rst)
-    begin
-        if(!rst) 
-        begin
-            sim_state <= IDLE;
-            index <= initial_index;
-            width_count <= initial_index>>1;
-            ram_wait_count <= `RAM_READ_WAIT;
-            step_count <= 0;
-        end
-        else 
-        begin
-            step_count <= next_step_count;
-            ram_wait_count <= next_ram_wait_count;
+    // always @(posedge clk or negedge rst)
+    // begin
+    //     if(!rst) 
+    //     begin
+    //         sim_state <= IDLE;
+    //         index <= initial_index;
+    //         width_count <= initial_index>>1;
+    //         // ram_wait_count <= `RAM_READ_WAIT;
+    //         step_count <= 0;
+    //     end
+    //     else 
+    //     begin
+    //         step_count <= next_step_count;
+    //         // ram_wait_count <= next_ram_wait_count;
 
-            c0_addr <= (c0_write_en && sim_state != STREAM) ? c0_next_write_addr : index;
-            c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
-            c0_write_en <= c0_next_write_en;
-            c0_n_write_en <= c0_n_next_write_en;
-            c0_data_in <= c0_next_data_in;
-            c0_n_data_in <= c0_next_data_in;
+    //         c0_addr <= (c0_write_en && sim_state != STREAM) ? c0_next_write_addr : index;
+    //         c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
+    //         c0_write_en <= c0_next_write_en;
+    //         c0_n_write_en <= c0_n_next_write_en;
+    //         c0_data_in <= c0_next_data_in;
+    //         c0_n_data_in <= c0_next_data_in;
 
-            cn_addr <= (cn_write_en && sim_state != STREAM) ? cn_next_write_addr : index;
-            cn_n_addr <= cn_n_next_write_en ? cn_next_write_addr : index;
-            cn_write_en <= cn_next_write_en;
-            cn_n_write_en <= cn_n_next_write_en;
-            cn_data_in <= cn_next_data_in;
-            cn_n_data_in <= cn_next_data_in;
+    //         cn_addr <= (cn_write_en && sim_state != STREAM) ? cn_next_write_addr : index;
+    //         cn_n_addr <= cn_n_next_write_en ? cn_next_write_addr : index;
+    //         cn_write_en <= cn_next_write_en;
+    //         cn_n_write_en <= cn_n_next_write_en;
+    //         cn_data_in <= cn_next_data_in;
+    //         cn_n_data_in <= cn_next_data_in;
 
-            cne_addr <= (cne_write_en && sim_state != STREAM) ? cne_next_write_addr : index;
-            cne_n_addr <= cne_n_next_write_en ? cne_next_write_addr : index;
-            cne_write_en <= cne_next_write_en;
-            cne_n_write_en <= cne_n_next_write_en;
-            cne_data_in <= cne_next_data_in;
-            cne_n_data_in <= cne_next_data_in;
+    //         cne_addr <= (cne_write_en && sim_state != STREAM) ? cne_next_write_addr : index;
+    //         cne_n_addr <= cne_n_next_write_en ? cne_next_write_addr : index;
+    //         cne_write_en <= cne_next_write_en;
+    //         cne_n_write_en <= cne_n_next_write_en;
+    //         cne_data_in <= cne_next_data_in;
+    //         cne_n_data_in <= cne_next_data_in;
 
-            ce_addr <= (ce_write_en && sim_state != STREAM) ? ce_next_write_addr : index;
-            ce_n_addr <= ce_n_next_write_en ? ce_next_write_addr : index;
-            ce_write_en <= ce_next_write_en;
-            ce_n_write_en <= ce_n_next_write_en;
-            ce_data_in <= ce_next_data_in;
-            ce_n_data_in <= ce_next_data_in;
+    //         ce_addr <= (ce_write_en && sim_state != STREAM) ? ce_next_write_addr : index;
+    //         ce_n_addr <= ce_n_next_write_en ? ce_next_write_addr : index;
+    //         ce_write_en <= ce_next_write_en;
+    //         ce_n_write_en <= ce_n_next_write_en;
+    //         ce_data_in <= ce_next_data_in;
+    //         ce_n_data_in <= ce_next_data_in;
 
-            cse_addr <= (cse_write_en && sim_state != STREAM) ? cse_next_write_addr : index;
-            cse_n_addr <= cse_n_next_write_en ? cse_next_write_addr : index;
-            cse_write_en <= cse_next_write_en;
-            cse_n_write_en <= cse_n_next_write_en;
-            cse_data_in <= cse_next_data_in;
-            cse_n_data_in <= cse_next_data_in;
+    //         cse_addr <= (cse_write_en && sim_state != STREAM) ? cse_next_write_addr : index;
+    //         cse_n_addr <= cse_n_next_write_en ? cse_next_write_addr : index;
+    //         cse_write_en <= cse_next_write_en;
+    //         cse_n_write_en <= cse_n_next_write_en;
+    //         cse_data_in <= cse_next_data_in;
+    //         cse_n_data_in <= cse_next_data_in;
 
-            cs_addr <= (cs_write_en && sim_state != STREAM) ? cs_next_write_addr : index;
-            cs_n_addr <= cs_n_next_write_en ? cs_next_write_addr : index;
-            cs_write_en <= cs_next_write_en;
-            cs_n_write_en <= cs_n_next_write_en;
-            cs_data_in <= cs_next_data_in;
-            cs_n_data_in <= cs_next_data_in;
+    //         cs_addr <= (cs_write_en && sim_state != STREAM) ? cs_next_write_addr : index;
+    //         cs_n_addr <= cs_n_next_write_en ? cs_next_write_addr : index;
+    //         cs_write_en <= cs_next_write_en;
+    //         cs_n_write_en <= cs_n_next_write_en;
+    //         cs_data_in <= cs_next_data_in;
+    //         cs_n_data_in <= cs_next_data_in;
 
-            csw_addr <= (csw_write_en && sim_state != STREAM) ? csw_next_write_addr : index;
-            csw_n_addr <= csw_n_next_write_en ? csw_next_write_addr : index;
-            csw_write_en <= csw_next_write_en;
-            csw_n_write_en <= csw_n_next_write_en;
-            csw_data_in <= csw_next_data_in;
-            csw_n_data_in <= csw_next_data_in;
+    //         csw_addr <= (csw_write_en && sim_state != STREAM) ? csw_next_write_addr : index;
+    //         csw_n_addr <= csw_n_next_write_en ? csw_next_write_addr : index;
+    //         csw_write_en <= csw_next_write_en;
+    //         csw_n_write_en <= csw_n_next_write_en;
+    //         csw_data_in <= csw_next_data_in;
+    //         csw_n_data_in <= csw_next_data_in;
 
-            cw_addr <= (cw_write_en && sim_state != STREAM) ? cw_next_write_addr : index;
-            cw_n_addr <= cw_n_next_write_en ? cw_next_write_addr : index;
-            cw_write_en <= cw_next_write_en;
-            cw_n_write_en <= cw_n_next_write_en;
-            cw_data_in <= cw_next_data_in;
-            cw_n_data_in <= cw_next_data_in;
+    //         cw_addr <= (cw_write_en && sim_state != STREAM) ? cw_next_write_addr : index;
+    //         cw_n_addr <= cw_n_next_write_en ? cw_next_write_addr : index;
+    //         cw_write_en <= cw_next_write_en;
+    //         cw_n_write_en <= cw_n_next_write_en;
+    //         cw_data_in <= cw_next_data_in;
+    //         cw_n_data_in <= cw_next_data_in;
 
-            cnw_addr <= (cnw_write_en && sim_state != STREAM) ? cnw_next_write_addr : index;
-            cnw_n_addr <= cnw_n_next_write_en ? cnw_next_write_addr : index;
-            cnw_write_en <= cnw_next_write_en;
-            cnw_n_write_en <= cnw_n_next_write_en;
-            cnw_data_in <= cnw_next_data_in;
-            cnw_n_data_in <= cnw_next_data_in;
-        end
-    end
+    //         cnw_addr <= (cnw_write_en && sim_state != STREAM) ? cnw_next_write_addr : index;
+    //         cnw_n_addr <= cnw_n_next_write_en ? cnw_next_write_addr : index;
+    //         cnw_write_en <= cnw_next_write_en;
+    //         cnw_n_write_en <= cnw_n_next_write_en;
+    //         cnw_data_in <= cnw_next_data_in;
+    //         cnw_n_data_in <= cnw_next_data_in;
+    //     end
+    // end
 
 
     //Stream state
     always @* begin
-        c0_next_write_addr = 0;
-        c0_next_write_en = 0;
-        c0_n_next_write_en = 0;
-        c0_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        c0_write_en = 0;
+        c0_n_write_en = 0;
+        c0_data_in = 0;
+        c0_n_data_in = 0;
 
-        cn_next_write_addr = 0;
-        cn_next_write_en = 0;
-        cn_n_next_write_en = 0;
-        cn_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cn_write_en = 0;
+        cn_n_write_en = 0;
+        cn_data_in = 0;
+        cn_n_data_in = 0;
 
-        cne_next_write_addr = 0;
-        cne_next_write_en = 0;
-        cne_n_next_write_en = 0;
-        cne_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cne_write_en = 0;
+        cne_n_write_en = 0;
+        cne_data_in = 0;
+        cne_n_data_in = 0;
 
-        ce_next_write_addr = 0;
-        ce_next_write_en = 0;
-        ce_n_next_write_en = 0;
-        ce_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        ce_write_en = 0;
+        ce_n_write_en = 0;
+        ce_data_in = 0;
+        ce_n_data_in = 0;
 
-        cse_next_write_addr = 0;
-        cse_next_write_en = 0;
-        cse_n_next_write_en = 0;
-        cse_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cse_write_en = 0;
+        cse_n_write_en = 0;
+        cse_data_in = 0;
+        cse_n_data_in = 0;
 
-        cs_next_write_addr = 0;
-        cs_next_write_en = 0;
-        cs_n_next_write_en = 0;
-        cs_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cs_write_en = 0;
+        cs_n_write_en = 0;
+        cs_data_in = 0;
+        cs_n_data_in = 0;
 
-        csw_next_write_addr = 0;
-        csw_next_write_en = 0;
-        csw_n_next_write_en = 0;
-        csw_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        csw_write_en = 0;
+        csw_n_write_en = 0;
+        csw_data_in = 0;
+        csw_n_data_in = 0;
 
-        cw_next_write_addr = 0;
-        cw_next_write_en = 0;
-        cw_n_next_write_en = 0;
-        cw_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cw_write_en = 0;
+        cw_n_write_en = 0;
+        cw_data_in = 0;
+        cw_n_data_in = 0;
 
-        cnw_next_write_addr = 0;
-        cnw_next_write_en = 0;
-        cnw_n_next_write_en = 0;
-        cnw_next_data_in = 0;
+        //c[0-z]*_addr [ -~]*
+        //c[0-z]*_addr [ -~]*
+        cnw_write_en = 0;
+        cnw_n_write_en = 0;
+        cnw_data_in = 0;
+        cnw_n_data_in = 0;       // next_index = 0;
 
-        next_index = 0;
-
-        next_step_count = step_count;
-        next_ram_wait_count = ram_wait_count;
+        // next_step_count = step_count;
+        // next_ram_wait_count = ram_wait_count;
+        zero_barrier = 0;
+        read_wait = 0;
 
         case(sim_state)
             IDLE: begin
-                if(step >= step_count) begin
-                    next_sim_state = STREAM;
-                    next_ram_wait_count = `RAM_READ_WAIT;
-                end
-                else
-                    next_sim_state = IDLE;
+                next_sim_state = STREAM;
             end
             STREAM:
-            begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = 0;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                end        
-                else begin
-                    if(index >= 2*(`DEPTH-1)) // if streamed all cells, go to bounce stage
-                    begin
-                        next_step_count = step_count + 1;
-                        next_index = 0;
-                        next_width_count = 0;
-                        next_sim_state = BOUNCE; // if one solver wants to go to the bounce state we must wait until all solvers are ready to advance the state
-                        // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
-                    end
-                    else // if not, increment index and continue streaming
-                    begin
-                        next_index = 1;
-                        next_sim_state = STREAM;
-
-                        if(barriers[index]==1'b0)
-                            begin
-                            next_ram_wait_count = `RAM_READ_WAIT;
-
-                            cn_next_write_addr = index-2*`WIDTH; // write to cell above
-                            cn_n_next_write_en = (index>= 2*(`WIDTH)); // only write if past first row
-
-                            cne_next_write_addr = index-2*`WIDTH+2;
-                            cne_n_next_write_en = (index >= 2*(`WIDTH) && (width_count != `WIDTH - 1));
-
-                            ce_next_write_addr = index+2;
-                            ce_n_next_write_en = (width_count != `WIDTH - 1);
-
-                            cse_next_write_addr = index+2*`WIDTH+2;
-                            cse_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1)  && (width_count != `WIDTH - 1));
-
-                            cs_next_write_addr = index+2*`WIDTH;
-                            cs_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1));
-
-                            csw_next_write_addr = index+2*`WIDTH-2;
-                            csw_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1) && (width_count != 0));
-
-                            cw_next_write_addr = index - 2;
-                            cw_n_next_write_en = (width_count != 0);
-
-                            cnw_next_write_addr = index - 2 - 2*`WIDTH;
-                            cnw_n_next_write_en = (index >= 2*`WIDTH && (width_count != 0));
-                        end
-                    end
-                    if(index <= 2*(`DEPTH-1)) 
-                    begin
-                        // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
-                        // note to self: streaming step reads from cx and writes to cx_n. 
-                        cn_next_data_in = cn_data_out;
-
-                        cne_next_data_in = cne_data_out;
-
-                        ce_next_data_in = ce_data_out;
-
-                        cse_next_data_in = cse_data_out;
-
-                        cs_next_data_in = cs_data_out;
-
-                        csw_next_data_in = csw_data_out;
-
-                        cw_next_data_in = cw_data_out;
-
-                        cnw_next_data_in = cnw_data_out;
-                    end
-                    else 
-                    begin
-                        cn_next_data_in = 0;
-
-                        cne_next_data_in = 0;
-
-                        ce_next_data_in = 0;
-
-                        cse_next_data_in = 0;
-
-                        cs_next_data_in = 0;
-
-                        csw_next_data_in = 0;
-
-                        cw_next_data_in = 0;
-
-                        cnw_next_data_in = 0;
-                    end
+            begin      
+                if(index >= `DEPTH-1) // if streamed all cells, go to bounce stage
+                begin
+                    // next_step_count = step_count + 1;
+                    // next_index = 0;
+                    // next_width_count = 0;
+                    next_sim_state = BOUNCE;
+                    // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
                 end
+                else 
+                begin
+                    // next_index = index + 1;
+                    // next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
+                    next_sim_state = STREAM;
+                end
+                if(index <= `DEPTH-1 && barriers[index]==1'b0)
+                begin
+                    read_wait = 1'b1;
+                    
+                    c0_n_write_en = 1'b1;
+                    
+                    cn_n_write_en = (index>= `WIDTH); // only write if past first row
+                    
+                    cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                    
+                    ce_n_write_en = (width_count != `WIDTH - 1);
+                    
+                    cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                    
+                    cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
+                    
+                    csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                    
+                    cw_n_write_en = (width_count != 0);
+       
+                    cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
+                end
+                // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
+                    // note to self: streaming step reads from cx and writes to cx_n. 
+
+                
+                c0_n_data_in = c0_data_out;
+
+                cn_n_data_in = cn_data_out;
+
+                cne_n_data_in = cne_data_out;
+
+                ce_n_data_in = ce_data_out;
+
+                cse_n_data_in = cse_data_out;
+
+                cs_n_data_in = cs_data_out;
+
+                csw_n_data_in = csw_data_out;
+
+                cw_n_data_in = cw_data_out;
+
+                cnw_n_data_in = cnw_data_out;
             end
 
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
                 
-                if(index >= 2*(`DEPTH-1)) 
+                if(index <= `DEPTH-1 && barriers[index] == 1'b1) // RAM read, so need to wait for RAM...
                 begin
-                    next_index = 0;
-                    next_width_count = 0;
-                    next_sim_state = ZERO_BOUNCE;
-//                    next_step_count = step_count + 1;
+                    read_wait = 1'b1;
+                    next_sim_state = BOUNCE_WAIT;
+                    // next_index = index;
                 end
-                else begin
-                    if(barriers[index>>1] == 1'b1) // RAM read, so need to wait for RAM...
-                    begin
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                        next_sim_state = BOUNCE_WAIT;
-                        next_index = 0;
-                    end
-                    else // not a barrier, skip over
-                    begin
-                        next_sim_state = BOUNCE;
-                        next_index = 1;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
-                    end
+                else if(index >= `DEPTH-1) 
+                begin
+                    // next_index = 0;
+                    // next_width_count = 0;
+                    next_sim_state = ZERO_BOUNCE;
+                    // next_step_count = step_count + 1;
+                end
+                else // not a barrier, skip over
+                begin
+                    next_sim_state = BOUNCE;
+                    // next_index = index + 1;
+                    // next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                 end
 
             end
 
             BOUNCE_WAIT:
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = 0;
-                    next_index = 0;
-                    next_width_count = width_count;
+                if(index <= `DEPTH-1)
+                begin
+                    if(barriers[index == 1'b1])
+                    begin
+                        // cn_n_addr = index-`WIDTH;
+                        cn_n_write_en = (index>= `WIDTH);
+                        cn_n_data_in = cs_n_data_out;
 
+                        // cne_n_addr = index-`WIDTH+1;
+                        cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                        cne_n_data_in = csw_n_data_out;
 
-                end 
-                else begin
-                    cn_next_write_addr = index-2*`WIDTH;
-                    cn_n_next_write_en = (index>= 2*`WIDTH);
-                    
-                    cne_next_write_addr = index-2*`WIDTH+2;
-                    cne_n_next_write_en = (index >= 2*`WIDTH && (width_count != `WIDTH - 1));
-                    
-                    ce_next_write_addr = index+2;
-                    ce_n_next_write_en = (width_count != `WIDTH - 1);
-                     
-                    cse_next_write_addr = index+2*`WIDTH+2;
-                    cse_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1)  && (width_count != `WIDTH - 1));
-                    
-                    cs_next_write_addr = index+2*(`WIDTH);
-                    cs_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1));
-                     
-                    csw_next_write_addr = index+2*`WIDTH-2;
-                    csw_n_next_write_en = (index <= 2*(`DEPTH-`WIDTH-1) && (width_count != 0));
-                    
-                    cw_next_write_addr = index - 2;
-                    cw_n_next_write_en = (width_count != 0);
-                     
-                    cnw_next_write_addr = index - 2*`WIDTH - 2;
-                    cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
-                    
-                    if(barriers[index>>1]) begin
-                        cn_next_data_in = cs_n_data_out;
-                        cne_next_data_in = csw_n_data_out;
-                        ce_next_data_in = cw_n_data_out;
-                        cse_next_data_in = cnw_n_data_out; 
-                        cs_next_data_in = cn_n_data_out;
-                        csw_next_data_in = cne_n_data_out; 
-                        cw_next_data_in = ce_n_data_out;
-                        cnw_next_data_in = cse_n_data_out;
+                        // ce_n_addr = index+1;
+                        ce_n_write_en = (width_count != `WIDTH - 1);
+                        ce_n_data_in = cw_n_data_out; 
+
+                        // cse_n_addr = index+`WIDTH+1;
+                        cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                        cse_n_data_in = cnw_n_data_out; 
+
+                        // cs_n_addr = index+`WIDTH;
+                        cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
+                        cs_n_data_in = cn_n_data_out; 
+
+                        // csw_n_addr = index+`WIDTH-1;
+                        csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                        csw_n_data_in = cne_n_data_out; 
+
+                        // cw_n_addr = index - 1;
+                        cw_n_write_en = (width_count != 0);
+                        cw_n_data_in = ce_n_data_out; 
+
+                        // cnw_n_addr = index - `WIDTH - 1;
+                        cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
+                        cnw_n_data_in = cse_n_data_out;
                     end
-                    else begin
-                        cn_next_data_in = cn_n_data_out;
-                        cne_next_data_in = cne_n_data_out;
-                        ce_next_data_in = ce_n_data_out;
-                        cse_next_data_in = cse_n_data_out; 
-                        cs_next_data_in = cs_n_data_out;
-                        csw_next_data_in = csw_n_data_out; 
-                        cw_next_data_in = cw_n_data_out;
-                        cnw_next_data_in = cnw_n_data_out;
+                    else
+                    begin
+                        // needs an extra step where it reads from the target write address and then compares values to stitch together correct output
+                        // c0_n_data_in = c0_data_out;
+
+                        // cn_n_data_in = cn_data_out;
+
+                        // cne_n_data_in = cne_data_out;
+
+                        // ce_n_data_in = ce_data_out;
+
+                        // cse_n_data_in = cse_data_out;
+
+                        // cs_n_data_in = cs_data_out;
+
+                        // csw_n_data_in = csw_data_out;
+
+                        // cw_n_data_in = cw_data_out;
+
+                        // cnw_n_data_in = cnw_data_out;
                     end
-                    // go back to bounce state
-                    next_index = index + 2*`RAMS_TO_ACCESS;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
+                end
+
+                // go back to bounce state
+                if(index < `DEPTH-1)
+                begin
+                    // next_index = index + 1;
+                    // next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                     next_sim_state = BOUNCE; 
+                end
+                else
+                begin
+                    // next_index = 0;
+                    // next_width_count = 0;
+                    next_sim_state = ZERO_BOUNCE; 
                 end
             end
 
             ZERO_BOUNCE:
             begin
-                if(index >= 2*(`DEPTH-1)) 
+                if(index >= `DEPTH-1) 
                 begin
-                    next_index = 0;
+                    // next_index = 0;
+                    // next_width_count = 0;
                     next_sim_state = COLLIDE;
-                    next_ram_wait_count = `RAM_READ_WAIT; // set ram read wait 
-//                    next_step_count = step_count + 1;
+                    // next_step_count = step_count + 1;
+                    
                 end
                 else
                 begin
-                    next_index = 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                    // next_index = index + 1;
+                    // next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                     next_sim_state = ZERO_BOUNCE;
                 end
-                if(index <=  2*(`DEPTH-1)) 
+
+                if(index <= `DEPTH-1 && barriers[index] == 1'b1) //this is where you left off 
                 begin
-                    if(barriers[index>>1] == 1'b1) //this is where you left off 
-                    begin
-                        // write zeroes to all barrier cells in cx_n
-                        c0_next_write_addr = index;
-                        c0_n_next_write_en = 1'b1;
-                        c0_next_data_in = 16'b0;
+                    // write zeroes to all barrier cells in cx_n
+                    //c[0-z]*_addr [ -~]*
+                    c0_n_write_en = 1'b1;
+                    c0_n_data_in = 16'b0;
 
-                        cn_next_write_addr = index;
-                        cn_n_next_write_en = 1'b1;
-                        cn_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    cn_n_write_en = 1'b1;
+                    cn_n_data_in = 16'b0;
 
-                        cne_next_write_addr = index;
-                        cne_n_next_write_en = 1'b1;
-                        cne_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    cne_n_write_en = 1'b1;
+                    cne_n_data_in = 16'b0;
 
-                        ce_next_write_addr = index;
-                        ce_n_next_write_en = 1'b1;
-                        ce_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    ce_n_write_en = 1'b1;
+                    ce_n_data_in = 16'b0;
 
-                        cse_next_write_addr = index;
-                        cse_n_next_write_en = 1'b1;
-                        cse_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    cse_n_write_en = 1'b1;
+                    cse_n_data_in = 16'b0;
 
-                        cs_next_write_addr = index;
-                        cs_n_next_write_en = 1'b1;
-                        cs_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    cs_n_write_en = 1'b1;
+                    cs_n_data_in = 16'b0;
 
-                        csw_next_write_addr = index;
-                        csw_n_next_write_en = 1'b1;
-                        csw_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    csw_n_write_en = 1'b1;
+                    csw_n_data_in = 16'b0;
 
-                        cw_next_write_addr = index;
-                        cw_n_next_write_en = 1'b1;
-                        cw_next_data_in = 16'b0;
+                    //c[0-z]*_addr [ -~]*
+                    cw_n_write_en = 1'b1;
+                    cw_n_data_in = 16'b0;
 
-                        cnw_next_write_addr = index;
-                        cnw_n_next_write_en = 1'b1;
-                        cnw_next_data_in = 16'b0;
-                    end
-                end
-                else
-                begin
+                    //c[0-z]*_addr [ -~]*
+                    cnw_n_write_en = 1'b1;
+                    cnw_n_data_in = 16'b0;
 
+                    zero_barrier = 1'b1;
                 end
             end
-            COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
+        COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = COLLIDE;
-                    next_index = 0;
-                end
-                else if(nv_ready) 
+                if(nv_ready)
+
                     begin
-                        if(index == 2*(`DEPTH-1)) 
+                        if(index >= `DEPTH-1) 
                         begin
-                            next_index = 0;
+                            // next_index = 0;
+                            // next_width_count = 0;
                             next_sim_state = STREAM;
-                            next_ram_wait_count = `RAM_READ_WAIT;
+                            // next_ram_wait_count = 2;
                             // next_step_count = step_count + 1;
                         end
                         else
                         begin
-                            next_index = 1;
+                            // next_index = index + 1;
+                            // next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                             next_sim_state = COLLIDE;
-                            next_ram_wait_count = `RAM_READ_WAIT;
+                            // next_// ram_wait_count = `RAM_READ_WAIT;
                         end
-                        c0_next_write_addr = index;
-                        c0_next_write_en = 1'b1;
-                        c0_next_data_in = c_c0;
+                        if(index <= `DEPTH-1) 
+                        begin
+                            //c[0-z]*_addr [ -~]*
+                            c0_write_en = 1'b1;
+                            c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
 
-                        cn_next_write_addr = index;
-                        cn_next_write_en = 1'b1;
-                        cn_next_data_in = c_cn;
+                            //c[0-z]*_addr [ -~]*
+                            cn_write_en = 1'b1;
+                            cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
 
-                        cne_next_write_addr = index;
-                        cne_next_write_en = 1'b1;
-                        cne_next_data_in = c_cne;
+                            //c[0-z]*_addr [ -~]*
+                            cne_write_en = 1'b1;
+                            cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
 
-                        ce_next_write_addr = index;
-                        ce_next_write_en = 1'b1;
-                        ce_next_data_in = c_ce;
+                            //c[0-z]*_addr [ -~]*
+                            ce_write_en = 1'b1;
+                            ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
 
-                        cse_next_write_addr = index;
-                        cse_next_write_en = 1'b1;
-                        cse_next_data_in = c_cse;
+                            //c[0-z]*_addr [ -~]*
+                            cse_write_en = 1'b1;
+                            cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
 
-                        cs_next_write_addr = index;
-                        cs_next_write_en = 1'b1;
-                        cs_next_data_in = c_cs;
+                            //c[0-z]*_addr [ -~]*
+                            cs_write_en = 1'b1;
+                            cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
 
-                        csw_next_write_addr = index;
-                        csw_next_write_en = 1'b1;
-                        csw_next_data_in = c_csw;
+                            //c[0-z]*_addr [ -~]*
+                            csw_write_en = 1'b1;
+                            csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
 
-                        cw_next_write_addr = index;
-                        cw_next_write_en = 1'b1;
-                        cw_next_data_in = c_cw;
+                            //c[0-z]*_addr [ -~]*
+                            cw_write_en = 1'b1;
+                            cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
 
-                        cnw_next_write_addr = index;
-                        cnw_next_write_en = 1'b1;
-                        cnw_next_data_in = c_cnw;
+                            //c[0-z]*_addr [ -~]*
+                            cnw_write_en = 1'b1;
+                            cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
+                        end
                     end
                 else
                     next_sim_state = COLLIDE;
             end
-
             default: 
             begin
                 next_sim_state = IDLE;
-                next_ram_wait_count = 0;
+                // next_// ram_wait_count = 0;
             end 
         endcase
     end
+
 
 endmodule
