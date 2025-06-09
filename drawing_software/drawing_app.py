@@ -6,82 +6,28 @@ from PIL import Image
 import numpy as np
 import time
 import subprocess
-import win32gui
-import win32con
-
-python_win_title = "DrawingApp"
-unity_win_title = "Unit"
 
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
-
-# Pygame Configuration
 pygame.init()
 fps = 60
 fpsClock = pygame.time.Clock()
 
 canvasSize = [800, 800]
-
-# Window size 
-buttonAreaWidth = canvasSize[0]/4  # Space for buttons
+buttonAreaWidth = 200
 width, height = canvasSize[0] + buttonAreaWidth, canvasSize[1]
-screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.DROPFILE | pygame.HWSURFACE | pygame.DOUBLEBUF)
+screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-font = pygame.font.SysFont('Lato', 30)
-
-# Wait a moment for windows to be created
-time.sleep(1)
-
-# Find your Python window (Pygame window) by class name or title
-def find_window(title):
-    hwnd = win32gui.FindWindow(None, title)
-    if hwnd == 0:
-        print(f"Window '{title}' not found")
-    return hwnd
-
-hwnd_python = find_window(python_win_title)
-hwnd_unity = find_window(unity_win_title)
-
-if hwnd_python != 0 and hwnd_unity != 0:
-    # Set Python window as child of Unity window
-    win32gui.SetParent(hwnd_python, hwnd_unity)
-
-    # Resize and position the Python window inside Unity
-    # Adjust these values based on how/where you want it
-    win32gui.MoveWindow(hwnd_python, 100, 100, 800, 800, True)
-
-    # Optional: remove window decorations (title bar, borders) for cleaner embedding
-    style = win32gui.GetWindowLong(hwnd_python, win32con.GWL_STYLE)
-    style = style & ~win32con.WS_CAPTION & ~win32con.WS_THICKFRAME
-    win32gui.SetWindowLong(hwnd_python, win32con.GWL_STYLE, style)
-else:
-    print("Could not find one or both windows")
-
-
-# Our Buttons will append themselves to this list
+font = pygame.font.SysFont('Arial', 20)
 objects = []
-
-#store lines here
 lines = []
+current_line = []
+images = []
 
-# Store all drawn points here
-points = []
-
-#store moved polygons here
-dragging_poly = []
-
-#store cirlces here
-circles = set()
-
-#store objects being moved here
-active_object = []
-
-# Initial color
+user_input = ''
 drawColor = [0, 0, 0]
-
-# Initial brush size
 brushSize = 10
 
-# Store drawn polygons
+drawingEnabled = True
 polygons = []
 selected_vertex = None
 selected_polygon = None
@@ -94,32 +40,20 @@ class Button():
         self.height = height
         self.onclickFunction = onclickFunction
         self.onePress = onePress
-
-        self.fillColors = {
-            'normal': '#ffffff',
-            'hover': '#666666',
-            'pressed': '#333333',
-        }
-
+        self.fillColors = {'normal': '#ffffff', 'hover': '#666666', 'pressed': '#333333'}
         self.buttonSurface = pygame.Surface((self.width, self.height))
         self.buttonRect = pygame.Rect(self.x, self.y, self.width, self.height)
-
         self.buttonSurf = font.render(buttonText, True, (20, 20, 20))
-
         self.alreadyPressed = False
-
         objects.append(self)
 
     def process(self):
         mousePos = pygame.mouse.get_pos()
-
         self.buttonSurface.fill(self.fillColors['normal'])
         if self.buttonRect.collidepoint(mousePos):
             self.buttonSurface.fill(self.fillColors['hover'])
-
             if pygame.mouse.get_pressed(num_buttons=3)[0]:
                 self.buttonSurface.fill(self.fillColors['pressed'])
-
                 if self.onePress:
                     self.onclickFunction()
                 elif not self.alreadyPressed:
@@ -127,7 +61,6 @@ class Button():
                     self.alreadyPressed = True
             else:
                 self.alreadyPressed = False
-
         self.buttonSurface.blit(self.buttonSurf, [
             self.buttonRect.width / 2 - self.buttonSurf.get_rect().width / 2,
             self.buttonRect.height / 2 - self.buttonSurf.get_rect().height / 2
@@ -145,19 +78,15 @@ class InputBox:
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
-        if event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_RETURN:
-                    pass
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                self.txt_surface = font.render(self.text, True, self.color)
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+            self.txt_surface = font.render(self.text, True, self.color)
 
     def update(self):
-        width = max(200, self.txt_surface.get_width() + 10)
-        self.rect.w = width
+        self.rect.w = max(200, self.txt_surface.get_width() + 10)
 
     def draw(self, screen):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -197,9 +126,19 @@ class Slider:
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
         elif event.type == pygame.MOUSEMOTION and self.dragging:
-            mx = event.pos[0]
-            mx = max(self.x, min(mx, self.x + self.width))
+            mx = max(self.x, min(event.pos[0], self.x + self.width))
             self.value = self.min_val + (mx - self.x) / self.width * (self.max_val - self.min_val)
+
+def save():
+    file_name_orig = "canvas" + str(int(time.time())) + ".png"
+    pygame.image.save(canvas, file_name_orig)
+    img = Image.open(file_name_orig).convert("L").resize((50, 50), Image.LANCZOS)
+    img.save("50x50img.png")
+    binary_array = (np.array(img) < 128).astype(np.uint8).flatten()
+    packed_bits = np.packbits(binary_array)
+    file_name_bin = str(int(time.time())) + "_data.bin"
+    with open(file_name_bin, "wb") as f:
+        f.write(packed_bits.tobytes())
 
 class Polygon:
     def __init__(self, center, sides, radius):
@@ -210,12 +149,8 @@ class Polygon:
 
     def calculate_points(self):
         angle = 2 * math.pi / self.sides
-        return [
-            (
-                self.center[0] + self.radius * math.cos(i * angle),
-                self.center[1] + self.radius * math.sin(i * angle)
-            ) for i in range(self.sides)
-        ]
+        return [(self.center[0] + self.radius * math.cos(i * angle),
+                 self.center[1] + self.radius * math.sin(i * angle)) for i in range(self.sides)]
 
     def draw(self, surface):
         pygame.draw.polygon(surface, drawColor, self.points, 0)
@@ -225,184 +160,140 @@ class Polygon:
             if math.hypot(pos[0] - x, pos[1] - y) < radius:
                 return i
         return None
-    
-    def move_polygon(self, dx, dy):
-        self.center[0] += dx
-        self.center[1] += dy
-        self.points = self.calculate_points()
 
     def move_vertex(self, index, new_pos):
         self.points[index] = new_pos
 
-    #def expand(self, )
+class Images:
+    def __init__(self, img_surface, pos=(0, 0)):
+        self.orig_image = img_surface
+        self.pos = list(pos)
+        self.SF = 1
+        self.dragging = False
+        self.drag_offset = (0, 0)
+        self.update_scaled()
+
+    def update_scaled(self):
+        w, h = self.orig_image.get_size()
+        self.image = pygame.transform.scale(self.orig_image, (int(w * self.SF), int(h * self.SF)))
+        self.rect = self.image.get_rect(topleft=self.pos)
+
+    def start_drag(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            self.dragging = True
+            self.drag_offset = (mouse_pos[0] - self.pos[0], mouse_pos[1] - self.pos[1])
+            return True
+        return False
+
+    def drag(self, mouse_pos):
+        if self.dragging:
+            self.pos = [mouse_pos[0] - self.drag_offset[0], mouse_pos[1] - self.drag_offset[1]]
+            self.update_scaled()
+
+    def stop_drag(self):
+        self.dragging = False
+
+    def draw(self, surface):
+        surface.blit(self.image, self.pos)
 
 def draw_polygon():
     try:
         sides = int(input_box1[0].get_value())
-        poly = Polygon((canvasSize[0] // 2, canvasSize[1] // 2), sides, 100)
-        polygons.append(poly)
+        polygons.append(Polygon((canvasSize[0] // 2, canvasSize[1] // 2), sides, 100))
     except ValueError:
-        print("Invalid input for polygon sides")
+        print("Invalid polygon sides")
 
 def draw_circle():
-    circle_point = (400, 400)
-    circles.add(circle_point)
-
-def save():
-    file_name_orig = "canvas" + str(int(time.time())) + ".png"
-    pygame.image.save(canvas, file_name_orig)
-
-    img = Image.open(file_name_orig).convert("L")
-    img_resized = img.resize((50, 50), Image.LANCZOS)
-    img_resized.save("50x50img.png")
-
-    img_array = np.array(img_resized)
-    binary_array = (img_array < 128).astype(np.uint8)
-
-    flat_arr = binary_array.flatten()
-    packed_bits = np.packbits(flat_arr)  
-
-    file_name_bin = str(int(time.time())) + "_data.bin"
-    with open(file_name_bin, "wb") as f:
-        f.write(packed_bits.tobytes())
-
-    subprocess.run(["python3", ""])
+    pygame.draw.circle(canvas, drawColor, [400, 400], 50)
 
 def clear():
     canvas.fill((255, 255, 255))
     polygons.clear()
-    points.clear()
-    circles.clear()
+    lines.clear()
 
-# Setup buttons
-buttonWidth = 160
-buttonHeight = 35
-buttonMargin = 25
+Button(25, 25, 160, 35, 'Polygon', draw_polygon)
+label_y = 60
+screen_label = font.render("Insert no of sides", True, (255, 255, 255))
+input_box1 = [InputBox(25, label_y + 30, 160, 25)]
 
-buttons = [
-    ['Polygon', draw_polygon],
-    ['Circle', draw_circle],
-    ['Save', save],
-    ['Clear', clear]
-]
+for i, (btn_name, func) in enumerate([('Circle', draw_circle), ('Save', save), ('Clear', clear)]):
+    Button(25, 120 + i * 60, 160, 35, btn_name, func)
 
-for index, buttonName in enumerate(buttons):
-    Button(buttonMargin, buttonMargin + index * (buttonHeight + buttonMargin), buttonWidth, buttonHeight, buttonName[0], buttonName[1])
-
-num_buttons = len(buttons)
-input_box_y = buttonMargin + num_buttons * (buttonHeight + buttonMargin)
-input_box1 = [InputBox(buttonMargin, input_box_y, buttonWidth, 25)]
-
-slider_y = input_box_y + 60
-slider = Slider((buttonMargin, slider_y))
-
+slider = Slider((25, 320))
 canvas = pygame.Surface(canvasSize)
 canvas.fill((255, 255, 255))
 
-drawingEnabled = True
-
-# Game loop
 while True:
     screen.fill((30, 30, 30))
+    for obj in objects: obj.process()
 
-    for obj in objects:
-        obj.process()
-
-    #canvas.fill((255, 255, 255))
-    for poly in polygons:
-        poly.draw(canvas)
-
+    canvas.fill((255, 255, 255))
+    for poly in polygons: poly.draw(canvas)
     for line in lines:
-        if(len(points) >= 2):
-            pygame.draw.lines(canvas,drawColor,False,points,brushSize)
-
-    # for point in points:
-    #     pygame.draw.circle(canvas, drawColor, point, brushSize)
-
-
-    for circle_point in circles:
-        pygame.draw.circle(canvas, drawColor, circle_point, 50)
-
+        if len(line) >= 2:
+            pygame.draw.lines(canvas, drawColor, False, line, brushSize)
+    if len(current_line) >= 2:
+        pygame.draw.lines(canvas, drawColor, False, current_line, brushSize)
+    for img in images:
+        img.draw(canvas)
 
     screen.blit(canvas, (buttonAreaWidth, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        for box in input_box1:
-            box.handle_event(event)
-
+            pygame.quit(); sys.exit()
+        for box in input_box1: box.handle_event(event)
         slider.handle_event(event)
 
-        #draw or move polygon vertex when pressed
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if pygame.mouse.get_pressed()[0]:
-                mx, my = pygame.mouse.get_pos()
-                if mx > buttonAreaWidth:
-                    pos = (mx - buttonAreaWidth, my)
-                    for poly in polygons:
-                        idx = poly.get_vertex_at_pos(pos)
-                        if idx is not None:
-                            selected_vertex = idx
-                            selected_polygon = poly
-                            break
-                        elif math.hypot(pos[0] - mx, pos[1] - my) < poly.radius:
-                            dragging_poly = poly
-                            start_point = pos
-                            break
-
-
-        if event.type == pygame.MOUSEMOTION:
-            if dragging_poly and start_point:
-                mx, my = pygame.mouse.get_pos()
-                new_pos = (mx - buttonAreaWidth, my)
-                dx = new_pos[0] - start_point[0]
-                dy = new_pos[1] - start_point[1]
-                dragging_poly.move_polygon(dx, dy)
-                start_point = new_pos 
-
+        if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
+            mx, my = pygame.mouse.get_pos()
+            if mx > buttonAreaWidth:
+                pos = (mx - buttonAreaWidth, my)
+                for poly in polygons:
+                    idx = poly.get_vertex_at_pos(pos)
+                    if idx is not None:
+                        selected_vertex, selected_polygon = idx, poly
+                        break
+                for img in reversed(images):
+                    if img.start_drag((mx - buttonAreaWidth, my)):
+                        break
 
         if event.type == pygame.MOUSEBUTTONUP:
-            selected_vertex = None
-            selected_polygon = None
-            dragging_poly = None
-            start_point = None
-            if len(points) > 1:
-                lines.append(points[:])
-            points.clear()
+            if len(current_line) > 1: lines.append(current_line)
+            current_line, selected_vertex, selected_polygon = [], None, None
+            for img in images: img.stop_drag()
 
-        #drag and drop image into canvas
+        if event.type == pygame.MOUSEMOTION:
+            mx, my = pygame.mouse.get_pos()
+            if mx > buttonAreaWidth:
+                for img in images:
+                    img.drag((mx - buttonAreaWidth, my))
+
         if event.type == pygame.DROPFILE:
-            path = event.file
-            img = pygame.image.load(path)
-            img = pygame.transform.scale(img, canvasSize)
-            canvas.blit(img, (0, 0))
-
+            try:
+                img_surface = pygame.image.load(event.file).convert_alpha()
+                images.append(Images(img_surface, (0, 0)))
+            except Exception as e:
+                print(f"Could not load image: {e}")
 
     for box in input_box1:
         box.update()
         box.draw(screen)
+    screen.blit(screen_label, (25, label_y))
 
     slider.draw(screen)
     brushSize = slider.get_value()
 
-#draw
-    if pygame.mouse.get_pressed()[0]:
+    if drawingEnabled and pygame.mouse.get_pressed()[0]:
         mx, my = pygame.mouse.get_pos()
         if mx > buttonAreaWidth and selected_vertex is None:
-            dx = mx - buttonAreaWidth
-            dy = my
-            points.append((dx, dy))
-            if len(points) == 0 or math.hypot(dx - points[-1][0], dy - points[-1][1]) > brushSize/2:
-                points.append((dx, dy))
+            dx, dy = mx - buttonAreaWidth, my
+            if not current_line or math.hypot(dx - current_line[-1][0], dy - current_line[-1][1]) > brushSize / 2:
+                current_line.append((dx, dy))
 
-#change location of polygon vertex
-    if selected_polygon is not None and selected_vertex is not None:
+    if selected_polygon and selected_vertex is not None:
         mx, my = pygame.mouse.get_pos()
-        pos = (mx - buttonAreaWidth, my)
-        selected_polygon.move_vertex(selected_vertex, pos)
+        selected_polygon.move_vertex(selected_vertex, (mx - buttonAreaWidth, my))
 
     pygame.display.flip()
     fpsClock.tick(fps)
