@@ -5,6 +5,12 @@ import math
 from PIL import Image
 import numpy as np
 import time
+import subprocess
+import win32gui
+import win32con
+
+python_win_title = "DrawingApp"
+unity_win_title = "Unit"
 
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
@@ -21,6 +27,34 @@ width, height = canvasSize[0] + buttonAreaWidth, canvasSize[1]
 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.DROPFILE | pygame.HWSURFACE | pygame.DOUBLEBUF)
 
 font = pygame.font.SysFont('Lato', 30)
+
+# Wait a moment for windows to be created
+time.sleep(1)
+
+# Find your Python window (Pygame window) by class name or title
+def find_window(title):
+    hwnd = win32gui.FindWindow(None, title)
+    if hwnd == 0:
+        print(f"Window '{title}' not found")
+    return hwnd
+
+hwnd_python = find_window(python_win_title)
+hwnd_unity = find_window(unity_win_title)
+
+if hwnd_python != 0 and hwnd_unity != 0:
+    # Set Python window as child of Unity window
+    win32gui.SetParent(hwnd_python, hwnd_unity)
+
+    # Resize and position the Python window inside Unity
+    # Adjust these values based on how/where you want it
+    win32gui.MoveWindow(hwnd_python, 100, 100, 800, 800, True)
+
+    # Optional: remove window decorations (title bar, borders) for cleaner embedding
+    style = win32gui.GetWindowLong(hwnd_python, win32con.GWL_STYLE)
+    style = style & ~win32con.WS_CAPTION & ~win32con.WS_THICKFRAME
+    win32gui.SetWindowLong(hwnd_python, win32con.GWL_STYLE, style)
+else:
+    print("Could not find one or both windows")
 
 
 # Our Buttons will append themselves to this list
@@ -231,6 +265,8 @@ def save():
     file_name_bin = str(int(time.time())) + "_data.bin"
     with open(file_name_bin, "wb") as f:
         f.write(packed_bits.tobytes())
+
+    subprocess.run(["python3", ""])
 
 def clear():
     canvas.fill((255, 255, 255))

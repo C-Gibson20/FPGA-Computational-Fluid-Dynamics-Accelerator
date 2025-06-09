@@ -1,5 +1,3 @@
-#to be ran on Jupyter notebook
-
 import socket
 import numpy as np
 from pynq import MMIO, Overlay
