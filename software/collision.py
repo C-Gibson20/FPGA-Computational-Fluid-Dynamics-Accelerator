@@ -15,15 +15,15 @@ f_i_int = {
     # 'se':   0x00E4,
     # 'sw':   0x0090,
     # 'nw':   0x00E4
-    'null': 0x0000,
-    'n':    0x0000,
-    's':    0x0000,
+    'null': 0x0E38,
+    'n':    0x038E,
+    's':    0x038E,
     'e':    0x0000,
-    'w':    0x0000,
+    'w':    0x038E,
     'ne':   0x0000,
     'se':   0x0000,
-    'sw':   0x0000,
-    'nw':   0x0000
+    'sw':   0x00E4,
+    'nw':   0x00E4
 }
 f_i = {k: q313_to_float(v) for k, v in f_i_int.items()}
 
