@@ -181,8 +181,8 @@ def initialize(x1top, y1top, y1height, u0=u0):
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 100
-nSeconds = 15
+fps = 60
+nSeconds = 10
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
@@ -213,12 +213,13 @@ print(f"uy[0]  = {to_q313_hex(uy[0])}")
 
 
 # Don't animate first few frames
-for i in range(10):
-    stream()
-    bounce()
-    collide()
+# for i in range(10):
+#     stream()
+#     bounce()
+#     collide()
 
 # Plot which we'll be animating
+collide()
 a = speed2
 im = plt.imshow(a.reshape(height,width))
 
@@ -242,5 +243,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=600) 
+writervideo = animation.FFMpegWriter(fps=60) 
 anim.save(f, writer=writervideo)
