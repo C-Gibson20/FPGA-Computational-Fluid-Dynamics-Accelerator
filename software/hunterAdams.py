@@ -5,11 +5,11 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 50                      # grid height
-width = 50                     # grid width
+height = 5                      # grid height
+width = 5                     # grid width
 viscosity = 0.002                # viscosity
 omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
-u0 = 0.1                         # initial in-flow speed (eastward)
+u0 = 0.01                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
 one36th  = 1./36.                # a constant
@@ -147,24 +147,24 @@ def initialize(x1top, y1top, y1height, u0=u0):
     
     count = 0
     for i in range(height*width):
-        # n0[i] = four9ths* (1 - 1.5*(u0**2.))
-        # nN[i] = one9th  * (1 - 1.5*(u0**2.))
-        # nS[i] = one9th  * (1 - 1.5*(u0**2.))
-        # nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        # nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
-        n0[i] = 0
-        nN[i] = 0
-        nS[i] = 0
-        nE[i] = 0
-        nW[i] = 0
-        nNE[i]= 0
-        nSE[i]= 0
-        nNW[i]= 0
-        nSW[i]= 0
+        n0[i] = four9ths* (1 - 1.5*(u0**2.))
+        nN[i] = one9th  * (1 - 1.5*(u0**2.))
+        nS[i] = one9th  * (1 - 1.5*(u0**2.))
+        nE[i] = one9th  * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nW[i] = one9th  * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nNE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nSE[i]= one36th * (1 + 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nNW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        nSW[i]= one36th * (1 - 3*u0 + 4.5*(u0**2.) - 1.5*(u0**2.))
+        # n0[i] = 0
+        # nN[i] = 0
+        # nS[i] = 0
+        # nE[i] = 0
+        # nW[i] = 0
+        # nNE[i]= 0
+        # nSE[i]= 0
+        # nNW[i]= 0
+        # nSW[i]= 0
         
         rho[i] =  n0[i] + nN[i] + nS[i] + nE[i] + nW[i] + nNE[i] + nSE[i] + nNW[i] + nSW[i]
         
@@ -189,7 +189,7 @@ fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
 # initialize(25, 11, 10, 50, 150)
-initialize(25, 20, 10)
+initialize(3, 3, 0)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
