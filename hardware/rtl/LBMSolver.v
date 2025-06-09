@@ -189,7 +189,7 @@ module LBMSolver (
     localparam MEM_RESET        = 4'd9;
     
     reg [15:0] width_count, next_width_count;
-    reg [2:0] sim_state, next_sim_state;
+    reg [3:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index, next_index;
     
     // collider flags
@@ -443,10 +443,9 @@ module LBMSolver (
 
                 if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
                 begin
-                    next_index = 2*`WIDTH+2;
-                    next_width_count = 2;
-                    next_sim_state = BOUNCE;
-                    // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
+                    next_index = `WIDTH+1;
+                    next_width_count = 1;
+                    next_sim_state = BOUNDARY;
                 end 
             end
 
@@ -498,9 +497,9 @@ module LBMSolver (
 
                     if(index == `DEPTH-1-`WIDTH-1) 
                     begin
-                        next_index = 2*`WIDTH+2;
-                        next_width_count = 2;
-                        next_sim_state = BOUNCE;
+                        next_index = `WIDTH + 1;
+                        next_width_count = 1;
+                        next_sim_state = BOUNDARY;
                         
                     end
                     else
@@ -550,28 +549,72 @@ module LBMSolver (
                     else if (index == `DEPTH - 2*`WIDTH + 1) begin // SW corner
                         cne_next_write_addr = `DEPTH - `WIDTH; 
                         cne_n_next_write_en = 1;
+                        cn_next_write_addr = `DEPTH - `WIDTH+1; 
+                        cn_n_next_write_en = 1;
+                        ce_next_write_addr = `DEPTH - 2*`WIDTH; 
+                        ce_n_next_write_en = 1;
+
                         cne_next_data_in = cne_data_out;
-                        
+                        cn_next_data_in = cn_data_out;
+                        ce_next_data_in = ce_data_out;
+
                     end
                     else if(index == `WIDTH + 1) begin // NW corner
                         cse_next_write_addr = 0;
                         cse_n_next_write_en = 1;
+                        cs_next_write_addr = 1;
+                        cs_n_next_write_en = 1;
+                        ce_next_write_addr = `WIDTH;
+                        ce_n_next_write_en = 1;
+
                         cse_next_data_in = cse_data_out;
+                        cs_next_data_in = cs_data_out;
+                        ce_next_data_in = ce_data_out;
+                        
                     end
-                    else if(`WIDTH + 1 < index < 2*`WIDTH -2) begin // top edge
+                    else if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
                         cs_next_write_addr = index - `WIDTH;
                         cs_n_next_write_en = 1;
                         cs_next_data_in = cs_data_out;
                     end
-                    else if(index >= `DEPTH - `WIDTH ) begin // bottom edge
+                    else if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
                         cn_next_write_addr = index - `WIDTH;
                         cn_n_next_write_en = 1;
                         cn_next_data_in = cn_data_out;
                     end
+                    else if(width_count == 1) begin // left edge
+                        ce_next_write_addr = index - 1;
+                        ce_n_next_write_en = 1;
+                        ce_next_data_in = ce_data_out;
+                    end
+                    else if(width_count == `WIDTH - 2) begin // right edge 
+                        cw_next_write_addr = index + 1;
+                        cw_n_next_write_en = 1;
+                        cw_next_data_in = cw_data_out;
+                    end
+                    
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    // next index logic
+                    if(`WIDTH + 1 <= index && index <= 2*`WIDTH - 2) begin // top edge
+                        next_index = (width_count == `WIDTH - 2) ? index + 3 : index + 1;
+                        next_width_count = (width_count == `WIDTH - 2) ? 1 : width_count + 1;
+                        next_sim_state = BOUNDARY;
+                    end
+                    else if(`DEPTH - 2*`WIDTH + 1 <= index && index <= `DEPTH - `WIDTH - 2) begin // bottom edge 
+                        next_index = (width_count == `WIDTH - 2) ? 2*`WIDTH+2 : index + 1;
+                        next_width_count = (width_count == `WIDTH - 2) ? 2 : width_count + 1;
+                        next_sim_state = (width_count == `WIDTH - 2) ? BOUNCE : BOUNDARY;
+                        next_ram_wait_count = (width_count == `WIDTH - 2) ? `RAM_READ_WAIT : 0;
+                    end
+                    else begin // everything else
+                        next_index = (width_count == `WIDTH - 2) ? index + 3: index + `WIDTH -3;
+                        next_width_count = (width_count == `WIDTH - 2) ? 1 : `WIDTH - 2;
+                        next_sim_state = BOUNDARY;
+                    end
+  
                 end
 
             end
-
 
             BOUNCE:
             begin
