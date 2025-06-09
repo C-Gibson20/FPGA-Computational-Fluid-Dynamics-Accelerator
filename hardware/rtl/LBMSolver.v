@@ -425,6 +425,8 @@ module LBMSolver (
                 if(step_count < step) begin
                     next_sim_state = STREAM;
                     next_ram_wait_count = 0;
+                    next_index = `WIDTH+1;
+                    next_width_count = 1;
                 end
                 else
                     next_sim_state = IDLE;
@@ -653,7 +655,6 @@ module LBMSolver (
                     next_sim_state = BOUNCE_WAIT;
                     next_index = index;
                     next_width_count = width_count;
-
 
                 end 
                 else begin
