@@ -36,16 +36,20 @@ module host_interface(
     input wire [`DATA_WIDTH-1:0]   u_x,
     input wire [`DATA_WIDTH-1:0]   u_y,
     input wire [`DATA_WIDTH-1:0]   rho,
+    input wire [`DATA_WIDTH-1:0]   u_squared,
     input wire in_collision_state,
     
     output reg [`DATA_WIDTH-1:0] GPIOux, // send data one at a time first
     output reg [`DATA_WIDTH-1:0] GPIOuy, // send data one at a time first
-    output reg [`DATA_WIDTH-1:0] GPIOrho // send data one at a time first
+    output reg [`DATA_WIDTH-1:0] GPIOrho, // send data one at a time first
+    output reg [`DATA_WIDTH-1:0] GPIOu2 // send data one at a time first
+    
     );
     
     reg [`DATA_WIDTH-1:0] uxs [`DEPTH-1:0];
     reg [`DATA_WIDTH-1:0] uys [`DEPTH-1:0];
     reg [`DATA_WIDTH-1:0] rhos [`DEPTH-1:0];
+    reg [`DATA_WIDTH-1:0] u2s [`DEPTH-1:0];
     reg [`ADDRESS_WIDTH-1:0] count;
     
     wire host_transmission;
@@ -66,6 +70,7 @@ module host_interface(
             uxs[count] <= u_x;
             uys[count] <= u_y;
             rhos[count] <= rho;
+            u2s[count] <= u_squared;
             count <= count + 1;
         end
         else if(in_collision_state) begin
@@ -79,6 +84,7 @@ module host_interface(
             GPIOux <= uxs[GPIOi[`ADDRESS_WIDTH-1:0]];
             GPIOuy <= uys[GPIOi[`ADDRESS_WIDTH-1:0]];
             GPIOrho <= rhos[GPIOi[`ADDRESS_WIDTH-1:0]];
+            GPIOu2 <= u2s[GPIOi[`ADDRESS_WIDTH-1:0]];
         end
 
         if(!rst) begin
