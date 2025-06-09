@@ -14,7 +14,7 @@ def validate_file(filepath):
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"File not found: {filepath}")
     if not os.access(filepath, os.R_OK):
-        raise PermissionError(f"No read permissions for file: {filepath}")
+        raise PermissionError(f"No read perm3issions for file: {filepath}")
 
 def send_data(sock, filepath):
     """Send file data over socket"""
