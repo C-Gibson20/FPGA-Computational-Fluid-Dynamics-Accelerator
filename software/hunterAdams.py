@@ -10,7 +10,7 @@ width = 50                     # grid width
 # viscosity = 0.002                # viscosity
 # omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 omega = 2.
-u0 = 0.1                       # initial in-flow speed (eastward)
+u0 = 0.2                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
 one36th  = 1./36.                # a constant
@@ -200,7 +200,6 @@ print(f"nSW[0] = {to_q313_hex(nSW[0])}")
 print(f"rho[0] = {to_q313_hex(rho[0])}")
 print(f"ux[0]  = {to_q313_hex(ux[0])}")
 print(f"uy[0]  = {to_q313_hex(uy[0])}")
-
 
 
 # Don't animate first few frames
