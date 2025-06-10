@@ -2,8 +2,8 @@ import numpy as np
 
 INPUT_FILE = "u_squared_log.txt"
 OUTPUT_FILE = "u_squared_pretty.txt"
-WIDTH = 15
-HEIGHT = 15
+WIDTH = 5
+HEIGHT = 5
 CELLS_PER_FRAME = WIDTH * HEIGHT
 
 # Load raw Q3.13 values from Verilator

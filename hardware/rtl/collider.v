@@ -14,14 +14,14 @@ module collider(
 
     input  wire signed [15:0] f_null, f_n, f_ne, f_e, f_se, f_s, f_sw, f_w, f_nw,
 
-    output wire [15:0] f_new_null, f_new_n, f_new_ne, f_new_e, f_new_se,
+    output wire signed [15:0] f_new_null, f_new_n, f_new_ne, f_new_e, f_new_se,
                        f_new_s, f_new_sw, f_new_w, f_new_nw,
 
     output wire collider_busy,
     output wire newval_ready,
     output wire axi_ready,
 
-    output wire [15:0] u_x, u_y, rho, u_squared
+    output wire signed [15:0] u_x, u_y, rho, u_squared
 );
 
 // ----------------------------------------------------------------------------------
@@ -87,10 +87,22 @@ assign u_y = u_y_intermediate >>> 13;
 // Step 2: u^2 and related terms
 // ----------------------------------------------------------------------------------
 
+// wire signed [15:0] a = u_y;
 wire signed [31:0] u_x_squared_intermediate = u_x * u_x;
-wire signed [31:0] u_y_squared_intermediate = u_y * u_y;
+wire signed [31:0] u_y_squared_intermediate = u_y * u_y; 
 wire signed [15:0] u_x_squared = u_x_squared_intermediate >>> 13;
 wire signed [15:0] u_y_squared = u_y_squared_intermediate >>> 13;
+// wire signed [31:0] u_y_shifted = u_y_squared_intermediate >>> 13;
+// wire signed [15:0] u_y_squared = (u_y_shifted > 32'sh00007FFF) ? 16'h7FFF :
+//                                  (u_y_shifted < 32'shFFFF8000) ? 16'h8000 :
+//                                  u_y_shifted[15:0];
+
+
+// always @(*) begin
+//      $display("u_y_squared_intermediate = %0d (hex = %h)", u_y_squared_intermediate, u_y_squared_intermediate);
+//     $display("u_y_shifted = %0d (hex = %h)", u_y_shifted, u_y_shifted);
+//     $display("u_y_squared = %0d (hex = %h)", u_y_squared, u_y_squared);
+// end
 
 assign u_squared = u_x_squared + u_y_squared;
 wire signed [31:0] three_halves_u_squared_intermediate = three_halves * u_squared;

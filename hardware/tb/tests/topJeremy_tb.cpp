@@ -3,16 +3,26 @@
 
 unsigned int ticks = 0;
 
-class TopTestbench : public Testbench {
+class TopJeremyTestbench : public Testbench {
 protected:
     std::ofstream logFile;
 
     void initializeInputs() override {
         top->clk = 1;
-        top->rst = 1;
+        top->rst = 0;
         top->en  = 1;
         top->step = 1000;
         top->omega = 0x4000; // 2.0 in Q3.13
+        top->init_c0    = 0x0E02;
+        top->init_cn    = 0x0381;
+        top->init_cne   = 0x012F;
+        top->init_ce    = 0x04BB;
+        top->init_cse   = 0x012F;
+        top->init_cs    = 0x0381;
+        top->init_csw   = 0x00A6;
+        top->init_cw    = 0x0298;
+        top->init_cnw   = 0x00A6;
+
 
         logFile.open("u_squared_log.txt");
         if (!logFile.is_open()) {
@@ -24,6 +34,10 @@ protected:
     // ✅ override runSimulation in this subclass
     void runSimulation(int cycles) {
         for (int i = 0; i < cycles; i++) {
+            if(i == 2)
+            { 
+                top->rst = 1; 
+            }
             for (int clk = 0; clk < 2; clk++) {
                 top->eval();
 #ifndef __APPLE__
@@ -47,8 +61,8 @@ protected:
     }
 };
 
-TEST_F(TopTestbench, LogUSquaredOnly) {
-    runSimulation(10000);  // enough cycles for 1000 steps
+TEST_F(TopJeremyTestbench, LogUSquaredOnly) {
+    runSimulation(1000);  // enough cycles for 1000 steps
 
     // Run Python script to convert the log
     int status = std::system("python3 convert_u_squared.py");
@@ -58,52 +72,6 @@ TEST_F(TopTestbench, LogUSquaredOnly) {
         std::cout << "✅ Log converted by convert_u_squared.py\n";
     }
 }
-
-// TEST_F(TopTestbench, BarriersBounce) {
-//     top->barriers |= (1 << 0); // set barrier[0] = 1
-//     runSimulation(11);
-//     EXPECT_GE(top->testing_cs_n_data_in,0x11);
-// }
-
-// TEST_F(TopTestbench, BarriersZero) {
-//     top->barriers |= (1 << 0); // set barrier[0] = 1
-//     runSimulation(14);
-//     EXPECT_GE(top->testing_cs_n_data_in,0x0);
-// }
-
-// TEST_F(TopTestbench, idk) {
-//     top->barriers = 0xF99F; 
-//     runSimulation(4000);
-// }
-
-// TEST_F(TopTestbench, irdk) {
-//     top->barriers = 0x0420; 
-//     runSimulation(8000);
-// }
-// assuming `DEPTH` bits wide, i in [0..DEPTH-1]
-
-// TEST_F(TopTestbench, kii) {
-
-//     auto setBarrierBit = [&](int i) {
-//         int word = i >> 5;        // divide by 32
-//         int bit  = i &  31;       // mod 32
-//         top->barriers.data()[word] |= (1U << bit);
-//     };
-
-//     for (int w = 0; w < (2500+31)/32; ++w) {
-//         top->barriers.data()[w] = 0;
-//     }
-
-//     for (int i = 0; i < 2500; i++) {
-//         bool isBarrier = (i < 50) || (i >= 2450) || (i % 50 == 0) || ((i+1) % 50 == 0);
-//         if (isBarrier) {
-//             std::cout << "Barrier at " << i << std::endl;
-//             setBarrierBit(i);
-//         }
-//     }
-//     runSimulation(80099);
-//     EXPECT_EQ(top->testing_c0_data_in,0x0E38);
-// }
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
