@@ -8,8 +8,7 @@ HOST = '192.168.2.99'
 PORT = 9005
 
 overlay = Overlay('project_1.bit')
-overlay.download()
-
+AXI = ol.axi_gpio_0.channel1
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
@@ -21,6 +20,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if not data:
                 break
             conn.sendall(data)
-    .write(data)
+    AXI.write(data)
 conn.close()
-sock.close()
+s.close()

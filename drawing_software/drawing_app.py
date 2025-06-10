@@ -5,7 +5,11 @@ import math
 from PIL import Image
 import numpy as np
 import time
-import subprocess
+import win32gui
+import win32con
+
+python_win_title = "DrawingApp"
+unity_win_title = "Unit"
 
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
 pygame.init()
@@ -17,18 +21,49 @@ buttonAreaWidth = 200
 width, height = canvasSize[0] + buttonAreaWidth, canvasSize[1]
 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-font = pygame.font.SysFont('Arial', 20)
+font = pygame.font.SysFont('Lato', 30)
+
+
+# Wait a moment for windows to be created
+time.sleep(1)
+
+# Find your Python window (Pygame window) by class name or title
+def find_window(title):
+    hwnd = win32gui.FindWindow(None, title)
+    if hwnd == 0:
+        print(f"Window '{title}' not found")
+    return hwnd
+
+hwnd_python = find_window(python_win_title)
+hwnd_unity = find_window(unity_win_title)
+
+if hwnd_python != 0 and hwnd_unity != 0:
+    # Set Python window as child of Unity window
+    win32gui.SetParent(hwnd_python, hwnd_unity)
+
+    # Resize and position the Python window inside Unity
+    # Adjust these values based on how/where you want it
+    win32gui.MoveWindow(hwnd_python, 100, 100, 800, 800, True)
+
+    # Optional: remove window decorations (title bar, borders) for cleaner embedding
+    style = win32gui.GetWindowLong(hwnd_python, win32con.GWL_STYLE)
+    style = style & ~win32con.WS_CAPTION & ~win32con.WS_THICKFRAME
+    win32gui.SetWindowLong(hwnd_python, win32con.GWL_STYLE, style)
+else:
+    print("Could not find one or both windows")
+
+#append all classes here
 objects = []
 lines = []
 current_line = []
 images = []
+polygons = []
 
 user_input = ''
 drawColor = [0, 0, 0]
 brushSize = 10
 
 drawingEnabled = True
-polygons = []
 selected_vertex = None
 selected_polygon = None
 
@@ -129,16 +164,6 @@ class Slider:
             mx = max(self.x, min(event.pos[0], self.x + self.width))
             self.value = self.min_val + (mx - self.x) / self.width * (self.max_val - self.min_val)
 
-def save():
-    file_name_orig = "canvas" + str(int(time.time())) + ".png"
-    pygame.image.save(canvas, file_name_orig)
-    img = Image.open(file_name_orig).convert("L").resize((50, 50), Image.LANCZOS)
-    img.save("50x50img.png")
-    binary_array = (np.array(img) < 128).astype(np.uint8).flatten()
-    packed_bits = np.packbits(binary_array)
-    file_name_bin = str(int(time.time())) + "_data.bin"
-    with open(file_name_bin, "wb") as f:
-        f.write(packed_bits.tobytes())
 
 class Polygon:
     def __init__(self, center, sides, radius):
@@ -206,20 +231,40 @@ def draw_polygon():
 def draw_circle():
     pygame.draw.circle(canvas, drawColor, [400, 400], 50)
 
+#clear canvas
 def clear():
     canvas.fill((255, 255, 255))
     polygons.clear()
     lines.clear()
+    images.clear()
+
+#saves image in a flattened 2500 bit array to send to pynq
+def save():
+    file_name_orig = "canvas" + str(int(time.time())) + ".png"
+    pygame.image.save(canvas, file_name_orig)
+
+    #downsize image into 50x50
+    img = Image.open(file_name_orig).convert("L").resize((50, 50), Image.LANCZOS)
+    img.save("50x50img.png")
+
+    #convert image into black and white and convert into binary array
+    binary_array = (np.array(img) < 128).astype(np.uint8).flatten()
+    packed_bits = np.packbits(binary_array)
+
+    #store 
+    file_name_bin = str(int(time.time())) + "_data.bin"
+    with open(file_name_bin, "wb") as f:
+        f.write(packed_bits.tobytes())
 
 Button(25, 25, 160, 35, 'Polygon', draw_polygon)
-label_y = 60
+label_y = 70
 screen_label = font.render("Insert no of sides", True, (255, 255, 255))
-input_box1 = [InputBox(25, label_y + 30, 160, 25)]
+input_box1 = [InputBox(0, label_y + 30, 100, 25)]
 
 for i, (btn_name, func) in enumerate([('Circle', draw_circle), ('Save', save), ('Clear', clear)]):
-    Button(25, 120 + i * 60, 160, 35, btn_name, func)
+    Button(25, 140 + i * 60, 160, 35, btn_name, func)
 
-slider = Slider((25, 320))
+slider = Slider((25, 340))
 canvas = pygame.Surface(canvasSize)
 canvas.fill((255, 255, 255))
 
