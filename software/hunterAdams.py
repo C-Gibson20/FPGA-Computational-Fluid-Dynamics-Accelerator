@@ -5,12 +5,12 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 15                     # grid height
-width = 15                     # grid width
+height = 50                     # grid height
+width = 50                     # grid width
 # viscosity = 0.002                # viscosity
 # omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 omega = 2.
-u0 = 0.005                       # initial in-flow speed (eastward)
+u0 = 0.1                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
 one36th  = 1./36.                # a constant
@@ -173,14 +173,14 @@ def initialize(x1top, y1top, y1height, u0=u0):
         ycoord = ycoord if (xcoord != 0) else (ycoord + 1)
 
 # Frames per second, and number of seconds
-fps = 1
+fps = 60
 nSeconds = 10
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(8, 5, 3)
+initialize(2, 2, 0)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
@@ -221,11 +221,11 @@ def animate_func(i):
     collide()
     im.set_array(speed2.reshape(height, width))
     
-    # Save speed2 of current frame
-    with open(f"speed2_step{i}.txt", "w") as f:
-        for y in range(height):
-            row = speed2[y * width : (y + 1) * width]
-            f.write(" ".join(f"{val:.6f}" for val in row) + "\n")
+    # # Save speed2 of current frame
+    # with open(f"speed2_step{i}.txt", "w") as f:
+    #     for y in range(height):
+    #         row = speed2[y * width : (y + 1) * width]
+    #         f.write(" ".join(f"{val:.6f}" for val in row) + "\n")
     
     return [im]
 
@@ -241,5 +241,5 @@ print('Done!')
 
 # Generate an mp4 video of the animation
 f = r"./animation4.mp4" 
-writervideo = animation.FFMpegWriter(fps=1) 
+writervideo = animation.FFMpegWriter(fps=60) 
 anim.save(f, writer=writervideo)

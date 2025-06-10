@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolver (
+module LBMSolverJeremy (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -179,13 +179,10 @@ module LBMSolver (
     assign testing_cs_n_data_in = cs_n_data_in;
     //States
     localparam IDLE             = 4'd0;
-    localparam STREAM           = 4'd1;
+    // localparam STREAM           = 4'd1;
     localparam STREAM_WAIT      = 4'd2;
     localparam BOUNDARY         = 4'd3;
     localparam BOUNDARY_WAIT    = 4'd4;
-    localparam BOUNCE           = 4'd5;
-    localparam BOUNCE_WAIT      = 4'd6;
-    localparam ZERO_BOUNCE      = 4'd7;
     localparam COLLIDE          = 4'd8;
     localparam MEM_RESET        = 4'd9;
     
@@ -281,7 +278,7 @@ module LBMSolver (
         .u_squared(u_squared)
     );
 
-    //Update stream state
+    //Update next state
     always @(posedge clk or negedge rst)
     begin
         if(!rst) 
@@ -367,7 +364,7 @@ module LBMSolver (
     end
 
 
-    //Stream state
+    //state handling
     always @* begin
         c0_next_write_addr = 0;
         c0_next_write_en = 0;
@@ -423,37 +420,36 @@ module LBMSolver (
         case(sim_state)
             IDLE: begin
                 if(step_count < step) begin
-                    next_sim_state = STREAM;
-                    next_ram_wait_count = 0;
+                    next_sim_state = STREAM_WAIT;
+                    next_ram_wait_count = `RAM_READ_WAIT; //0 if both stream and stream_wait
                     next_index = `WIDTH+1;
                     next_width_count = 1;
                 end
                 else
                     next_sim_state = IDLE;
             end
-            STREAM:
-            begin
-                if(barriers[index] == 1'b0) //stream if not barrier
-                begin
-                    next_ram_wait_count = `RAM_READ_WAIT;
-                    next_sim_state = STREAM_WAIT;
-                    next_index = index;
-                end
-                else if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
-                begin
-                    next_index = `WIDTH+1;
-                    next_width_count = 1;
-                    next_sim_state = BOUNDARY;
-                end 
-                else // don't stream
-                begin
-                    next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
-                    next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
-                    next_sim_state = STREAM;
-                end
+            // STREAM:
+            // begin
+            //     if(barriers[index] == 1'b0) //stream if not barrier
+            //     begin
+            //         next_ram_wait_count = `RAM_READ_WAIT;
+            //         next_sim_state = STREAM_WAIT;
+            //         next_index = index;
+            //     end
+            //     else // don't stream
+            //     begin
+            //         next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
+            //         next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
+            //         next_sim_state = STREAM;
+            //     end
 
-                
-            end
+            //     if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
+            //     begin
+            //         next_index = `WIDTH+1;
+            //         next_width_count = 1;
+            //         next_sim_state = BOUNDARY;
+            //     end 
+            // end
 
             STREAM_WAIT : // do the outside too
             begin
@@ -464,6 +460,8 @@ module LBMSolver (
                     next_width_count = width_count;
                 end 
                 else begin
+
+                    next_ram_wait_count = `RAM_READ_WAIT;//delete if we have both stream and stream_wait
                     
                     c0_next_write_addr = index;
                     c0_n_next_write_en = 1'b1;
@@ -512,7 +510,7 @@ module LBMSolver (
                     begin
                         next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
                         next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
-                        next_sim_state = STREAM;
+                        next_sim_state = STREAM_WAIT;
                     end
                 end
             end
@@ -607,9 +605,9 @@ module LBMSolver (
                         next_sim_state = BOUNDARY;
                     end
                     else if(`DEPTH - 2*`WIDTH + 1 <= index && index <= `DEPTH - `WIDTH - 2) begin // bottom edge 
-                        next_index = (width_count == `WIDTH - 2) ? 2*`WIDTH+2 : index + 1;
-                        next_width_count = (width_count == `WIDTH - 2) ? 2 : width_count + 1;
-                        next_sim_state = (width_count == `WIDTH - 2) ? BOUNCE : BOUNDARY;
+                        next_index = (width_count == `WIDTH - 2) ? 0 : index + 1; //for full state it is 2*`WIDTH+2
+                        next_width_count = (width_count == `WIDTH - 2) ? 0 : width_count + 1;//for full state it is 2
+                        next_sim_state = (width_count == `WIDTH - 2) ? COLLIDE : BOUNDARY;
                         next_ram_wait_count = (width_count == `WIDTH - 2) ? `RAM_READ_WAIT : 0;
                     end
                     else begin // everything else
@@ -622,148 +620,6 @@ module LBMSolver (
 
             end
 
-            BOUNCE:
-            begin
-                // note to self: this stage reads from cx_n and writes to cx_n
-                // NOTE: we only bounce the interior cells, ie: x: [2,...,WIDTH-3], y: [2,...,HEIGHT-3]
-                // basically we leave a margin of 2 layers on teh outside that we don't bounce
-                
-                if(barriers[index] == 1'b1) // RAM read, so need to wait for RAM...
-                begin
-                    next_ram_wait_count = `RAM_READ_WAIT;
-                    next_sim_state = BOUNCE_WAIT;
-                    next_index = index;
-                end
-                else if(index == `DEPTH-1-2*`WIDTH-2) 
-                begin
-                    next_index = 0;
-                    next_width_count = 0;
-                    next_sim_state = ZERO_BOUNCE; // don't bother only zeroeing inside the margins 
-                end
-                else // not a barrier, skip over
-                begin
-                    next_sim_state = BOUNCE;
-                    next_index = (width_count==`WIDTH-3) ? index + 5 : index + 1;
-                    next_width_count = (width_count == `WIDTH-3) ? 2 : (width_count + 1);
-                end
-
-            end
-
-            BOUNCE_WAIT:
-            begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = BOUNCE_WAIT;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                end 
-                else begin
-                    cn_next_write_addr = index-`WIDTH;
-                    cn_n_next_write_en = (index>= `WIDTH);
-                    cn_next_data_in = cs_n_data_out;
-
-                    cne_next_write_addr = index-`WIDTH+1;
-                    cne_n_next_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
-                    cne_next_data_in = csw_n_data_out;
-
-                    ce_next_write_addr = index+1;
-                    ce_n_next_write_en = (width_count != `WIDTH - 1);
-                    ce_next_data_in = cw_n_data_out; 
-
-                    cse_next_write_addr = index+`WIDTH+1;
-                    cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
-                    cse_next_data_in = cnw_n_data_out; 
-
-                    cs_next_write_addr = index+`WIDTH;
-                    cs_n_next_write_en = (index <= `DEPTH-`WIDTH-1);
-                    cs_next_data_in = cn_n_data_out; 
-
-                    csw_next_write_addr = index+`WIDTH-1;
-                    csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-                    csw_next_data_in = cne_n_data_out; 
-
-                    cw_next_write_addr = index - 1;
-                    cw_n_next_write_en = (width_count != 0);
-                    cw_next_data_in = ce_n_data_out; 
-
-                    cnw_next_write_addr = index - `WIDTH - 1;
-                    cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
-                    cnw_next_data_in = cse_n_data_out;
-
-
-                    // go back to bounce state
-                    if(index != `DEPTH-1-2*`WIDTH-2) 
-                    begin
-                        next_index = (width_count==`WIDTH-3) ? index + 5 : index + 1;
-                        next_width_count = (width_count == `WIDTH-3) ? 2 : (width_count + 1);
-                        next_sim_state = BOUNCE;
-                    end 
-                    else
-                    begin
-                        next_index = 0; // don't really care about zeroing only the inner cells, so just treat it as normal
-                        next_width_count = 0;
-                        next_sim_state = ZERO_BOUNCE; 
-                    end
-                end
-            end
-
-            ZERO_BOUNCE: // don't really care about zeroing only the inner cells, so 
-            begin
-                if(index == `DEPTH-1) 
-                begin
-                    next_index = 0; // collide with a margin of 1 layer on the outside
-                    next_width_count = 0;
-                    next_sim_state = COLLIDE;
-                    
-                end
-                else
-                begin
-                    next_index = index + 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                    next_sim_state = ZERO_BOUNCE;
-                end
-
-                if(barriers[index] == 1'b1) //this is where you left off 
-                begin
-                    // write zeroes to all barrier cells in cx_n
-                    c0_next_write_addr = index;
-                    c0_n_next_write_en = 1'b1;
-                    c0_next_data_in = 16'b0;
-
-                    cn_next_write_addr = index;
-                    cn_n_next_write_en = 1'b1;
-                    cn_next_data_in = 16'b0;
-
-                    cne_next_write_addr = index;
-                    cne_n_next_write_en = 1'b1;
-                    cne_next_data_in = 16'b0;
-
-                    ce_next_write_addr = index;
-                    ce_n_next_write_en = 1'b1;
-                    ce_next_data_in = 16'b0;
-
-                    cse_next_write_addr = index;
-                    cse_n_next_write_en = 1'b1;
-                    cse_next_data_in = 16'b0;
-
-                    cs_next_write_addr = index;
-                    cs_n_next_write_en = 1'b1;
-                    cs_next_data_in = 16'b0;
-
-                    csw_next_write_addr = index;
-                    csw_n_next_write_en = 1'b1;
-                    csw_next_data_in = 16'b0;
-
-                    cw_next_write_addr = index;
-                    cw_n_next_write_en = 1'b1;
-                    cw_next_data_in = 16'b0;
-
-                    cnw_next_write_addr = index;
-                    cnw_n_next_write_en = 1'b1;
-                    cnw_next_data_in = 16'b0;
-                end
-            end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
@@ -832,11 +688,8 @@ module LBMSolver (
                             cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
                         end
                     end
-                else begin
+                else
                     next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-                end
             end
 
             MEM_RESET : begin
