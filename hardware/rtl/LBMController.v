@@ -512,66 +512,69 @@ module LBMController (
         end
         else 
         begin
-            step_count <= next_step_count;
+            sim_state <= next_sim_state;
+            index <= next_index;
+            width_count <= next_width_count;
+            step_count <= incr_step ? step_count + 1 : step_count;
             ram_wait_count <= next_ram_wait_count;
-
-            c0_addr <= (c0_write_en && sim_state != STREAM) ? c0_next_write_addr : index;
+            
+            c0_addr <= c0_next_write_en ? c0_next_write_addr : index;
             c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
             c0_write_en <= c0_next_write_en;
             c0_n_write_en <= c0_n_next_write_en;
             c0_data_in <= c0_next_data_in;
             c0_n_data_in <= c0_next_data_in;
 
-            cn_addr <= (cn_write_en && sim_state != STREAM) ? cn_next_write_addr : index;
+            cn_addr <= cn_next_write_en ? cn_next_write_addr : index;
             cn_n_addr <= cn_n_next_write_en ? cn_next_write_addr : index;
             cn_write_en <= cn_next_write_en;
             cn_n_write_en <= cn_n_next_write_en;
             cn_data_in <= cn_next_data_in;
             cn_n_data_in <= cn_next_data_in;
 
-            cne_addr <= (cne_write_en && sim_state != STREAM) ? cne_next_write_addr : index;
+            cne_addr <= cne_next_write_en ? cne_next_write_addr : index;
             cne_n_addr <= cne_n_next_write_en ? cne_next_write_addr : index;
             cne_write_en <= cne_next_write_en;
             cne_n_write_en <= cne_n_next_write_en;
             cne_data_in <= cne_next_data_in;
             cne_n_data_in <= cne_next_data_in;
 
-            ce_addr <= (ce_write_en && sim_state != STREAM) ? ce_next_write_addr : index;
+            ce_addr <= ce_next_write_en ? ce_next_write_addr : index;
             ce_n_addr <= ce_n_next_write_en ? ce_next_write_addr : index;
             ce_write_en <= ce_next_write_en;
             ce_n_write_en <= ce_n_next_write_en;
             ce_data_in <= ce_next_data_in;
             ce_n_data_in <= ce_next_data_in;
 
-            cse_addr <= (cse_write_en && sim_state != STREAM) ? cse_next_write_addr : index;
+            cse_addr <= cse_next_write_en ? cse_next_write_addr : index;
             cse_n_addr <= cse_n_next_write_en ? cse_next_write_addr : index;
             cse_write_en <= cse_next_write_en;
             cse_n_write_en <= cse_n_next_write_en;
             cse_data_in <= cse_next_data_in;
             cse_n_data_in <= cse_next_data_in;
 
-            cs_addr <= (cs_write_en && sim_state != STREAM) ? cs_next_write_addr : index;
+            cs_addr <= cs_next_write_en ? cs_next_write_addr : index;
             cs_n_addr <= cs_n_next_write_en ? cs_next_write_addr : index;
             cs_write_en <= cs_next_write_en;
             cs_n_write_en <= cs_n_next_write_en;
             cs_data_in <= cs_next_data_in;
             cs_n_data_in <= cs_next_data_in;
 
-            csw_addr <= (csw_write_en && sim_state != STREAM) ? csw_next_write_addr : index;
+            csw_addr <= csw_next_write_en ? csw_next_write_addr : index;
             csw_n_addr <= csw_n_next_write_en ? csw_next_write_addr : index;
             csw_write_en <= csw_next_write_en;
             csw_n_write_en <= csw_n_next_write_en;
             csw_data_in <= csw_next_data_in;
             csw_n_data_in <= csw_next_data_in;
 
-            cw_addr <= (cw_write_en && sim_state != STREAM) ? cw_next_write_addr : index;
+            cw_addr <= cw_next_write_en ? cw_next_write_addr : index;
             cw_n_addr <= cw_n_next_write_en ? cw_next_write_addr : index;
             cw_write_en <= cw_next_write_en;
             cw_n_write_en <= cw_n_next_write_en;
             cw_data_in <= cw_next_data_in;
             cw_n_data_in <= cw_next_data_in;
 
-            cnw_addr <= (cnw_write_en && sim_state != STREAM) ? cnw_next_write_addr : index;
+            cnw_addr <= cnw_next_write_en ? cnw_next_write_addr : index;
             cnw_n_addr <= cnw_n_next_write_en ? cnw_next_write_addr : index;
             cnw_write_en <= cnw_next_write_en;
             cnw_n_write_en <= cnw_n_next_write_en;
@@ -644,75 +647,65 @@ module LBMController (
             end
             STREAM:
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = STREAM;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                    c0_next_write_addr = c0_n_addr;
-                    c0_n_next_write_en = c0_n_write_en;
-
-                    cn_next_write_addr = cn_n_addr;
-                    cn_n_next_write_en = cn_n_write_en;
-
-                    cne_next_write_addr = cne_n_addr;
-                    cne_n_next_write_en = cne_n_write_en;
-
-                    ce_next_write_addr = ce_n_addr;
-                    ce_n_next_write_en = ce_n_write_en;
-
-                    cse_next_write_addr = cse_n_addr;
-                    cse_n_next_write_en = cse_n_write_en;
-
-                    cs_next_write_addr = cs_n_addr;
-                    cs_n_next_write_en = cs_n_write_en;
-
-                    csw_next_write_addr = csw_n_addr;
-                    csw_n_next_write_en = csw_n_write_en;
-
-                    cw_next_write_addr = cw_n_addr;
-                    cw_n_next_write_en = cw_n_write_en;
-
-                    cnw_next_write_addr = cnw_n_addr;
-                    cnw_n_next_write_en = cnw_n_write_en;
+                if(any_read_wait) 
+                begin
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_sim_state = STREAM_WAIT;
+                end  
+                else if(index+`RAMS_TO_ACCESS > `DEPTH-1-`WIDTH-1) 
+                begin
+                    next_sim_state = BOUNDARY;
+                    next_index = `WIDTH+1;
+                    next_width_count = 1;
                 end
                 else
-                begin 
-                    if(index+`RAMS_TO_ACCESS > `DEPTH-1) 
+                begin
+                    next_sim_state = STREAM;
+                    next_index = index + `RAMS_TO_ACCESS;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + `RAMS_TO_ACCESS);
+                end  
+            end
+            STREAM_WAIT : // do the outside too
+            begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
+                    next_sim_state = STREAM_WAIT;
+                    next_index = index;
+                    next_width_count = width_count;
+                end 
+                else begin
+                    
+                    c0_next_write_addr = index;
+
+                    cn_next_write_addr = index-`WIDTH; // write to cell above
+
+                    cne_next_write_addr = index-`WIDTH+1;
+
+                    ce_next_write_addr = index+1;
+
+                    cse_next_write_addr = index+`WIDTH+1;
+
+                    cs_next_write_addr = index+`WIDTH;
+
+                    csw_next_write_addr = index+`WIDTH-1;
+
+                    cw_next_write_addr = index - 1;
+
+                    cnw_next_write_addr = index - 1 - `WIDTH;
+
+                    if(index == `DEPTH-1-`WIDTH-1) 
                     begin
+                        next_index = `WIDTH + 1;
+                        next_width_count = 1;
                         next_sim_state = BOUNCE;
-                        next_index = 0;
-                        next_width_count = 0;
+                        
                     end
                     else
                     begin
-                        next_sim_state = STREAM;
                         next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + `RAMS_TO_ACCESS);
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                        next_sim_state = STREAM;
                     end
-                    if(any_read_wait) 
-                    begin
-                        next_ram_wait_count = `RAM_READ_WAIT;
-
-                        c0_next_write_addr = index;
-
-                        cn_next_write_addr = index-`WIDTH;
-
-                        cne_next_write_addr = index-`WIDTH+1;
-
-                        ce_next_write_addr = index+1;
-                        
-                        cse_next_write_addr = index+`WIDTH+1;
-                        
-                        cs_next_write_addr = index+`WIDTH;
-                        
-                        csw_next_write_addr = index+`WIDTH-1;
-                        
-                        cw_next_write_addr = index - 1;
-                        
-                        cnw_next_write_addr = index - 1 - `WIDTH;
-                    end    
                 end
             end
 

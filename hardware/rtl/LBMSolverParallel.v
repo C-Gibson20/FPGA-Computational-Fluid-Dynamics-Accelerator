@@ -436,7 +436,7 @@ module LBMSolverParallel (
                     // next_step_count = step_count + 1;
                     // next_index = 0;
                     // next_width_count = 0;
-                    next_sim_state = BOUNCE;
+                    next_sim_state = BOUNDARY;
                     // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
                 end
                 else 
@@ -448,48 +448,91 @@ module LBMSolverParallel (
                 if(index <= `DEPTH-1 && barriers[index]==1'b0)
                 begin
                     read_wait = 1'b1;
+                    next_sim_state = `STREAM_WAIT;
+                    // c0_n_write_en = 1'b1;
                     
-                    c0_n_write_en = 1'b1;
+                    // cn_n_write_en = (index>= `WIDTH); // only write if past first row
                     
-                    cn_n_write_en = (index>= `WIDTH); // only write if past first row
+                    // cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
                     
-                    cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                    // ce_n_write_en = (width_count != `WIDTH - 1);
                     
-                    ce_n_write_en = (width_count != `WIDTH - 1);
+                    // cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
                     
-                    cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                    // cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
                     
-                    cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
+                    // csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
                     
-                    csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-                    
-                    cw_n_write_en = (width_count != 0);
+                    // cw_n_write_en = (width_count != 0);
        
-                    cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
+                    // cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
                 end
                 // @Kayvan are the ternary expressions on next_addr needed? can't just have them as the target address?
                     // note to self: streaming step reads from cx and writes to cx_n. 
 
                 
-                c0_n_data_in = c0_data_out;
+                // c0_n_data_in = c0_data_out;
 
-                cn_n_data_in = cn_data_out;
+                // cn_n_data_in = cn_data_out;
 
-                cne_n_data_in = cne_data_out;
+                // cne_n_data_in = cne_data_out;
 
-                ce_n_data_in = ce_data_out;
+                // ce_n_data_in = ce_data_out;
 
-                cse_n_data_in = cse_data_out;
+                // cse_n_data_in = cse_data_out;
 
-                cs_n_data_in = cs_data_out;
+                // cs_n_data_in = cs_data_out;
 
-                csw_n_data_in = csw_data_out;
+                // csw_n_data_in = csw_data_out;
 
-                cw_n_data_in = cw_data_out;
+                // cw_n_data_in = cw_data_out;
 
-                cnw_n_data_in = cnw_data_out;
+                // cnw_n_data_in = cnw_data_out;
             end
+            STREAM_WAIT:
+            begin
+                c0_n_next_write_en = 1'b1;
+                c0_next_data_in = c0_data_out;
 
+                
+                cn_n_next_write_en = 1;
+                cn_next_data_in = cn_data_out;
+
+                cne_n_next_write_en = 1;
+                cne_next_data_in = cne_data_out;
+
+                ce_n_next_write_en = 1;
+                ce_next_data_in = ce_data_out;
+
+                cse_n_next_write_en = 1;
+                cse_next_data_in = cse_data_out;
+
+                cs_n_next_write_en = 1;
+                cs_next_data_in = cs_data_out;
+
+                csw_n_next_write_en = 1;
+                csw_next_data_in = csw_data_out;
+
+                cw_n_next_write_en = 1;
+                cw_next_data_in = cw_data_out;
+
+                cnw_n_next_write_en = 1;
+                cnw_next_data_in = cnw_data_out;
+
+                if(index == `DEPTH-1-`WIDTH-1) 
+                begin
+                    // next_index = `WIDTH + 1;
+                    // next_width_count = 1;
+                    next_sim_state = BOUNDARY;
+                    
+                end
+                else
+                begin
+                    // next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
+                    // next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
+                    next_sim_state = STREAM;
+                end
+            end
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
