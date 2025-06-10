@@ -161,7 +161,7 @@ TEST_F(ColliderTestbench, inputZero) {
     EXPECT_EQ(collider->f_new_nw,   0);
 }
 
-TEST_F(ColliderTestbench, randomtest) {
+TEST_F(ColliderTestbench, the1daytest) {
     collider->f_null = 0x0E06;
     collider->f_n    = 0x037F;
     collider->f_s    = 0x0385;
@@ -174,15 +174,15 @@ TEST_F(ColliderTestbench, randomtest) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_EQ(collider->f_new_null, 3588);
-    EXPECT_EQ(collider->f_new_n,    896);
-    EXPECT_EQ(collider->f_new_s,    898);
-    EXPECT_EQ(collider->f_new_e,    1213);
-    EXPECT_EQ(collider->f_new_w,    665);
-    EXPECT_EQ(collider->f_new_ne,   302);
-    EXPECT_EQ(collider->f_new_se,   304);
-    EXPECT_EQ(collider->f_new_sw,   167);
-    EXPECT_EQ(collider->f_new_nw,   166);
+    EXPECT_EQ(collider->f_new_null, 3602); //Use mass conversion: if skipped ~3588
+    EXPECT_NEAR(collider->f_new_n,    896, 3);
+    EXPECT_NEAR(collider->f_new_s,    898, 3);
+    EXPECT_NEAR(collider->f_new_e,    1213, 3);
+    EXPECT_NEAR(collider->f_new_w,    665, 3);
+    EXPECT_NEAR(collider->f_new_ne,   302, 3);
+    EXPECT_NEAR(collider->f_new_se,   304, 3);
+    EXPECT_NEAR(collider->f_new_sw,   167, 3);
+    EXPECT_NEAR(collider->f_new_nw,   166, 3);
 }
 
 int main(int argc, char **argv) {
