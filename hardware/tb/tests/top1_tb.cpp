@@ -9,7 +9,7 @@ protected:
 
     void initializeInputs() override {
         top->clk = 1;
-        top->rst = 1;
+        top->rst = 0;
         top->en  = 1;
         top->step = 1000;
         top->omega = 0x3000; // 2.0 in Q3.13
@@ -33,6 +33,9 @@ protected:
     // ✅ override runSimulation in this subclass
     void runSimulation(int cycles) {
         for (int i = 0; i < cycles; i++) {
+            if(i == 400){
+                top->rst = 1;
+            }
             for (int clk = 0; clk < 2; clk++) {
                 top->eval();
 #ifndef __APPLE__
@@ -43,9 +46,9 @@ protected:
             ticks++;
 
             // ✅ Log u_squared when valid
-            if (top->collider_ready && top->in_collision_state) {
-                logFile << int16_t(top->u_squared) << "\n";
-            }
+            // if (top->collider_ready && top->in_collision_state) {
+            //     logFile << top->u_squared << "\n";
+            // }
 
             if (Verilated::gotFinish()) {
                 break;
@@ -57,7 +60,7 @@ protected:
 };
 
 TEST_F(TopTestbench, LogUSquaredOnly) {
-    runSimulation(10000);  // enough cycles for 1000 steps
+    runSimulation(20000);  // enough cycles for 1000 steps
 
     // Run Python script to convert the log
     int status = std::system("python3 convert_u_squared.py");

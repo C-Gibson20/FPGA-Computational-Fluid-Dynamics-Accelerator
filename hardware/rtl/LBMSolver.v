@@ -831,8 +831,11 @@ module LBMSolver (
                             cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
                         end
                     end
-                else
+                else begin
                     next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;
+                end
             end
 
             MEM_RESET : begin
