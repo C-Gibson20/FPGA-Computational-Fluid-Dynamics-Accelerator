@@ -38,9 +38,8 @@ module BRAM_addr_gen(
     reg reg_full;  
 
     
-    always @(posedge axi_ready or posedge next_img) begin
+    always @(posedge clk or posedge next_img) begin
         if (next_img) begin
-            data_out <= 0;
             curr_bits <= 0;
             count <= 0;
             data_valid <= 0;

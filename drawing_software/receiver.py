@@ -9,7 +9,7 @@ PORT = 9005
 
 overlay = Overlay('project_1.bit')
 AXI = ol.axi_gpio_0.channel1
-AXI_READY = ol.axi_gpio0.channel1
+AXI_READY = ol.axi_gpio0.channel2
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
