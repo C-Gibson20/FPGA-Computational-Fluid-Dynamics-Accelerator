@@ -644,41 +644,7 @@ module LBMController (
             end
             STREAM:
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = STREAM;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                    c0_next_write_addr = c0_n_addr;
-                    c0_n_next_write_en = c0_n_write_en;
-
-                    cn_next_write_addr = cn_n_addr;
-                    cn_n_next_write_en = cn_n_write_en;
-
-                    cne_next_write_addr = cne_n_addr;
-                    cne_n_next_write_en = cne_n_write_en;
-
-                    ce_next_write_addr = ce_n_addr;
-                    ce_n_next_write_en = ce_n_write_en;
-
-                    cse_next_write_addr = cse_n_addr;
-                    cse_n_next_write_en = cse_n_write_en;
-
-                    cs_next_write_addr = cs_n_addr;
-                    cs_n_next_write_en = cs_n_write_en;
-
-                    csw_next_write_addr = csw_n_addr;
-                    csw_n_next_write_en = csw_n_write_en;
-
-                    cw_next_write_addr = cw_n_addr;
-                    cw_n_next_write_en = cw_n_write_en;
-
-                    cnw_next_write_addr = cnw_n_addr;
-                    cnw_n_next_write_en = cnw_n_write_en;
-                end
-                else
-                begin 
+   
                     if(index+`RAMS_TO_ACCESS > `DEPTH-1) 
                     begin
                         next_sim_state = BOUNCE;
@@ -713,7 +679,6 @@ module LBMController (
                         
                         cnw_next_write_addr = index - 1 - `WIDTH;
                     end    
-                end
             end
 
             BOUNCE:
