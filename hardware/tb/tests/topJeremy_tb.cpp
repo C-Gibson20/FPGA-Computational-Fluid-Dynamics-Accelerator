@@ -13,15 +13,15 @@ protected:
         top->en  = 1;
         top->step = 1000;
         top->omega = 0x4000; // 2.0 in Q3.13
-        top->init_c0    = 0x0E02;
-        top->init_cn    = 0x0381;
-        top->init_cne   = 0x012F;
-        top->init_ce    = 0x04BB;
-        top->init_cse   = 0x012F;
-        top->init_cs    = 0x0381;
-        top->init_csw   = 0x00A6;
+        top->init_c0    = 0x0E38;
+        top->init_cn    = 0x038E;
+        top->init_cs    = 0x038E;
+        top->init_ce    = 0x03AA;
         top->init_cw    = 0x0298;
+        top->init_cne   = 0x00EA;
+        top->init_cse   = 0x00EA;        
         top->init_cnw   = 0x00A6;
+        top->init_csw   = 0x00DD;
 
 
         logFile.open("u_squared_log.txt");

@@ -439,6 +439,12 @@ module LBMSolver (
                     next_sim_state = STREAM_WAIT;
                     next_index = index;
                 end
+                else if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
+                begin
+                    next_index = `WIDTH+1;
+                    next_width_count = 1;
+                    next_sim_state = BOUNDARY;
+                end 
                 else // don't stream
                 begin
                     next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
@@ -446,12 +452,7 @@ module LBMSolver (
                     next_sim_state = STREAM;
                 end
 
-                if(index == `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
-                begin
-                    next_index = `WIDTH+1;
-                    next_width_count = 1;
-                    next_sim_state = BOUNDARY;
-                end 
+                
             end
 
             STREAM_WAIT : // do the outside too
