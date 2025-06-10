@@ -8,7 +8,17 @@ module top (
     input  wire [31:0] step,
     input  wire [`DEPTH-1:0] barriers,
     input  wire signed [15:0] omega,
-    
+
+    input wire [`DATA_WIDTH-1:0]        init_c0,
+    input wire [`DATA_WIDTH-1:0]        init_cn,
+    input wire [`DATA_WIDTH-1:0]        init_cne,
+    input wire [`DATA_WIDTH-1:0]        init_ce,
+    input wire [`DATA_WIDTH-1:0]        init_cse,
+    input wire [`DATA_WIDTH-1:0]        init_cs,
+    input wire [`DATA_WIDTH-1:0]        init_csw,
+    input wire [`DATA_WIDTH-1:0]        init_cw,
+    input wire [`DATA_WIDTH-1:0]        init_cnw,
+
     output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
     output wire signed [15:0] testing_c0_data_in,
     output wire [`DATA_WIDTH-1:0] u_x,
@@ -99,6 +109,16 @@ module top (
         .cnw_addr(cnw_addr), .cnw_data_in(cnw_data_in), .cnw_write_en(cnw_write_en), .cnw_data_out(cnw_data_out),
         .cnw_n_addr(cnw_n_addr), .cnw_n_data_in(cnw_n_data_in), .cnw_n_write_en(cnw_n_write_en), .cnw_n_data_out(cnw_n_data_out),
 
+        .init_c0(init_c0),
+        .init_cn(init_cn),
+        .init_cne(init_cne),
+        .init_ce(init_ce),
+        .init_cse(init_cse),
+        .init_cs(init_cs),
+        .init_csw(init_csw),
+        .init_cw(init_cw),
+        .init_cnw(init_cnw),
+        
         .u_x(u_x),
         .u_y(u_y),
         .rho(rho),
