@@ -1,15 +1,15 @@
 import socket
 import numpy as np
-from pynq import MMIO, Overlay
+from pynq import Overlay
+
+ol = Overlay()
 
 HOST = '192.168.2.99'
-PORT = 9090
+PORT = 9005
 
 overlay = Overlay('project_1.bit')
 overlay.download()
 
-#choose address on vivado address editor
-mmio = MMIO()
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
@@ -21,6 +21,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if not data:
                 break
             conn.sendall(data)
-    gpio.write(data)
+    .write(data)
 conn.close()
 sock.close()

@@ -2,3 +2,4 @@
 /hardware/tb/test_out/**
 **/waveform.vcd
 *.txt
+*.mp4

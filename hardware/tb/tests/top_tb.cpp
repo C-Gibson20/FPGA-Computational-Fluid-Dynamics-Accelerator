@@ -44,7 +44,7 @@ protected:
 
             // ✅ Log u_squared when valid
             if (top->collider_ready && top->in_collision_state) {
-                logFile << top->u_squared << "\n";
+                logFile << int16_t(top->u_squared) << "\n";
             }
 
             if (Verilated::gotFinish()) {
@@ -57,7 +57,7 @@ protected:
 };
 
 TEST_F(TopTestbench, LogUSquaredOnly) {
-    runSimulation(20000);  // enough cycles for 1000 steps
+    runSimulation(10000);  // enough cycles for 1000 steps
 
     // Run Python script to convert the log
     int status = std::system("python3 convert_u_squared.py");

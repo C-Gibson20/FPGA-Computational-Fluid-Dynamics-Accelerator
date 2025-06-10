@@ -15,15 +15,15 @@ f_i_int = {
     # 'se':   0x00E4,
     # 'sw':   0x0090,
     # 'nw':   0x00E4
-    'null': 0x0E38,
-    'n':    0x038E,
-    's':    0x038E,
-    'e':    0x0000,
-    'w':    0x038E,
-    'ne':   0x0000,
-    'se':   0x0000,
-    'sw':   0x00E4,
-    'nw':   0x00E4
+    'null': 0x0E06,
+    'n':    0x037F,
+    's':    0x0385,
+    'e':    0x04BB,
+    'w':    0x0298,
+    'ne':   0x012F,
+    'se':   0x012F,
+    'sw':   0x00A6,
+    'nw':   0x00A6
 }
 f_i = {k: q313_to_float(v) for k, v in f_i_int.items()}
 
@@ -41,8 +41,8 @@ rho = sum(f_i.values())
 rho_x1 = rho * (2 - rho)
 x2 = (2 - rho) * (2 - rho_x1)
 x3 = x2 * (2 - rho * x2)
-u_x = (f_i['e'] + f_i['ne'] + f_i['se'] - f_i['w'] - f_i['nw'] - f_i['sw']) * x3
-u_y = (f_i['n'] + f_i['ne'] + f_i['nw'] - f_i['s'] - f_i['se'] - f_i['sw']) * x3
+u_x = (f_i['e'] + f_i['ne'] + f_i['se'] - f_i['w'] - f_i['nw'] - f_i['sw']) /rho
+u_y = (f_i['n'] + f_i['ne'] + f_i['nw'] - f_i['s'] - f_i['se'] - f_i['sw']) /rho
 
 omega = 2.0  # tau = 0.5
 
@@ -74,3 +74,9 @@ for k in data:
     d = data[k]
     print(f"{k:<9}| {d['f_i_int']:8} | {d['eu_int']:7} | {d['uu_int']:7} | {d['poly_int']:9} |"
           f" {d['f_eq_int']:9} | {d['f_new_int']:10}")
+
+print("\nMacroscopic velocities:")
+print(f"u_x = {u_x:.6f} ({float_to_q313_int(u_x)} in Q3.13)")
+print(f"u_y = {u_y:.6f} ({float_to_q313_int(u_y)} in Q3.13)")
+u_y_squared = u_y * u_y
+print(f"u_y^2 = {u_y_squared:.8f} ({float_to_q313_int(u_y_squared)} in Q3.13)")
