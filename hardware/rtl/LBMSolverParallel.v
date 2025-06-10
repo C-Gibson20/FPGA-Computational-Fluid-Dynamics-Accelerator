@@ -491,26 +491,33 @@ module LBMSolverParallel (
             end
             STREAM_WAIT:
             begin
-                // c0_next_write_addr = index;
                 c0_n_next_write_en = 1'b1;
-                // c0_next_data_in = c0_data_out;
+                c0_next_data_in = c0_data_out;
 
+                
                 cn_n_next_write_en = 1;
-                
+                cn_next_data_in = cn_data_out;
+
                 cne_n_next_write_en = 1;
-                
+                cne_next_data_in = cne_data_out;
+
                 ce_n_next_write_en = 1;
-                
+                ce_next_data_in = ce_data_out;
+
                 cse_n_next_write_en = 1;
-                
+                cse_next_data_in = cse_data_out;
+
                 cs_n_next_write_en = 1;
-                
+                cs_next_data_in = cs_data_out;
+
                 csw_n_next_write_en = 1;
-                
+                csw_next_data_in = csw_data_out;
+
                 cw_n_next_write_en = 1;
-                                
+                cw_next_data_in = cw_data_out;
+
                 cnw_n_next_write_en = 1;
-                
+                cnw_next_data_in = cnw_data_out;
 
                 if(index == `DEPTH-1-`WIDTH-1) 
                 begin
