@@ -38,6 +38,8 @@ wire signed [15:0] three         = 16'h6000; // 3.0
 wire signed [15:0] three_halves  = 16'h3000; // 3/2
 wire signed [15:0] nine_quarters = 16'h4800; // 9/4
 
+wire signed [15:0] round = 1 <<< 12;
+
 assign collider_busy = 1'b0;
 assign newval_ready  = 1'b1;
 assign axi_ready     = 1'b1;

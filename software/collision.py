@@ -6,24 +6,15 @@ def q313_to_float(x):
 
 # Initial f_i values from testbench (Q3.13)
 f_i_int = {
-    # 'null': 0x0E38,
-    # 'n':    0x038E,
-    # 's':    0x038E,
-    # 'e':    0x038E,
-    # 'w':    0x038E,
-    # 'ne':   0x0150,
-    # 'se':   0x00E4,
-    # 'sw':   0x0090,
-    # 'nw':   0x00E4
-    'null': 0x0E06,
-    'n':    0x037F,
-    's':    0x0385,
-    'e':    0x04BB,
-    'w':    0x0298,
-    'ne':   0x012F,
-    'se':   0x012F,
-    'sw':   0x00A6,
-    'nw':   0x00A6
+    'null': 0x0E38,
+    'n':    0x038E,
+    's':    0x038E,
+    'e':    0x03AA,
+    'w':    0x0373,
+    'ne':   0x00EA,
+    'se':   0x00EA,
+    'sw':   0x00DD,
+    'nw':   0x00DD
 }
 f_i = {k: q313_to_float(v) for k, v in f_i_int.items()}
 
