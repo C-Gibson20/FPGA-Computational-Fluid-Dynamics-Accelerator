@@ -59,6 +59,21 @@ TEST_F(multiplyTestbench, twotimestwoClipped) { //2 * 2 = 4
     EXPECT_EQ(multiply->c, 0x7FFF);
 }
 
+TEST_F(multiplyTestbench, nishant) { //-2 * 1.5 = -3
+    multiply->a = 0xC000;
+    multiply->b = 0x3000;
+    multiply->eval();
+    tfp->dump(ticks++);
+    EXPECT_EQ(multiply->c, 0xA000);
+}
+
+TEST_F(multiplyTestbench, idk) { //2 * 2 = 4
+    multiply->a = 0xFFFA;
+    multiply->b = 0x1FF9;
+    multiply->eval();
+    tfp->dump(ticks++);
+    EXPECT_EQ(multiply->c, 0xFFFA);
+}
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
