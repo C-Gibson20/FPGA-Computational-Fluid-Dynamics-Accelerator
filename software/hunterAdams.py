@@ -9,7 +9,7 @@ height = 50                     # grid height
 width = 50                     # grid width
 # viscosity = 0.002                # viscosity
 # omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
-omega = 2.
+omega = 1.75
 u0 = 0.1                       # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant
@@ -174,13 +174,13 @@ def initialize(x1top, y1top, y1height, u0=u0):
 
 # Frames per second, and number of seconds
 fps = 60
-nSeconds = 10
+nSeconds = 30
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(2, 2, 0)
+initialize(10, 10, 15)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
