@@ -37,7 +37,7 @@ module image_thing(
     reg next_img;
 
     
-    always @(posedge axi_ready or posedge next_img) begin
+    always @(posedge clk or posedge next_img) begin
         if (next_img) begin
             curr_bits <= 0;
             count <= 0;
@@ -52,7 +52,7 @@ module image_thing(
                     next_img <= 1;  
                     count <= 0;     
                 end
-                else begin
+                else if (!next_img) begin
                     count <= count + 1;
                 end
             end

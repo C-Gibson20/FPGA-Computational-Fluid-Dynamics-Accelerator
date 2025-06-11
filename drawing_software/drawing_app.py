@@ -58,6 +58,8 @@ lines = []
 current_line = []
 images = []
 polygons = []
+rectangles = []
+circles = []
 
 user_input = ''
 drawColor = [0, 0, 0]
@@ -221,6 +223,61 @@ class Images:
     def draw(self, surface):
         surface.blit(self.image, self.pos)
 
+class Rectangle:
+    def __init__(self, pos, size=(100, 60)):
+        self.pos = list(pos)  # Top-left corner
+        self.size = size
+        self.dragging = False
+        self.drag_offset = (0, 0)
+        self.rect = pygame.Rect(self.pos, self.size)
+
+    def draw(self, surface):
+        self.rect.topleft = self.pos
+        pygame.draw.rect(surface, drawColor, self.rect)
+        pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)  # Optional black border
+
+    def start_drag(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            self.dragging = True
+            self.drag_offset = (mouse_pos[0] - self.pos[0], mouse_pos[1] - self.pos[1])
+            return True
+        return False
+
+    def drag(self, mouse_pos):
+        if self.dragging:
+            self.pos = [mouse_pos[0] - self.drag_offset[0], mouse_pos[1] - self.drag_offset[1]]
+
+    def stop_drag(self):
+        self.dragging = False
+
+class Circle:
+    def __init__(self, pos, radius):
+        self.pos = list(pos)  # center of circle
+        self.radius = radius
+        self.dragging = False
+        self.drag_offset = (0, 0)
+        self.rect = pygame.Rect(self.pos[0] - radius, self.pos[1] - radius, radius * 2, radius * 2)
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, drawColor, self.pos, self.radius)
+        self.rect = pygame.Rect(self.pos[0] - self.radius, self.pos[1] - self.radius, self.radius * 2, self.radius * 2)
+
+    def start_drag(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            self.dragging = True
+            self.drag_offset = (mouse_pos[0] - self.pos[0], mouse_pos[1] - self.pos[1])
+            return True
+        return False
+
+    def drag(self, mouse_pos):
+        if self.dragging:
+            self.pos = [mouse_pos[0] - self.drag_offset[0], mouse_pos[1] - self.drag_offset[1]]
+
+    def stop_drag(self):
+        self.dragging = False
+
+
+
 def draw_polygon():
     try:
         sides = int(input_box1[0].get_value())
@@ -228,8 +285,16 @@ def draw_polygon():
     except ValueError:
         print("Invalid polygon sides")
 
+def draw_rectangle():
+    width = int(input_box3[0].get_value())
+    height = int(input_box4[0].get_value())
+    rect = Rectangle((canvasSize[0] // 2, canvasSize[1] // 2), (width, height))
+    rectangles.append(rect) 
+
 def draw_circle():
-    pygame.draw.circle(canvas, drawColor, [400, 400], 50)
+    radius = int(input_box2[0].get_value())
+    circle = Circle((canvasSize[0] // 2, canvasSize[1] // 2), radius)
+    circles.append(circle)
 
 #clear canvas
 def clear():
@@ -237,6 +302,8 @@ def clear():
     polygons.clear()
     lines.clear()
     images.clear()
+    circles.clear()
+    rectangles.clear()
 
 #saves image in a flattened 2500 bit array to send to pynq
 def save():
@@ -257,14 +324,24 @@ def save():
         f.write(packed_bits.tobytes())
 
 Button(25, 25, 160, 35, 'Polygon', draw_polygon)
-label_y = 70
 screen_label = font.render("Insert no of sides", True, (255, 255, 255))
-input_box1 = [InputBox(0, label_y + 30, 100, 25)]
+input_box1 = [InputBox(0, 100, 50, 25)]
 
-for i, (btn_name, func) in enumerate([('Circle', draw_circle), ('Save', save), ('Clear', clear)]):
-    Button(25, 140 + i * 60, 160, 35, btn_name, func)
+Button(25, 140, 160, 35, 'Circle', draw_circle)
+screen_label2 = font.render("Radius", True, (255, 255, 255))
+input_box2 = [InputBox(0, 210, 10, 25)]
 
-slider = Slider((25, 340))
+for i, (btn_name, func) in enumerate([('Save', save), ('Clear', clear)]):
+    Button(25, 250 + i * 60, 160, 35, btn_name, func)
+
+Button(25, 370, 160, 35, 'Rectangle', draw_rectangle)
+screen_label3 = font.render("Width", True, (255, 255, 255))
+input_box3 = [InputBox(0, 440, 10, 25)]
+
+screen_label4 = font.render("Height", True, (255, 255, 255))
+input_box4 = [InputBox(0, 510, 10, 25)]
+
+slider = Slider((25, 580))
 canvas = pygame.Surface(canvasSize)
 canvas.fill((255, 255, 255))
 
@@ -281,6 +358,10 @@ while True:
         pygame.draw.lines(canvas, drawColor, False, current_line, brushSize)
     for img in images:
         img.draw(canvas)
+    for rect in rectangles:
+        rect.draw(canvas)
+    for circle in circles:
+        circle.draw(canvas)
 
     screen.blit(canvas, (buttonAreaWidth, 0))
 
@@ -288,6 +369,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit(); sys.exit()
         for box in input_box1: box.handle_event(event)
+        for box in input_box2: box.handle_event(event)
+        for box in input_box3: box.handle_event(event)
+        for box in input_box4: box.handle_event(event)
         slider.handle_event(event)
 
         if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
@@ -302,17 +386,29 @@ while True:
                 for img in reversed(images):
                     if img.start_drag((mx - buttonAreaWidth, my)):
                         break
+                for rect in rectangles:
+                    if rect.start_drag((mx - buttonAreaWidth, my)):
+                        break
+                for circle in circles:
+                    if circle.start_drag((mx - buttonAreaWidth, my)):
+                        break
 
         if event.type == pygame.MOUSEBUTTONUP:
             if len(current_line) > 1: lines.append(current_line)
             current_line, selected_vertex, selected_polygon = [], None, None
             for img in images: img.stop_drag()
+            for rect in rectangles: rect.stop_drag()
+            for circle in circles: circle.stop_drag()
 
         if event.type == pygame.MOUSEMOTION:
             mx, my = pygame.mouse.get_pos()
             if mx > buttonAreaWidth:
                 for img in images:
                     img.drag((mx - buttonAreaWidth, my))
+                for rect in rectangles:
+                    rect.drag((mx - buttonAreaWidth, my))
+                for circle in circles:
+                    circle.drag((mx - buttonAreaWidth, my))
 
         if event.type == pygame.DROPFILE:
             try:
@@ -324,10 +420,29 @@ while True:
     for box in input_box1:
         box.update()
         box.draw(screen)
-    screen.blit(screen_label, (25, label_y))
+    screen.blit(screen_label, (25, 70))
+
+    for box in input_box2:
+        box.update()
+        box.draw(screen)
+    screen.blit(screen_label2, (25, 190))
+
+    for box in input_box3:
+        box.update()
+        box.draw(screen)
+    screen.blit(screen_label3, (25, 420))
+
+    for box in input_box4:
+        box.update()
+        box.draw(screen)
+    screen.blit(screen_label4, (25, 490))
+
 
     slider.draw(screen)
     brushSize = slider.get_value()
+
+    drawingEnabled = not any(rect.dragging for rect in rectangles) and not any(img.dragging for img in images) and not any(circle.dragging for circle in circles)
+
 
     if drawingEnabled and pygame.mouse.get_pressed()[0]:
         mx, my = pygame.mouse.get_pos()
