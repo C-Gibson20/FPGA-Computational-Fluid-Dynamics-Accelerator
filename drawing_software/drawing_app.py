@@ -7,6 +7,13 @@ import numpy as np
 import time
 import win32gui
 import win32con
+import socket
+
+HOST = '192.168.2.99'
+PORT = 9005
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
 
 python_win_title = "DrawingApp"
 unity_win_title = "Unit"
@@ -305,23 +312,55 @@ def clear():
     circles.clear()
     rectangles.clear()
 
-#saves image in a flattened 2500 bit array to send to pynq
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
 def save():
     file_name_orig = "canvas" + str(int(time.time())) + ".png"
     pygame.image.save(canvas, file_name_orig)
 
-    #downsize image into 50x50
+    # Downsize image and convert to binary
     img = Image.open(file_name_orig).convert("L").resize((50, 50), Image.LANCZOS)
     img.save("50x50img.png")
 
-    #convert image into black and white and convert into binary array
     binary_array = (np.array(img) < 128).astype(np.uint8).flatten()
     packed_bits = np.packbits(binary_array)
 
-    #store 
+    # Store for reference
     file_name_bin = str(int(time.time())) + "_data.bin"
     with open(file_name_bin, "wb") as f:
         f.write(packed_bits.tobytes())
+
+    return packed_bits.tobytes()
+
+def send():
+    data = save()  # Get packed image data
+    for attempt in range(MAX_RETRIES):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                print(f"Attempt {attempt + 1}/{MAX_RETRIES}: Connecting to {HOST}:{PORT}...")
+                s.settimeout(10)
+                s.connect((HOST, PORT))
+                print("Connection established")
+
+                s.sendall(data)
+                print(f"Sent {len(data)} bytes")
+                break  # Success
+        except socket.timeout:
+            print("Connection timed out")
+        except ConnectionRefusedError:
+            print("Connection refused - is the server running?")
+        except Exception as e:
+            print(f"Connection error: {e}")
+        
+        if attempt < MAX_RETRIES - 1:
+            print(f"Retrying in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+    else:
+        print("Failed to connect after retries")
+
+
 
 Button(25, 25, 160, 35, 'Polygon', draw_polygon)
 screen_label = font.render("Insert no of sides", True, (255, 255, 255))
@@ -331,7 +370,7 @@ Button(25, 140, 160, 35, 'Circle', draw_circle)
 screen_label2 = font.render("Radius", True, (255, 255, 255))
 input_box2 = [InputBox(0, 210, 10, 25)]
 
-for i, (btn_name, func) in enumerate([('Save', save), ('Clear', clear)]):
+for i, (btn_name, func) in enumerate([('Save', send), ('Clear', clear)]):
     Button(25, 250 + i * 60, 160, 35, btn_name, func)
 
 Button(25, 370, 160, 35, 'Rectangle', draw_rectangle)

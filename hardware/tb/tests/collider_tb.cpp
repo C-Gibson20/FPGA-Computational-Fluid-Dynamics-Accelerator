@@ -34,6 +34,7 @@ protected:
 TEST_F(ColliderTestbench, AtEquilibrium_NoChange) {
     loadEquilibriumValues();
     collider->eval();
+    tfp->dump(ticks++);
 
     // Confirm outputs remain unchanged
     EXPECT_EQ(collider->f_new_null, collider->f_null);
@@ -61,15 +62,15 @@ TEST_F(ColliderTestbench, SmallEastwardSpeed) {
     // Run one evaluation cycle
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3517, 4); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3514 if skipped
-    EXPECT_NEAR(collider->f_new_n,    878, 3);
-    EXPECT_NEAR(collider->f_new_s,    878, 3);
-    EXPECT_NEAR(collider->f_new_e, 1127, 3);
-    EXPECT_NEAR(collider->f_new_w, 824, 3);
-    EXPECT_NEAR(collider->f_new_ne,   396, 3);
-    EXPECT_NEAR(collider->f_new_se,   396, 3);
-    EXPECT_NEAR(collider->f_new_sw,   93, 3);
-    EXPECT_NEAR(collider->f_new_nw,   93, 3);
+    EXPECT_NEAR(collider->f_new_null, 3514, 1);
+    EXPECT_NEAR(collider->f_new_n,     878, 1);
+    EXPECT_NEAR(collider->f_new_s,    878, 1);
+    EXPECT_NEAR(collider->f_new_e,   1127, 1);
+    EXPECT_NEAR(collider->f_new_w,    824, 1);
+    EXPECT_NEAR(collider->f_new_ne,   396, 1);
+    EXPECT_NEAR(collider->f_new_se,   396, 1);
+    EXPECT_NEAR(collider->f_new_sw,    93, 1);
+    EXPECT_NEAR(collider->f_new_nw,    93, 1);
 }
 
 TEST_F(ColliderTestbench, StrongNorthwardSpeed) {
@@ -85,15 +86,15 @@ TEST_F(ColliderTestbench, StrongNorthwardSpeed) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3324, 3); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3322 if skipped
-    EXPECT_NEAR(collider->f_new_n,    1417, 3);
-    EXPECT_NEAR(collider->f_new_s,    671, 3);
-    EXPECT_NEAR(collider->f_new_e, 831, 3);
-    EXPECT_NEAR(collider->f_new_w, 831, 3);
-    EXPECT_NEAR(collider->f_new_ne,   434, 3);
-    EXPECT_NEAR(collider->f_new_se,   120, 3);
-    EXPECT_NEAR(collider->f_new_sw,   120, 3);
-    EXPECT_NEAR(collider->f_new_nw,  434, 3);
+    EXPECT_NEAR(collider->f_new_null, 3322, 2);
+    EXPECT_NEAR(collider->f_new_n,    1417, 1);
+    EXPECT_NEAR(collider->f_new_s,     671, 1);
+    EXPECT_NEAR(collider->f_new_e,     831, 1);
+    EXPECT_NEAR(collider->f_new_w,     831, 1);
+    EXPECT_NEAR(collider->f_new_ne,    434, 1);
+    EXPECT_NEAR(collider->f_new_se,    120, 1);
+    EXPECT_NEAR(collider->f_new_sw,    120, 1);
+    EXPECT_NEAR(collider->f_new_nw,    434, 1);
 }
 
 TEST_F(ColliderTestbench, DiagonalNorthEastFlow) {
@@ -109,15 +110,15 @@ TEST_F(ColliderTestbench, DiagonalNorthEastFlow) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3648, 3); // Uses mass conservation: f_new_null = rho - sum(f_new_i); ~3651 if skipped
+    EXPECT_NEAR(collider->f_new_null, 3651, 3);
     EXPECT_NEAR(collider->f_new_n,    1045, 3);
-    EXPECT_NEAR(collider->f_new_s,    789, 3);
-    EXPECT_NEAR(collider->f_new_e, 1045, 3);
-    EXPECT_NEAR(collider->f_new_w, 789, 3);
-    EXPECT_NEAR(collider->f_new_ne,   188, 3);
-    EXPECT_NEAR(collider->f_new_se,   228, 3);
-    EXPECT_NEAR(collider->f_new_sw,   252, 3);
-    EXPECT_NEAR(collider->f_new_nw,  228, 3);
+    EXPECT_NEAR(collider->f_new_s,     789, 3);
+    EXPECT_NEAR(collider->f_new_e,    1045, 3);
+    EXPECT_NEAR(collider->f_new_w,     789, 3);
+    EXPECT_NEAR(collider->f_new_ne,    188, 3);
+    EXPECT_NEAR(collider->f_new_se,    228, 3);
+    EXPECT_NEAR(collider->f_new_sw,    252, 3);
+    EXPECT_NEAR(collider->f_new_nw,    228, 3);
 }
 
 TEST_F(ColliderTestbench, ConservesMass) {
@@ -174,7 +175,7 @@ TEST_F(ColliderTestbench, the1daytest) {
 
     collider->eval();
     tfp->dump(ticks++);
-    EXPECT_NEAR(collider->f_new_null, 3586, 3); //Use mass conversion: if skipped ~3588
+    EXPECT_NEAR(collider->f_new_null, 3588, 3);
     EXPECT_NEAR(collider->f_new_n,    896, 3);
     EXPECT_NEAR(collider->f_new_s,    898, 3);
     EXPECT_NEAR(collider->f_new_e,    1213, 3);

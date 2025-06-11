@@ -24,6 +24,10 @@ module collider(
     output wire signed [15:0] u_x, u_y, rho, u_squared
 );
 
+assign collider_busy = 1'b0;
+assign newval_ready  = 1'b1;
+assign axi_ready     = 1'b1;
+
 // ----------------------------------------------------------------------------------
 // Constants (Q3.13 Fixed-Point)
 // ----------------------------------------------------------------------------------
@@ -53,10 +57,6 @@ function automatic signed [15:0] multiply(input signed [15:0] a, b);
     end
 endfunction
 
-assign collider_busy = 1'b0;
-assign newval_ready  = 1'b1;
-assign axi_ready     = 1'b1;
-
 // ----------------------------------------------------------------------------------
 // Step 1: Compute macroscopic variables (rho, u)
 // ----------------------------------------------------------------------------------
@@ -65,9 +65,6 @@ assign rho = f_null + f_n + f_ne + f_e + f_se + f_s + f_sw + f_w + f_nw;
 
 wire signed [15:0] rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se);
 wire signed [15:0] rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se);
-
-// assign u_x = rho_ux / rho;
-// assign u_y = rho_uy / rho;
 
 // Newton-Raphson Reciprocal Approximation (3 iteration) 
 // assuming 0.85 << rho << 1.15
@@ -81,66 +78,73 @@ wire signed [15:0] rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se);
 
 //x2 iteration
 wire signed [15:0] rho_x1 = multiply(rho, two - rho);
+// wire signed [31:0] rho_x1_product = (rho * (two - rho)) + round;
+// wire signed [15:0] rho_x1_shifted = rho_x1_product >>> 13;
+// wire signed [15:0] rho_x1 = (rho_x1_product > 32'sh10000000) ? 16'sh7FFF :
+//                             (rho_x1_product < 32'shf0000000) ? 16'sh8000 :
+//                             rho_x1_shifted;
+
 wire signed [15:0] x2 = multiply(two - rho, two - rho_x1);
+// wire signed [31:0] x2_product = ((two - rho) * (two - rho_x1)) + round;
+// wire signed [15:0] x2_shifted = x2_product >>> 13;
+
+// wire signed [15:0] x2 = (x2_product > 32'sh10000000) ? 16'sh7FFF :
+//                         (x2_product < 32'shf0000000) ? 16'sh8000 :
+//                         x2_shifted;
+
 
 //x3 iteration
-wire signed [15:0] rho_x2 = multiply(rho, x2);
-wire signed [15:0] x3 = multiply(x2, two - rho_x2);
+// wire signed [15:0] rho_x2 = multiply(rho, x2);
+wire signed [31:0] rho_x2_product = (rho * x2) + round;
+wire signed [15:0] rho_x2_shifted = rho_x2_product >>> 13;
+wire signed [15:0] rho_x2 = (rho_x2_product > 32'sh10000000) ? 16'sh7FFF :
+                            (rho_x2_product < 32'shf0000000) ? 16'sh8000 :
+                            rho_x2_shifted;
 
-assign u_x = multiply(rho_ux, x3);
-assign u_y = multiply(rho_uy, x3);
+wire signed [15:0] x3 = multiply(x2, (two - rho_x2));
+// wire signed [31:0] x3_product = (x2 * (two - rho_x2)) + round;
+// wire signed [15:0] x3_shifted = x3_product >>> 13;
+// wire signed [15:0] x3 = (x3_product > 32'sh10000000) ? 16'sh7FFF :
+//                         (x3_product < 32'shf0000000) ? 16'sh8000 :
+//                         x3_shifted;
+
+
+// ----- u_x -----
+wire signed [31:0] u_x_product = (rho_ux * x3) + round;
+wire signed [15:0] u_x_shifted = u_x_product >>> 13;
+
+assign u_x = (u_x_product > 32'sh10000000) ? 16'sh7FFF :
+             (u_x_product < 32'shf0000000) ? 16'sh8000 :
+             u_x_shifted;
+
+// ----- u_y -----
+wire signed [31:0] u_y_product = (rho_uy * x3) + round;
+wire signed [15:0] u_y_shifted = u_y_product >>> 13;
+
+assign u_y = (u_y_product > 32'sh10000000) ? 16'sh7FFF :
+             (u_y_product < 32'shf0000000) ? 16'sh8000 :
+             u_y_shifted;
+
 
 // ----------------------------------------------------------------------------------
-// Step 2: u^2 and related terms
+// Step 2: u^2
 // ----------------------------------------------------------------------------------
 
 wire signed [15:0] u_x_squared = multiply(u_x,u_x);
 wire signed [15:0] u_y_squared = multiply(u_y,u_y);
+wire signed [15:0] x_plus_y_squared               = multiply((u_x + u_y), (u_x + u_y));
+wire signed [15:0] x_minus_y_squared              = multiply((u_x - u_y), (u_x - u_y));
 assign u_squared = u_x_squared + u_y_squared;
-
-wire signed [15:0] three_halves_u_squared = multiply(three_halves,u_squared);
-
-// ----------------------------------------------------------------------------------
-// Step 3: Compute Feq values
-// ----------------------------------------------------------------------------------
-
-// Center
-// wire signed [15:0] polynomial_null = one - three_halves_u_squared;
-// wire signed [31:0] f_eq_null_intermediate = w_null * polynomial_null;
-// wire signed [31:0] f_eq_null_intermediate_2 = rho * (f_eq_null_intermediate >>> 13);
-// wire signed [15:0] f_eq_null = f_eq_null_intermediate_2 >>> 13;
-
-// Cardinal directions
-// 3 * u_x and 3 * u_y
-wire signed [15:0] three_u_x = multiply(three,u_x);
-wire signed [15:0] three_u_y = multiply(three,u_y);
-
-// 9/2 * u_x^2 and u_y^2
-wire signed [15:0] nine_half_u_x_squared = multiply(nine_quarters,u_x_squared <<< 1);
-wire signed [15:0] nine_half_u_y_squared = multiply(nine_quarters,u_y_squared <<< 1);
-
-wire signed [15:0] polynomial_n = one + three_u_y + nine_half_u_y_squared - three_halves_u_squared;
-wire signed [15:0] polynomial_s = one - three_u_y + nine_half_u_y_squared - three_halves_u_squared;
-wire signed [15:0] polynomial_e = one + three_u_x + nine_half_u_x_squared - three_halves_u_squared;
-wire signed [15:0] polynomial_w = one - three_u_x + nine_half_u_x_squared - three_halves_u_squared;
-
-wire signed [15:0] f_eq_n_intermediate = multiply(w_side, polynomial_n);
-wire signed [15:0] f_eq_s_intermediate = multiply(w_side, polynomial_s);
-wire signed [15:0] f_eq_e_intermediate = multiply(w_side, polynomial_e);
-wire signed [15:0] f_eq_w_intermediate = multiply(w_side, polynomial_w);
-
-wire signed [15:0] f_eq_n = multiply(rho, f_eq_n_intermediate);
-wire signed [15:0] f_eq_s = multiply(rho, f_eq_s_intermediate);
-wire signed [15:0] f_eq_e = multiply(rho, f_eq_e_intermediate);
-wire signed [15:0] f_eq_w = multiply(rho, f_eq_w_intermediate);
-// Diagonals
 wire signed [15:0] x_plus_y    = u_x + u_y;
 wire signed [15:0] x_minus_y   = u_x - u_y;
 wire signed [15:0] neg_x_plus_y = -x_plus_y;
 wire signed [15:0] neg_x_minus_y = -x_minus_y;
 
-wire signed [15:0] x_plus_y_squared               = multiply(x_plus_y, x_plus_y);
-wire signed [15:0] x_minus_y_squared              = multiply(x_minus_y, x_minus_y);
+wire signed [15:0] three_halves_u_squared = multiply(three_halves,u_squared);
+wire signed [15:0] three_u_x = multiply(three,u_x);
+wire signed [15:0] three_u_y = multiply(three,u_y);
+wire signed [15:0] nine_half_u_x_squared = multiply(nine_quarters,u_x_squared <<< 1);
+wire signed [15:0] nine_half_u_y_squared = multiply(nine_quarters,u_y_squared <<< 1);
 wire signed [15:0] three_x_plus_y                  = multiply(three, x_plus_y);
 wire signed [15:0] three_neg_x_plus_y              = multiply(three, neg_x_plus_y);
 wire signed [15:0] three_x_minus_y                  = multiply(three, x_minus_y);
@@ -148,16 +152,36 @@ wire signed [15:0] three_neg_x_minus_y              = multiply(three, neg_x_minu
 wire signed [15:0] nine_half_x_plus_y_squared              = multiply(nine_quarters, x_plus_y_squared <<< 1);
 wire signed [15:0] nine_half_x_minus_y_squared              = multiply(nine_quarters, x_minus_y_squared <<< 1);
 
+wire signed [15:0] polynomial_n = one + three_u_y + nine_half_u_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_s = one - three_u_y + nine_half_u_y_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_e = one + three_u_x + nine_half_u_x_squared - three_halves_u_squared;
+wire signed [15:0] polynomial_w = one - three_u_x + nine_half_u_x_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_ne = one + three_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_sw = one + three_neg_x_plus_y + nine_half_x_plus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_nw = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_se = one + three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 
+wire signed [31:0] f_eq_n_intermediate_product = (w_side * polynomial_n) + round;
+wire signed [15:0] f_eq_n_intermediate_shifted = f_eq_n_intermediate_product >>> 13;
+wire signed [15:0] f_eq_n_intermediate = (f_eq_n_intermediate_product > 32'sh10000000) ? 16'sh7FFF :
+                                         (f_eq_n_intermediate_product < 32'shf0000000) ? 16'sh8000 :
+                                         f_eq_n_intermediate_shifted;
+wire signed [15:0] f_eq_s_intermediate = multiply(w_side, polynomial_s);
+wire signed [15:0] f_eq_e_intermediate = multiply(w_side, polynomial_e);
+wire signed [15:0] f_eq_w_intermediate = multiply(w_side, polynomial_w);
 wire signed [15:0] f_eq_ne_intermediate = multiply(w_diag, polynomial_ne);
 wire signed [15:0] f_eq_sw_intermediate = multiply(w_diag, polynomial_sw);
 wire signed [15:0] f_eq_nw_intermediate = multiply(w_diag, polynomial_nw);
 wire signed [15:0] f_eq_se_intermediate = multiply(w_diag, polynomial_se);
 
+wire signed [31:0] f_eq_n_product   = (rho * f_eq_n_intermediate) + round;
+wire signed [15:0] f_eq_n_shifted   = f_eq_n_product >>> 13;
+wire signed [15:0] f_eq_n           = (f_eq_n_product > 32'sh10000000) ? 16'sh7FFF :
+                                      (f_eq_n_product < 32'shf0000000) ? 16'sh8000 :
+                                      f_eq_n_shifted;
+wire signed [15:0] f_eq_s = multiply(rho, f_eq_s_intermediate);
+wire signed [15:0] f_eq_e = multiply(rho, f_eq_e_intermediate);
+wire signed [15:0] f_eq_w = multiply(rho, f_eq_w_intermediate);
 wire signed [15:0] f_eq_ne = multiply(rho, f_eq_ne_intermediate);
 wire signed [15:0] f_eq_sw = multiply(rho, f_eq_sw_intermediate);
 wire signed [15:0] f_eq_nw = multiply(rho, f_eq_nw_intermediate);
