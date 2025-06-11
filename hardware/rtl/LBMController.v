@@ -25,14 +25,12 @@
 module LBMController (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
-    // input wire clk,
-    // input wire rst,
-    // input wire [`DEPTH-1:0] barriers,
-    // input wire en,
-    // input wire [31:0] step, // will step until sim value
-    // input wire signed [15:0] omega, // 1/tau
-    // input reg [`ADDRESS_WIDTH-1:0] index,
-    // input reg [`ADDRESS_WIDTH-1:0] width_count,
+    input wire clk,
+    input wire rst,
+    input wire [`DEPTH-1:0] barriers,
+    input wire en,
+    input wire [31:0] step, // will step until sim value
+    input wire signed [15:0] omega, // 1/tau
     
     // BRAM c0
     output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
@@ -150,16 +148,25 @@ module LBMController (
     output reg                          cnw_n_write_en,
     input  wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0]       cnw_n_data_out,
     
+    input wire [`DATA_WIDTH-1:0]        init_c0,
+    input wire [`DATA_WIDTH-1:0]        init_cn,
+    input wire [`DATA_WIDTH-1:0]        init_cne,
+    input wire [`DATA_WIDTH-1:0]        init_ce,
+    input wire [`DATA_WIDTH-1:0]        init_cse,
+    input wire [`DATA_WIDTH-1:0]        init_cs,
+    input wire [`DATA_WIDTH-1:0]        init_csw,
+    input wire [`DATA_WIDTH-1:0]        init_cw,
+    input wire [`DATA_WIDTH-1:0]        init_cnw,
 
-    // // collider results
-    // output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
-    // output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y, 
-    // output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
+    output wire signed [15:0] testing_cs_n_data_in,
+
+    // collider results
+    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
+    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y, 
+    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
-    // output wire collider_ready,
-    // output wire in_collision_state,
-    // output wire next_index,
-    // output wire [2:0] sim_state
+    output wire collider_ready,
+    output wire in_collision_state
 
 );
 
@@ -173,8 +180,10 @@ module LBMController (
     localparam BOUNCE_READ      = 4'd6;
     localparam BOUNCE_WAIT      = 4'd7;
     localparam ZERO_BOUNCE      = 4'd8;
-    localparam COLLIDE          = 4'd9;
-    localparam MEM_RESET        = 4'd10;
+    localparam ZERO_BOUNCE_WAIT = 4'd9;
+    localparam COLLIDE          = 4'd10;
+    localparam MEM_RESET        = 4'd11;
+
 
 
     // wire [`ADDRESS_WIDTH-1:0] c0_array_addr     [0:`RAMS_TO_ACCESS-1];
@@ -256,6 +265,7 @@ module LBMController (
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
     wire [`RAMS_TO_ACCESS-1:0] is_bw;
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
+    wire [`RAMS_TO_ACCESS-1:0] is_zb;
     wire [`RAMS_TO_ACCESS-1:0] is_nv;
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
@@ -304,9 +314,11 @@ module LBMController (
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
 
 
-    // reg [2:0] ram_wait_count, next_ram_wait_count;
+    reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    // reg [15:0] step_count, next_step_count;
+    reg [15:0] step_count, next_step_count;
+
+    reg incr_step;
 
     // wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
@@ -318,7 +330,7 @@ module LBMController (
     for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_solver
         wire [`ADDRESS_WIDTH-1:0] width_mod = (width_count + i) % `WIDTH;
 
-        LBMSolver LBMSolverArray ( //potentially need to change the array data ins
+        LBMSolverParallel LBMSolverArray ( //potentially need to change the array data ins
             .clk         (clk),
             .rst         (rst),
             .barriers    (barriers),
@@ -333,9 +345,10 @@ module LBMController (
             .c0_data_in    (c0_array_data_in   [i]),
             .c0_data_out   (c0_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .c0_write_en   (c0_array_write_en  [i]),
+            .init_c0       (init_c0),
 
             // ───────── c0_n ───────
-            .c0_n_data_in  (c0_n_array_data_in [i]),
+            .c0_n_data_in  (c0_array_n_data_in [i]),
             .c0_n_data_out (c0_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .c0_n_write_en (c0_array_n_write_en[i]),
 
@@ -343,9 +356,10 @@ module LBMController (
             .cn_data_in    (cn_array_data_in   [i]),
             .cn_data_out   (cn_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cn_write_en   (cn_array_write_en  [i]),
+            .init_cn       (init_cn),
 
             // ───────── cn_n ───────
-            .cn_n_data_in  (cn_n_array_data_in [i]),
+            .cn_n_data_in  (cn_array_n_data_in [i]),
             .cn_n_data_out (cn_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cn_n_write_en (cn_array_n_write_en[i]),
 
@@ -353,9 +367,10 @@ module LBMController (
             .cne_data_in   (cne_array_data_in  [i]),
             .cne_data_out  (cne_data_out       [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cne_write_en  (cne_array_write_en [i]),
+            .init_cne       (init_cne),
 
             // ───────── cne_n ──────
-            .cne_n_data_in (cne_n_array_data_in[i]),
+            .cne_n_data_in (cne_array_n_data_in[i]),
             .cne_n_data_out(cne_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cne_n_write_en(cne_array_n_write_en[i]),
 
@@ -363,9 +378,10 @@ module LBMController (
             .ce_data_in    (ce_array_data_in   [i]),
             .ce_data_out   (ce_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .ce_write_en   (ce_array_write_en  [i]),
+            .init_ce       (init_ce),
 
             // ───────── ce_n ───────
-            .ce_n_data_in  (ce_n_array_data_in [i]),
+            .ce_n_data_in  (ce_array_n_data_in [i]),
             .ce_n_data_out (ce_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .ce_n_write_en (ce_array_n_write_en[i]),
 
@@ -373,9 +389,10 @@ module LBMController (
             .cse_data_in   (cse_array_data_in  [i]),
             .cse_data_out  (cse_data_out       [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cse_write_en  (cse_array_write_en [i]),
+            .init_cse       (init_cse),
 
             // ───────── cse_n ──────
-            .cse_n_data_in (cse_n_array_data_in[i]),
+            .cse_n_data_in (cse_array_n_data_in[i]),
             .cse_n_data_out(cse_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cse_n_write_en(cse_array_n_write_en[i]),
 
@@ -383,9 +400,10 @@ module LBMController (
             .cs_data_in    (cs_array_data_in   [i]),
             .cs_data_out   (cs_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cs_write_en   (cs_array_write_en  [i]),
+            .init_cs       (init_cs),
 
             // ───────── cs_n ───────
-            .cs_n_data_in  (cs_n_array_data_in [i]),
+            .cs_n_data_in  (cs_array_n_data_in [i]),
             .cs_n_data_out (cs_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cs_n_write_en (cs_array_n_write_en[i]),
 
@@ -393,9 +411,10 @@ module LBMController (
             .csw_data_in   (csw_array_data_in  [i]),
             .csw_data_out  (csw_data_out       [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .csw_write_en  (csw_array_write_en [i]),
+            .init_csw       (init_csw),
 
             // ───────── csw_n ──────
-            .csw_n_data_in (csw_n_array_data_in[i]),
+            .csw_n_data_in (csw_array_n_data_in[i]),
             .csw_n_data_out(csw_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .csw_n_write_en(csw_array_n_write_en[i]),
 
@@ -403,9 +422,10 @@ module LBMController (
             .cw_data_in    (cw_array_data_in   [i]),
             .cw_data_out   (cw_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cw_write_en   (cw_array_write_en  [i]),
+            .init_cw       (init_cw),
 
             // ───────── cw_n ───────
-            .cw_n_data_in  (cw_n_array_data_in [i]),
+            .cw_n_data_in  (cw_array_n_data_in [i]),
             .cw_n_data_out (cw_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cw_n_write_en (cw_array_n_write_en[i]),
 
@@ -413,9 +433,10 @@ module LBMController (
             .cnw_data_in   (cnw_array_data_in  [i]),
             .cnw_data_out  (cnw_data_out       [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cnw_write_en  (cnw_array_write_en [i]),
+            .init_cnw       (init_cnw),
 
             // ───────── cnw_n ──────
-            .cnw_n_data_in (cnw_n_array_data_in[i]),
+            .cnw_n_data_in (cnw_array_n_data_in[i]),
             .cnw_n_data_out(cnw_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cnw_n_write_en(cnw_array_n_write_en[i]),
 
@@ -425,97 +446,85 @@ module LBMController (
             .rho                (rho_array                [i]),
             .collider_ready     (collider_ready_array     [i]),
             .in_collision_state (in_collision_state_array [i]),
-            .next_index         (next_index_array         [i]),
-            .next_sim_state     (next_sim_state_array     [i])
+            .next_sim_state     (next_sim_state_array     [i]),
+            .zero_barrier       (zero_barrier_array       [i]),
+            .read_wait          (read_wait_array          [i])
         );
 
 
     end
     endgenerate
 
-    genvar i;
+    genvar j;
     generate
-    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_solver
+    for (j = 0; j < `RAMS_TO_ACCESS; j = j + 1) begin : g_solver
         // one procedural block per iteration
         always @* begin
         // rest
-        c0_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = c0_array_n_write_en[i]
-            ? c0_array_data_in[i]
+        c0_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = c0_array_n_write_en[j]
+            ? c0_array_data_in[j]
             : c0_n_stored_data;
 
         // north
-        cn_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cn_array_n_write_en[i]
-            ? cn_array_data_in[i]
+        cn_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cn_array_n_write_en[j]
+            ? cn_array_data_in[j]
             : cn_n_stored_data;
 
         // north-east
-        cne_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cne_array_n_write_en[i]
-            ? cne_array_data_in[i]
+        cne_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cne_array_n_write_en[j]
+            ? cne_array_data_in[j]
             : cne_n_stored_data;
 
         // east
-        ce_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = ce_array_n_write_en[i]
-            ? ce_array_data_in[i]
+        ce_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = ce_array_n_write_en[j]
+            ? ce_array_data_in[j]
             : ce_n_stored_data;
 
         // south-east
-        cse_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cse_array_n_write_en[i]
-            ? cse_array_data_in[i]
+        cse_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cse_array_n_write_en[j]
+            ? cse_array_data_in[j]
             : cse_n_stored_data;
 
         // south
-        cs_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cs_array_n_write_en[i]
-            ? cs_array_data_in[i]
+        cs_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cs_array_n_write_en[j]
+            ? cs_array_data_in[j]
             : cs_n_stored_data;
 
         // south-west
-        csw_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = csw_array_n_write_en[i]
-            ? csw_array_data_in[i]
+        csw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = csw_array_n_write_en[j]
+            ? csw_array_data_in[j]
             : csw_n_stored_data;
 
         // west
-        cw_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cw_array_n_write_en[i]
-            ? cw_array_data_in[i]
+        cw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cw_array_n_write_en[j]
+            ? cw_array_data_in[j]
             : cw_n_stored_data;
 
         // north-west
-        cnw_next_data_in[(i*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cnw_array_n_write_en[i]
-            ? cnw_array_data_in[i]
+        cnw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
+            = cnw_array_n_write_en[j]
+            ? cnw_array_data_in[j]
             : cnw_n_stored_data;
         end
     end
     endgenerate
 
     //reductions
-    genvar i;
+    genvar k;
     generate
-    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_bw
-        assign is_bw[i] = (next_sim_state_array[i] == BOUNCE_WAIT);
-    end
-    endgenerate
-    genvar i;
-    generate
-    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_rw
-        assign is_rw[i] = (read_wait_array[i]);
-    end
-    endgenerate
-    generate
-    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_zb
-        assign is_zb[i] = (zero_barrier_array[i]);
-    end
-    endgenerate
-    generate
-    for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_nv
-        assign is_nv[i] = (collider_ready_array[i]);
+    for (k = 0; k < `RAMS_TO_ACCESS; k = k + 1) begin : g_bw
+        assign is_bw[k] = (next_sim_state_array[k] == BOUNCE_WAIT);
+        assign is_rw[k] = (read_wait_array[k]);
+        assign is_zb[k] = (zero_barrier_array[k]);
+        assign is_nv[k] = (collider_ready_array[k]);
     end
     endgenerate
 
@@ -574,8 +583,8 @@ module LBMController (
         if(!rst) 
         begin
             sim_state <= IDLE;
-            index <= initial_index;
-            width_count <= initial_index;
+            index <= 0;
+            width_count <= 0;
             ram_wait_count <= `RAM_READ_WAIT;
             step_count <= 0;
 

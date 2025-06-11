@@ -151,6 +151,15 @@ module LBMSolverParallel (
     output reg                          cnw_n_write_en,
     input  wire [`DATA_WIDTH-1:0]       cnw_n_data_out,
     
+    input wire [`DATA_WIDTH-1:0]        init_c0,
+    input wire [`DATA_WIDTH-1:0]        init_cn,
+    input wire [`DATA_WIDTH-1:0]        init_cne,
+    input wire [`DATA_WIDTH-1:0]        init_ce,
+    input wire [`DATA_WIDTH-1:0]        init_cse,
+    input wire [`DATA_WIDTH-1:0]        init_cs,
+    input wire [`DATA_WIDTH-1:0]        init_csw,
+    input wire [`DATA_WIDTH-1:0]        init_cw,
+    input wire [`DATA_WIDTH-1:0]        init_cnw,
 
     // collider results
     output wire [`DATA_WIDTH-1:0] u_x, 
@@ -176,8 +185,9 @@ module LBMSolverParallel (
     localparam BOUNCE_READ      = 4'd6;
     localparam BOUNCE_WAIT      = 4'd7;
     localparam ZERO_BOUNCE      = 4'd8;
-    localparam COLLIDE          = 4'd9;
-    localparam MEM_RESET        = 4'd10;
+    localparam ZERO_BOUNCE_WAIT = 4'd9;
+    localparam COLLIDE          = 4'd10;
+    localparam MEM_RESET        = 4'd11;
 
     // reg [15:0] width_count, next_width_count;
     // reg [2:0] sim_state, next_sim_state;
@@ -453,7 +463,7 @@ module LBMSolverParallel (
                 if(index <= `DEPTH-1 && barriers[index]==1'b0)
                 begin
                     read_wait = 1'b1;
-                    next_sim_state = `STREAM_WAIT;
+                    next_sim_state = STREAM_WAIT;
                     // c0_n_write_en = 1'b1;
                     
                     // cn_n_write_en = (index>= `WIDTH); // only write if past first row
@@ -496,33 +506,33 @@ module LBMSolverParallel (
             end
             STREAM_WAIT:
             begin
-                c0_n_next_write_en = 1'b1;
-                c0_next_data_in = c0_data_out;
+                c0_n_write_en = 1'b1;
+                c0_data_in = c0_data_out;
 
                 
-                cn_n_next_write_en = 1;
-                cn_next_data_in = cn_data_out;
+                cn_n_write_en = 1;
+                cn_data_in = cn_data_out;
 
-                cne_n_next_write_en = 1;
-                cne_next_data_in = cne_data_out;
+                cne_n_write_en = 1;
+                cne_data_in = cne_data_out;
 
-                ce_n_next_write_en = 1;
-                ce_next_data_in = ce_data_out;
+                ce_n_write_en = 1;
+                ce_data_in = ce_data_out;
 
-                cse_n_next_write_en = 1;
-                cse_next_data_in = cse_data_out;
+                cse_n_write_en = 1;
+                cse_data_in = cse_data_out;
 
-                cs_n_next_write_en = 1;
-                cs_next_data_in = cs_data_out;
+                cs_n_write_en = 1;
+                cs_data_in = cs_data_out;
 
-                csw_n_next_write_en = 1;
-                csw_next_data_in = csw_data_out;
+                csw_n_write_en = 1;
+                csw_data_in = csw_data_out;
 
-                cw_n_next_write_en = 1;
-                cw_next_data_in = cw_data_out;
+                cw_n_write_en = 1;
+                cw_data_in = cw_data_out;
 
-                cnw_n_next_write_en = 1;
-                cnw_next_data_in = cnw_data_out;
+                cnw_n_write_en = 1;
+                cnw_data_in = cnw_data_out;
 
                 if(index >= `DEPTH-1) 
                 begin
@@ -771,41 +781,41 @@ module LBMSolverParallel (
                 if(index <= `DEPTH-1) 
                 begin
                     // initial eastward direction             
-                    c0_next_write_en = 1;
-                    c0_n_next_write_en = 1;
-                    c0_next_data_in = (barriers[index] == 0) ? init_c0 : 0;
+                    c0_write_en = 1;
+                    c0_n_write_en = 1;
+                    c0_data_in = (barriers[index] == 0) ? init_c0 : 0;
 
-                    cn_next_write_en = 1;
-                    cn_n_next_write_en = 1;
-                    cn_next_data_in = (barriers[index] == 0) ? init_cn : 0;
+                    cn_write_en = 1;
+                    cn_n_write_en = 1;
+                    cn_data_in = (barriers[index] == 0) ? init_cn : 0;
 
-                    cne_next_write_en = 1;
-                    cne_n_next_write_en = 1;
-                    cne_next_data_in = (barriers[index] == 0) ? init_cne : 0;
+                    cne_write_en = 1;
+                    cne_n_write_en = 1;
+                    cne_data_in = (barriers[index] == 0) ? init_cne : 0;
 
-                    ce_next_write_en = 1;
-                    ce_n_next_write_en = 1;
-                    ce_next_data_in = (barriers[index] == 0) ? init_ce : 0;
+                    ce_write_en = 1;
+                    ce_n_write_en = 1;
+                    ce_data_in = (barriers[index] == 0) ? init_ce : 0;
 
-                    cse_next_write_en = 1;
-                    cse_n_next_write_en = 1;
-                    cse_next_data_in = (barriers[index] == 0) ? init_cse : 0;
+                    cse_write_en = 1;
+                    cse_n_write_en = 1;
+                    cse_data_in = (barriers[index] == 0) ? init_cse : 0;
 
-                    cs_next_write_en = 1;
-                    cs_n_next_write_en = 1;
-                    cs_next_data_in = (barriers[index] == 0) ? init_cs : 0;
+                    cs_write_en = 1;
+                    cs_n_write_en = 1;
+                    cs_data_in = (barriers[index] == 0) ? init_cs : 0;
 
-                    csw_next_write_en = 1;
-                    csw_n_next_write_en = 1;
-                    csw_next_data_in = (barriers[index] == 0) ? init_csw : 0;
+                    csw_write_en = 1;
+                    csw_n_write_en = 1;
+                    csw_data_in = (barriers[index] == 0) ? init_csw : 0;
 
-                    cw_next_write_en = 1;
-                    cw_n_next_write_en = 1;
-                    cw_next_data_in = (barriers[index] == 0) ? init_cw : 0;
+                    cw_write_en = 1;
+                    cw_n_write_en = 1;
+                    cw_data_in = (barriers[index] == 0) ? init_cw : 0;
 
-                    cnw_next_write_en = 1;
-                    cnw_n_next_write_en = 1;
-                    cnw_next_data_in = (barriers[index] == 0) ? init_cnw : 0;
+                    cnw_write_en = 1;
+                    cnw_n_write_en = 1;
+                    cnw_data_in = (barriers[index] == 0) ? init_cnw : 0;
                 end
             end
             default: 
