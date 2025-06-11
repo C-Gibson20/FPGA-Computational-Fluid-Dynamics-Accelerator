@@ -163,7 +163,8 @@ module LBMSolverParallel (
 
     // collider results
     output wire [`DATA_WIDTH-1:0] u_x, 
-    output wire [`DATA_WIDTH-1:0] u_y, 
+    output wire [`DATA_WIDTH-1:0] u_y,
+    output wire [`DATA_WIDTH-1:0] u_squared, 
     output wire [`DATA_WIDTH-1:0] rho,
     
     output wire collider_ready,
@@ -285,6 +286,7 @@ module LBMSolverParallel (
         .axi_ready(v_d_ready),
         .u_x(u_x),
         .u_y(u_y),
+        .u_squared(u_squared),
         .rho(rho)
     );
 

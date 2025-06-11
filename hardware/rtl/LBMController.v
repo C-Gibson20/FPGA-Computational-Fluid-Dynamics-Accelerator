@@ -162,7 +162,8 @@ module LBMController (
 
     // collider results
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y, 
+    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
+    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_squared, 
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
     output wire collider_ready,
@@ -226,9 +227,11 @@ module LBMController (
     wire [`DATA_WIDTH-1:0] cnw_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
 
     // Data-out from collider
-    wire [`DATA_WIDTH-1:0] u_x_array  [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] u_y_array  [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] rho_array  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] u_x_array        [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] u_y_array        [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] u_squared_array  [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] rho_array        [0:`RAMS_TO_ACCESS-1];
+
 
     // Write-enable and status bits
     wire [`RAMS_TO_ACCESS-1:0]  c0_array_write_en;
@@ -267,6 +270,8 @@ module LBMController (
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
     wire [`RAMS_TO_ACCESS-1:0] is_zb;
     wire [`RAMS_TO_ACCESS-1:0] is_nv;
+    wire [`RAMS_TO_ACCESS-1:0] is_cs;
+    wire [`RAMS_TO_ACCESS-1:0] is_cr;
     reg [15:0] width_count, next_width_count;
     reg [2:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index;
@@ -443,6 +448,7 @@ module LBMController (
             // ───────── collider results (unchanged) ─────────
             .u_x                (u_x_array                [i]),
             .u_y                (u_y_array                [i]),
+            .u_squared          (u_squared_array          [i]),
             .rho                (rho_array                [i]),
             .collider_ready     (collider_ready_array     [i]),
             .in_collision_state (in_collision_state_array [i]),
@@ -457,10 +463,14 @@ module LBMController (
 
     genvar j;
     generate
-    for (j = 0; j < `RAMS_TO_ACCESS; j = j + 1) begin : g_solver
+    for (j = 0; j < `RAMS_TO_ACCESS; j = j + 1) begin : g_variable_assign
         // one procedural block per iteration
         always @* begin
         // rest
+        u_x[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_x_array[j];
+        u_y[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_y_array[j];
+        u_squared[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_squared_array[j];
+        rho[(j*`DATA_WIDTH)+:`DATA_WIDTH] = rho_array[j];
         c0_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
             = c0_array_n_write_en[j]
             ? c0_array_data_in[j]
@@ -525,41 +535,46 @@ module LBMController (
         assign is_rw[k] = (read_wait_array[k]);
         assign is_zb[k] = (zero_barrier_array[k]);
         assign is_nv[k] = (collider_ready_array[k]);
+        assign is_cs[k] = (in_collision_state_array[k]);
+        assign is_cr[k] = (collider_ready_array);
     end
     endgenerate
 
+    assign testing_cs_n_data_in = cs_data_in;
+    assign in_collision_state = |is_cs;
+    assign collider_ready = |is_cr;
     wire any_bounce_wait = |is_bw;
     wire all_bounce_wait = &is_bw;
     wire any_read_wait = |is_rw;
     wire any_zero_barrier = |is_zb;
     wire all_nv_ready = &is_nv;
 
-    assign c0_write_en    = |c0_array_write_en;
-    assign c0_n_write_en  = |c0_array_n_write_en;
+    assign c0_next_write_en    = |c0_array_write_en;
+    assign c0_n_next_write_en  = |c0_array_n_write_en;
 
-    assign cn_write_en    = |cn_array_write_en;
-    assign cn_n_write_en  = |cn_array_n_write_en;
+    assign cn_next_write_en    = |cn_array_write_en;
+    assign cn_n_next_write_en  = |cn_array_n_write_en;
 
-    assign cne_write_en   = |cne_array_write_en;
-    assign cne_n_write_en = |cne_array_n_write_en;
+    assign cne_next_write_en   = |cne_array_write_en;
+    assign cne_n_next_write_en = |cne_array_n_write_en;
 
-    assign ce_write_en    = |ce_array_write_en;
-    assign ce_n_write_en  = |ce_array_n_write_en;
+    assign ce_next_write_en    = |ce_array_write_en;
+    assign ce_n_next_write_en  = |ce_array_n_write_en;
 
-    assign cse_write_en   = |cse_array_write_en;
-    assign cse_n_write_en = |cse_array_n_write_en;
+    assign cse_next_write_en   = |cse_array_write_en;
+    assign cse_n_next_write_en = |cse_array_n_write_en;
 
-    assign cs_write_en    = |cs_array_write_en;
-    assign cs_n_write_en  = |cs_array_n_write_en;
+    assign cs_next_write_en    = |cs_array_write_en;
+    assign cs_n_next_write_en  = |cs_array_n_write_en;
 
-    assign csw_write_en   = |csw_array_write_en;
-    assign csw_n_write_en = |csw_array_n_write_en;
+    assign csw_next_write_en   = |csw_array_write_en;
+    assign csw_n_next_write_en = |csw_array_n_write_en;
 
-    assign cw_write_en    = |cw_array_write_en;
-    assign cw_n_write_en  = |cw_array_n_write_en;
+    assign cw_next_write_en    = |cw_array_write_en;
+    assign cw_n_next_write_en  = |cw_array_n_write_en;
 
-    assign cnw_write_en   = |cnw_array_write_en;
-    assign cnw_n_write_en = |cnw_array_n_write_en;
+    assign cnw_next_write_en   = |cnw_array_write_en;
+    assign cnw_n_next_write_en = |cnw_array_n_write_en;
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     //need two rams one for the current time step and one for the next time step
 
@@ -687,50 +702,60 @@ module LBMController (
         c0_next_write_en = 0;
         c0_n_next_write_en = 0;
         c0_n_next_stored_data = c0_n_stored_data;
+        c0_n_read_from_write_address = 0;
 
         cn_next_write_addr = 0;
         cn_next_write_en = 0;
         cn_n_next_write_en = 0;
         cn_n_next_stored_data = cn_n_stored_data;
+        cn_n_read_from_write_address = 0;
 
         cne_next_write_addr = 0;
         cne_next_write_en = 0;
         cne_n_next_write_en = 0;
         cne_n_next_stored_data = cne_n_stored_data;
+        cne_n_read_from_write_address = 0;
 
         ce_next_write_addr = 0;
         ce_next_write_en = 0;
         ce_n_next_write_en = 0;
         ce_n_next_stored_data = ce_n_stored_data;
-
+        ce_n_read_from_write_address = 0;
+        
         cse_next_write_addr = 0;
         cse_next_write_en = 0;
         cse_n_next_write_en = 0;
         cse_n_next_stored_data = cse_n_stored_data;
+        cse_n_read_from_write_address = 0;
 
         cs_next_write_addr = 0;
         cs_next_write_en = 0;
         cs_n_next_write_en = 0;
         cs_n_next_stored_data = cs_n_stored_data;
+        cs_n_read_from_write_address = 0;
 
         csw_next_write_addr = 0;
         csw_next_write_en = 0;
         csw_n_next_write_en = 0;
         csw_n_next_stored_data = csw_n_stored_data;
+        csw_n_read_from_write_address = 0;
 
         cw_next_write_addr = 0;
         cw_next_write_en = 0;
         cw_n_next_write_en = 0;
         cw_n_next_stored_data = cw_n_stored_data;
+        cw_n_read_from_write_address = 0;
 
         cnw_next_write_addr = 0;
         cnw_next_write_en = 0;
         cnw_n_next_write_en = 0;
         cnw_n_next_stored_data = cnw_n_stored_data;
+        cnw_n_read_from_write_address = 0;
 
-        next_index = 0;
+        next_index = index;
+        next_width_count = width_count;
 
-        next_step_count = step_count;
+        incr_step = 0;
         next_ram_wait_count = ram_wait_count;
 
         case(sim_state)
@@ -1042,6 +1067,7 @@ module LBMController (
                         next_sim_state = STREAM;
                         next_index = 0;
                         next_width_count = 0;
+                        incr_step = 1;
                     end
                     else
                     begin
@@ -1140,7 +1166,8 @@ module LBMController (
 
             default: 
             begin
-                
+                next_sim_state = IDLE;
+                next_ram_wait_count = 0;
             end 
         endcase
     end
