@@ -174,13 +174,13 @@ def initialize(x1top, y1top, y1height, u0=u0):
 
 # Frames per second, and number of seconds
 fps = 60
-nSeconds = 10
+nSeconds = 30
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
-initialize(2, 2, 0)
+initialize(10, 10, 15)
 
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
