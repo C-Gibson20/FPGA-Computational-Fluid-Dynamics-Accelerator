@@ -31,7 +31,7 @@ module LBMSolverParallel (
     input wire en,
     input wire [31:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
-    input reg [2:0] sim_state,
+    input reg [3:0] sim_state,
     input reg [`ADDRESS_WIDTH-1:0] index,
     input reg [`ADDRESS_WIDTH-1:0] width_count,
     
@@ -170,8 +170,9 @@ module LBMSolverParallel (
     output wire collider_ready,
     output wire in_collision_state,
     // output wire next_index,
-    output wire [2:0] next_sim_state,
+    output wire [3:0] next_sim_state,
     output wire zero_barrier,
+    output wire nv_ready,
     output wire read_wait
 
 );
@@ -197,7 +198,6 @@ module LBMSolverParallel (
     
     // collider flags
     wire c_busy;
-    wire nv_ready;
     wire v_d_ready;
         
     // // reg [`DATA_WIDTH-1:0] c0_next_data_in;
@@ -583,7 +583,7 @@ module LBMSolverParallel (
             begin
                 if(index <= `DEPTH-1)
                 begin
-                    if(barriers[index == 1'b1])
+                    if(barriers[index] == 1'b1)
                     begin
                         // cn_n_addr = index-`WIDTH;
                         cn_n_write_en = (index>= `WIDTH);
@@ -660,7 +660,7 @@ module LBMSolverParallel (
 
             ZERO_BOUNCE_WAIT:
             begin
-            if(barriers[index == 1'b1])
+            if(barriers[index] == 1'b1)
                     begin
                         // cn_n_addr = index-`WIDTH;
                         cn_n_write_en = 1'b1;
@@ -717,7 +717,7 @@ module LBMSolverParallel (
                         begin
                             // next_index = 0;
                             // next_width_count = 0;
-                            next_sim_state = STREAM;
+                            next_sim_state = IDLE;
                             // next_ram_wait_count = 2;
                             // next_step_count = step_count + 1;
                         end
