@@ -9,6 +9,7 @@ protected:
     void initializeInputs() override {
         collider = top.get();
         collider->omega = 0x4000;
+        collider->rst = 1;
     }
 
     void loadEquilibriumValues() {
