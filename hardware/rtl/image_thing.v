@@ -52,7 +52,7 @@ module image_thing(
                     next_img <= 1;  
                     count <= 0;     
                 end
-                else begin
+                else if (!next_img) begin
                     count <= count + 1;
                 end
             end
