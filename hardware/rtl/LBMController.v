@@ -335,16 +335,16 @@ module LBMController (
         wire [`ADDRESS_WIDTH-1:0] width_mod = (width_count + i) % `WIDTH;
 
         LBMSolverParallel LBMSolverArray ( //potentially need to change the array data ins
-            .clk         (clk),
-            .rst         (rst),
-            .barriers    (barriers),
-            .en          (en),
-            .step        (step),
-            .omega       (omega),
-            .sim_state   (sim_state),
-            .index       (index + i),
-            .width_count (width_mod),
-
+            .clk            (clk),
+            .rst            (rst),
+            .barriers       (barriers),
+            .en             (en),
+            .step           (step),
+            .omega          (omega),
+            .sim_state      (sim_state),
+            .index          (index + i),
+            .width_count    (width_mod),
+            .ram_wait_count (ram_wait_count),
             // ───────── c0 ─────────
             .c0_data_in    (c0_array_data_in   [i]),
             .c0_data_out   (c0_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
