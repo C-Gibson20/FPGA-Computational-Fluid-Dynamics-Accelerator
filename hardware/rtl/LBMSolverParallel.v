@@ -31,10 +31,10 @@ module LBMSolverParallel (
     input wire en,
     input wire [31:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
-    input reg [2:0] sim_state,
+    input reg [3:0] sim_state,
     input reg [`ADDRESS_WIDTH-1:0] index,
     input reg [`ADDRESS_WIDTH-1:0] width_count,
-    
+    input reg [2:0] ram_wait_count,
     // BRAM c0
     // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
@@ -170,8 +170,9 @@ module LBMSolverParallel (
     output wire collider_ready,
     output wire in_collision_state,
     // output wire next_index,
-    output wire [2:0] next_sim_state,
+    output wire [3:0] next_sim_state,
     output wire zero_barrier,
+    output wire nv_ready,
     output wire read_wait
 
 );
@@ -197,7 +198,6 @@ module LBMSolverParallel (
     
     // collider flags
     wire c_busy;
-    wire nv_ready;
     wire v_d_ready;
         
     // // reg [`DATA_WIDTH-1:0] c0_next_data_in;
@@ -508,52 +508,54 @@ module LBMSolverParallel (
             end
             STREAM_WAIT:
             begin
-                c0_n_write_en = 1'b1;
-                c0_data_in = c0_data_out;
+                if(ram_wait_count == 0) begin
+                    c0_n_write_en = 1'b1;
+                    c0_data_in = c0_data_out;
 
-                
-                cn_n_write_en = 1;
-                cn_data_in = cn_data_out;
-
-                cne_n_write_en = 1;
-                cne_data_in = cne_data_out;
-
-                ce_n_write_en = 1;
-                ce_data_in = ce_data_out;
-
-                cse_n_write_en = 1;
-                cse_data_in = cse_data_out;
-
-                cs_n_write_en = 1;
-                cs_data_in = cs_data_out;
-
-                csw_n_write_en = 1;
-                csw_data_in = csw_data_out;
-
-                cw_n_write_en = 1;
-                cw_data_in = cw_data_out;
-
-                cnw_n_write_en = 1;
-                cnw_data_in = cnw_data_out;
-
-                if(index >= `DEPTH-1) 
-                begin
-                    // next_index = `WIDTH + 1;
-                    // next_width_count = 1;
-                    next_sim_state = BOUNCE;
                     
-                end
-                else
-                begin
-                    // next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
-                    // next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
-                    next_sim_state = STREAM;
+                    cn_n_write_en = 1;
+                    cn_data_in = cn_data_out;
+
+                    cne_n_write_en = 1;
+                    cne_data_in = cne_data_out;
+
+                    ce_n_write_en = 1;
+                    ce_data_in = ce_data_out;
+
+                    cse_n_write_en = 1;
+                    cse_data_in = cse_data_out;
+
+                    cs_n_write_en = 1;
+                    cs_data_in = cs_data_out;
+
+                    csw_n_write_en = 1;
+                    csw_data_in = csw_data_out;
+
+                    cw_n_write_en = 1;
+                    cw_data_in = cw_data_out;
+
+                    cnw_n_write_en = 1;
+                    cnw_data_in = cnw_data_out;
+
+                    if(index >= `DEPTH-1) 
+                    begin
+                        // next_index = `WIDTH + 1;
+                        // next_width_count = 1;
+                        next_sim_state = BOUNCE;
+                        
+                    end
+                    else
+                    begin
+                        // next_index = (width_count == `WIDTH-2) ? index + 3 : index + 1;
+                        // next_width_count = (width_count == `WIDTH-2) ? 1 : width_count + 1;
+                        next_sim_state = STREAM;
+                    end
                 end
             end
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
-                
+            
                 if(index <= `DEPTH-1 && barriers[index] == 1'b1) // RAM read, so need to wait for RAM...
                 begin
                     read_wait = 1'b1;
@@ -581,41 +583,43 @@ module LBMSolverParallel (
             end
             BOUNCE_WAIT:
             begin
-                if(index <= `DEPTH-1)
-                begin
-                    if(barriers[index == 1'b1])
+                if(ram_wait_count == 0) begin
+                    if(index <= `DEPTH-1)
                     begin
-                        // cn_n_addr = index-`WIDTH;
-                        cn_n_write_en = (index>= `WIDTH);
-                        cn_n_data_in = cs_n_data_out;
+                        if(barriers[index] == 1'b1)
+                        begin
+                            // cn_n_addr = index-`WIDTH;
+                            cn_n_write_en = (index>= `WIDTH);
+                            cn_n_data_in = cs_n_data_out;
 
-                        // cne_n_addr = index-`WIDTH+1;
-                        cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
-                        cne_n_data_in = csw_n_data_out;
+                            // cne_n_addr = index-`WIDTH+1;
+                            cne_n_write_en = (index >= `WIDTH && (width_count != `WIDTH - 1));
+                            cne_n_data_in = csw_n_data_out;
 
-                        // ce_n_addr = index+1;
-                        ce_n_write_en = (width_count != `WIDTH - 1);
-                        ce_n_data_in = cw_n_data_out; 
+                            // ce_n_addr = index+1;
+                            ce_n_write_en = (width_count != `WIDTH - 1);
+                            ce_n_data_in = cw_n_data_out; 
 
-                        // cse_n_addr = index+`WIDTH+1;
-                        cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
-                        cse_n_data_in = cnw_n_data_out; 
+                            // cse_n_addr = index+`WIDTH+1;
+                            cse_n_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                            cse_n_data_in = cnw_n_data_out; 
 
-                        // cs_n_addr = index+`WIDTH;
-                        cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
-                        cs_n_data_in = cn_n_data_out; 
+                            // cs_n_addr = index+`WIDTH;
+                            cs_n_write_en = (index <= `DEPTH-`WIDTH-1);
+                            cs_n_data_in = cn_n_data_out; 
 
-                        // csw_n_addr = index+`WIDTH-1;
-                        csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
-                        csw_n_data_in = cne_n_data_out; 
+                            // csw_n_addr = index+`WIDTH-1;
+                            csw_n_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                            csw_n_data_in = cne_n_data_out; 
 
-                        // cw_n_addr = index - 1;
-                        cw_n_write_en = (width_count != 0);
-                        cw_n_data_in = ce_n_data_out; 
+                            // cw_n_addr = index - 1;
+                            cw_n_write_en = (width_count != 0);
+                            cw_n_data_in = ce_n_data_out; 
 
-                        // cnw_n_addr = index - `WIDTH - 1;
-                        cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
-                        cnw_n_data_in = cse_n_data_out;
+                            // cnw_n_addr = index - `WIDTH - 1;
+                            cnw_n_write_en = (index >= `WIDTH && (width_count != 0));
+                            cnw_n_data_in = cse_n_data_out;
+                        end
                     end
                 end
 
@@ -660,7 +664,8 @@ module LBMSolverParallel (
 
             ZERO_BOUNCE_WAIT:
             begin
-            if(barriers[index == 1'b1])
+            if(ram_wait_count == 0) begin
+                if(barriers[index] == 1'b1)
                     begin
                         // cn_n_addr = index-`WIDTH;
                         cn_n_write_en = 1'b1;
@@ -706,69 +711,72 @@ module LBMSolverParallel (
                         // next_width_count = 0;
                         next_sim_state = ZERO_BOUNCE;
                     end
+                end
             end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             begin
-                if(nv_ready)
+                if(ram_wait_count == 0) begin
+                    if(nv_ready)
 
-                    begin
-                        if(index >= `DEPTH-1) 
                         begin
-                            // next_index = 0;
-                            // next_width_count = 0;
-                            next_sim_state = STREAM;
-                            // next_ram_wait_count = 2;
-                            // next_step_count = step_count + 1;
+                            if(index >= `DEPTH-1) 
+                            begin
+                                // next_index = 0;
+                                // next_width_count = 0;
+                                next_sim_state = IDLE;
+                                // next_ram_wait_count = 2;
+                                // next_step_count = step_count + 1;
+                            end
+                            else
+                            begin
+                                // next_index = index + 1;
+                                // next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                                next_sim_state = COLLIDE;
+                                // next_// ram_wait_count = `RAM_READ_WAIT;
+                            end
+                            if(index <= `DEPTH-1) 
+                            begin
+                                //c[0-z]*_addr [ -~]*
+                                c0_write_en = 1'b1;
+                                c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
+
+                                //c[0-z]*_addr [ -~]*
+                                cn_write_en = 1'b1;
+                                cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
+
+                                //c[0-z]*_addr [ -~]*
+                                cne_write_en = 1'b1;
+                                cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
+
+                                //c[0-z]*_addr [ -~]*
+                                ce_write_en = 1'b1;
+                                ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
+
+                                //c[0-z]*_addr [ -~]*
+                                cse_write_en = 1'b1;
+                                cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
+
+                                //c[0-z]*_addr [ -~]*
+                                cs_write_en = 1'b1;
+                                cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
+
+                                //c[0-z]*_addr [ -~]*
+                                csw_write_en = 1'b1;
+                                csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
+
+                                //c[0-z]*_addr [ -~]*
+                                cw_write_en = 1'b1;
+                                cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
+
+                                //c[0-z]*_addr [ -~]*
+                                cnw_write_en = 1'b1;
+                                cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
+                            end
                         end
-                        else
-                        begin
-                            // next_index = index + 1;
-                            // next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                            next_sim_state = COLLIDE;
-                            // next_// ram_wait_count = `RAM_READ_WAIT;
-                        end
-                        if(index <= `DEPTH-1) 
-                        begin
-                            //c[0-z]*_addr [ -~]*
-                            c0_write_en = 1'b1;
-                            c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
-
-                            //c[0-z]*_addr [ -~]*
-                            cn_write_en = 1'b1;
-                            cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
-
-                            //c[0-z]*_addr [ -~]*
-                            cne_write_en = 1'b1;
-                            cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
-
-                            //c[0-z]*_addr [ -~]*
-                            ce_write_en = 1'b1;
-                            ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
-
-                            //c[0-z]*_addr [ -~]*
-                            cse_write_en = 1'b1;
-                            cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
-
-                            //c[0-z]*_addr [ -~]*
-                            cs_write_en = 1'b1;
-                            cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
-
-                            //c[0-z]*_addr [ -~]*
-                            csw_write_en = 1'b1;
-                            csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
-
-                            //c[0-z]*_addr [ -~]*
-                            cw_write_en = 1'b1;
-                            cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
-
-                            //c[0-z]*_addr [ -~]*
-                            cnw_write_en = 1'b1;
-                            cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
-                        end
-                    end
-                else
-                    next_sim_state = COLLIDE;
+                    else
+                        next_sim_state = COLLIDE;
+                end
             end
 
             MEM_RESET : begin

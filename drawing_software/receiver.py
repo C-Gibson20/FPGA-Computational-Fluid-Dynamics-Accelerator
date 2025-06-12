@@ -14,12 +14,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
     conn, addr = s.accept()
-    count = 0
     with conn:
         while True:
-            data = conn.recv(2)
-            count = count + 1
-    address = count
-    AXI.write((1 << 31) | (address << 16) | data)
+            data_buff = bytearray(conn.recv(156))  
+            for i in range(0, len(data_buff), 4):
+                word_bytes = data_buff[i:i+4]
+                if len(word_bytes) < 4:
+                    continue  # skip incomplete word
+                word = int.from_bytes(word_bytes, byteorder='big') 
+                AXI.write((1 << 31) | (i << 16) | word) 
 conn.close()
 s.close()

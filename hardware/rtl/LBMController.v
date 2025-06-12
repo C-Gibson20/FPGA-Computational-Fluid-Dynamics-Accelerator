@@ -5,7 +5,7 @@
 // 
 // Create Date: 28.05.2025 18:44:59
 // Design Name: 
-// Module Name: LBMSolver
+// Module Name: LBMController
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -158,8 +158,6 @@ module LBMController (
     input wire [`DATA_WIDTH-1:0]        init_cw,
     input wire [`DATA_WIDTH-1:0]        init_cnw,
 
-    output wire signed [15:0] testing_cs_n_data_in,
-
     // collider results
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
@@ -265,6 +263,7 @@ module LBMController (
     wire in_collision_state_array  [0:`RAMS_TO_ACCESS-1];
     wire read_wait_array          [0:`RAMS_TO_ACCESS-1];
     wire zero_barrier_array [0:`RAMS_TO_ACCESS-1];
+    wire nv_ready_array [0:`RAMS_TO_ACCESS-1];
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
     wire [`RAMS_TO_ACCESS-1:0] is_bw;
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
@@ -273,7 +272,7 @@ module LBMController (
     wire [`RAMS_TO_ACCESS-1:0] is_cs;
     wire [`RAMS_TO_ACCESS-1:0] is_cr;
     reg [15:0] width_count, next_width_count;
-    reg [2:0] sim_state, next_sim_state;
+    reg [3:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index;
     reg [`ADDRESS_WIDTH-1:0] next_index;
     
@@ -336,16 +335,16 @@ module LBMController (
         wire [`ADDRESS_WIDTH-1:0] width_mod = (width_count + i) % `WIDTH;
 
         LBMSolverParallel LBMSolverArray ( //potentially need to change the array data ins
-            .clk         (clk),
-            .rst         (rst),
-            .barriers    (barriers),
-            .en          (en),
-            .step        (step),
-            .omega       (omega),
-            .sim_state   (sim_state),
-            .index       (index + i),
-            .width_count (width_mod),
-
+            .clk            (clk),
+            .rst            (rst),
+            .barriers       (barriers),
+            .en             (en),
+            .step           (step),
+            .omega          (omega),
+            .sim_state      (sim_state),
+            .index          (index + i),
+            .width_count    (width_mod),
+            .ram_wait_count (ram_wait_count),
             // ───────── c0 ─────────
             .c0_data_in    (c0_array_data_in   [i]),
             .c0_data_out   (c0_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
@@ -454,6 +453,7 @@ module LBMController (
             .in_collision_state (in_collision_state_array [i]),
             .next_sim_state     (next_sim_state_array     [i]),
             .zero_barrier       (zero_barrier_array       [i]),
+            .nv_ready           (nv_ready_array           [i]),
             .read_wait          (read_wait_array          [i])
         );
 
@@ -534,13 +534,12 @@ module LBMController (
         assign is_bw[k] = (next_sim_state_array[k] == BOUNCE_WAIT);
         assign is_rw[k] = (read_wait_array[k]);
         assign is_zb[k] = (zero_barrier_array[k]);
-        assign is_nv[k] = (collider_ready_array[k]);
+        assign is_nv[k] = (nv_ready_array[k]);
         assign is_cs[k] = (in_collision_state_array[k]);
-        assign is_cr[k] = (collider_ready_array);
+        assign is_cr[k] = (collider_ready_array[k]);
     end
     endgenerate
 
-    assign testing_cs_n_data_in = cs_data_in;
     assign in_collision_state = |is_cs;
     assign collider_ready = |is_cr;
     wire any_bounce_wait = |is_bw;
@@ -597,7 +596,7 @@ module LBMController (
     begin
         if(!rst) 
         begin
-            sim_state <= IDLE;
+            sim_state <= MEM_RESET;
             index <= 0;
             width_count <= 0;
             ram_wait_count <= `RAM_READ_WAIT;
@@ -721,7 +720,7 @@ module LBMController (
         ce_n_next_write_en = 0;
         ce_n_next_stored_data = ce_n_stored_data;
         ce_n_read_from_write_address = 0;
-        
+
         cse_next_write_addr = 0;
         cse_next_write_en = 0;
         cse_n_next_write_en = 0;
@@ -774,7 +773,7 @@ module LBMController (
                     next_ram_wait_count = `RAM_READ_WAIT;
                     next_sim_state = STREAM_WAIT;
                 end  
-                else if(index+`RAMS_TO_ACCESS > `DEPTH) 
+                else if(index+`RAMS_TO_ACCESS >= `DEPTH-1) 
                 begin
                     next_sim_state = BOUNCE;
                     next_index = `WIDTH+1;
@@ -824,7 +823,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index == `DEPTH-1-`WIDTH-1) 
+                    if(index >= `DEPTH-1) 
                     begin
                         next_index = `WIDTH + 1;
                         next_width_count = 1;
@@ -879,7 +878,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
                 end
-                else if(index + `RAMS_TO_ACCESS > `DEPTH) 
+                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1) 
                 begin
                     next_sim_state = ZERO_BOUNCE;
                     next_index = 0;
@@ -922,6 +921,7 @@ module LBMController (
                     cnw_n_next_stored_data = cnw_n_data_out;
 
                     next_sim_state = BOUNCE_WAIT;
+                    next_ram_wait_count = `RAM_READ_WAIT;
                     next_index = index;
                     next_width_count = width_count;
                 end
@@ -964,7 +964,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
                         next_sim_state = ZERO_BOUNCE;
                         next_index = 0;
@@ -981,7 +981,7 @@ module LBMController (
 
             ZERO_BOUNCE:
             begin
-                if(index + `RAMS_TO_ACCESS > `DEPTH)
+                if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                 begin
                     next_sim_state = COLLIDE;
                     next_index = 0;
@@ -1004,7 +1004,7 @@ module LBMController (
             begin
                 if(ram_wait_count > 0) begin
                     next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = COLLIDE;
+                    next_sim_state = ZERO_BOUNCE_WAIT;
                     next_index = index;
                     next_width_count = width_count;
                 end
@@ -1037,7 +1037,7 @@ module LBMController (
                     cnw_next_write_addr = index;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
                         next_sim_state = COLLIDE;
                         next_index = 0;
@@ -1062,9 +1062,9 @@ module LBMController (
                 end
                 else if(all_nv_ready)
                 begin
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
-                        next_sim_state = STREAM;
+                        next_sim_state = IDLE;
                         next_index = 0;
                         next_width_count = 0;
                         incr_step = 1;
