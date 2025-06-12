@@ -216,20 +216,18 @@ end
 // Stage 7:
 // ------------------------
 `DECLARE(s7)
-reg signed [31:0] u_x_product_s7, u_y_product_s7;
-
-reg signed [15:0] u_x_shifted_s7, u_y_shifted_s7;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
         `RESET(s7)
     end else begin
         `PIPE(s6, s7)
-        u_x_product_s7 <= u_x_product_s6;
-        u_y_product_s7 <= u_y_product_s6;
-
-        u_x_shifted_s7 <= u_x_product_s6 >>> 13;
-        u_y_shifted_s7 <= u_y_product_s6 >>> 13;
+        u_x_s7 <= (u_x_product_s6 > 32'sh10000000) ? 16'sh7FFF :
+                   (u_x_product_s6 < 32'shf0000000) ? 16'sh8000 :
+                   u_x_product_s6 >>> 13;
+        u_y_s7 <= (u_y_product_s6 > 32'sh10000000) ? 16'sh7FFF :
+                   (u_y_product_s6 < 32'shf0000000) ? 16'sh8000 :
+                   u_y_product_s6 >>> 13;
     end
 end
 
@@ -238,17 +236,18 @@ end
 // ------------------------
 `DECLARE(s8)
 
+reg signed [31:0] u_x_squared_product_s8, u_y_squared_product_s8, x_plus_y_squared_product_s8, x_minus_y_squared_product_s8;
+
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
         `RESET(s8)
     end else begin
         `PIPE(s7, s8)
-        u_x_s8 <= (u_x_product_s7 > 32'sh10000000) ? 16'sh7FFF :
-                   (u_x_product_s7 < 32'shf0000000) ? 16'sh8000 :
-                   u_x_shifted_s7;
-        u_y_s8 <= (u_y_product_s7 > 32'sh10000000) ? 16'sh7FFF :
-                   (u_y_product_s7 < 32'shf0000000) ? 16'sh8000 :
-                   u_y_shifted_s7;
+
+        u_x_squared_product_s8 <= (u_x_s7 * u_x_s7) + round;
+        u_y_squared_product_s8 <= (u_y_s7 * u_y_s7) + round;
+        x_plus_y_squared_product_s8 <= ((u_x_s7 + u_y_s7) * (u_x_s7 + u_y_s7)) + round;
+        x_minus_y_squared_product_s8 <= ((u_x_s7 - u_y_s7) * (u_x_s7 - u_y_s7)) + round;
     end
 end
 
@@ -257,7 +256,7 @@ end
 // ------------------------
 `DECLARE(s9)
 
-reg signed [31:0] u_x_squared_product_s9, u_y_squared_product_s9, x_plus_y_squared_product_s9, x_minus_y_squared_product_s9;
+reg signed [15:0] u_x_squared_s9, u_y_squared_s9, x_plus_y_squared_s9, x_minus_y_squared_s9;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -265,10 +264,22 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s8, s9)
 
-        u_x_squared_product_s9 <= (u_x_s8 * u_x_s8) + round;
-        u_y_squared_product_s9 <= (u_y_s8 * u_y_s8) + round;
-        x_plus_y_squared_product_s9 <= ((u_x_s8 + u_y_s8) * (u_x_s8 + u_y_s8)) + round;
-        x_minus_y_squared_product_s9 <= ((u_x_s8 - u_y_s8) * (u_x_s8 - u_y_s8)) + round;
+        u_x_squared_s9 <= (u_x_squared_product_s8 > 32'sh10000000) ? 16'sh7FFF :
+                        (u_x_squared_product_s8 < 32'shf0000000) ? 16'sh8000 :
+                        u_x_squared_product_s8 >>> 13;
+
+        u_y_squared_s9 <= (u_y_squared_product_s8 > 32'sh10000000) ? 16'sh7FFF :
+                        (u_y_squared_product_s8 < 32'shf0000000) ? 16'sh8000 :
+                        u_y_squared_product_s8 >>> 13;
+
+        x_plus_y_squared_s9 <= (x_plus_y_squared_product_s8 > 32'sh10000000) ? 16'sh7FFF :
+                                (x_plus_y_squared_product_s8 < 32'shf0000000) ? 16'sh8000 :
+                                x_plus_y_squared_product_s8 >>> 13;
+
+        x_minus_y_squared_s9 <= (x_minus_y_squared_product_s8 > 32'sh10000000) ? 16'sh7FFF :
+                                (x_minus_y_squared_product_s8 < 32'shf0000000) ? 16'sh8000 :
+                                x_minus_y_squared_product_s8 >>> 13;
+
     end
 end
 
@@ -277,8 +288,8 @@ end
 // ------------------------
 `DECLARE(s10)
 
-reg signed [31:0] u_x_squared_product_s10, u_y_squared_product_s10, x_plus_y_squared_product_s10, x_minus_y_squared_product_s10;
-reg signed [15:0] u_x_squared_shifted_s10, u_y_squared_shifted_s10, x_plus_y_squared_shifted_s10, x_minus_y_squared_shifted_s10;
+reg signed [15:0] x_plus_y_s10, x_minus_y_s10, neg_x_plus_y_s10, neg_x_minus_y_s10;
+reg signed [15:0] x_plus_y_squared_s10, x_minus_y_squared_s10, u_x_squared_s10, u_y_squared_s10;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -286,15 +297,16 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s9, s10)
 
-        u_x_squared_product_s10        <= u_x_squared_product_s9;
-        u_y_squared_product_s10        <= u_y_squared_product_s9;
-        x_plus_y_squared_product_s10   <= x_plus_y_squared_product_s9;
-        x_minus_y_squared_product_s10  <= x_minus_y_squared_product_s9;
+        u_x_squared_s10        <= u_x_squared_s9;
+        u_y_squared_s10        <= u_y_squared_s9;
+        x_plus_y_squared_s10   <= x_plus_y_squared_s9;
+        x_minus_y_squared_s10  <= x_minus_y_squared_s9;
+        u_squared_s10          <= u_x_squared_s9 + u_y_squared_s9;
 
-        u_x_squared_shifted_s10        <= u_x_squared_product_s9 >>> 13;
-        u_y_squared_shifted_s10        <= u_y_squared_product_s9 >>> 13;
-        x_plus_y_squared_shifted_s10   <= x_plus_y_squared_product_s9 >>> 13;
-        x_minus_y_squared_shifted_s10  <= x_minus_y_squared_product_s9 >>> 13;
+        x_plus_y_s10           <= u_x_s9 + u_y_s9;
+        x_minus_y_s10          <= u_x_s9 - u_y_s9;
+        neg_x_plus_y_s10       <= -(u_x_s9 + u_y_s9);
+        neg_x_minus_y_s10      <= -(u_x_s9 - u_y_s9);
     end
 end
 
@@ -303,7 +315,7 @@ end
 // ------------------------
 `DECLARE(s11)
 
-reg signed [15:0] u_x_squared_s11, u_y_squared_s11, x_plus_y_squared_s11, x_minus_y_squared_s11;
+reg signed [31:0] three_halves_u_squared_product_s11, three_u_x_product_s11, three_u_y_product_s11, nine_half_u_x_squared_product_s11, nine_half_u_y_squared_product_s11, three_x_plus_y_product_s11, three_neg_x_plus_y_product_s11, three_x_minus_y_product_s11, three_neg_x_minus_y_product_s11, nine_half_x_plus_y_squared_product_s11, nine_half_x_minus_y_squared_product_s11;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -311,22 +323,17 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s10, s11)
 
-        u_x_squared_s11 <= (u_x_squared_product_s10 > 32'sh10000000) ? 16'sh7FFF :
-                        (u_x_squared_product_s10 < 32'shf0000000) ? 16'sh8000 :
-                        u_x_squared_shifted_s10;
-
-        u_y_squared_s11 <= (u_y_squared_product_s10 > 32'sh10000000) ? 16'sh7FFF :
-                        (u_y_squared_product_s10 < 32'shf0000000) ? 16'sh8000 :
-                        u_y_squared_shifted_s10;
-
-        x_plus_y_squared_s11 <= (x_plus_y_squared_product_s10 > 32'sh10000000) ? 16'sh7FFF :
-                                (x_plus_y_squared_product_s10 < 32'shf0000000) ? 16'sh8000 :
-                                x_plus_y_squared_shifted_s10;
-
-        x_minus_y_squared_s11 <= (x_minus_y_squared_product_s10 > 32'sh10000000) ? 16'sh7FFF :
-                                (x_minus_y_squared_product_s10 < 32'shf0000000) ? 16'sh8000 :
-                                x_minus_y_squared_shifted_s10;
-
+        three_halves_u_squared_product_s11     <= (three_halves * u_squared_s10) + round;
+        three_u_x_product_s11                  <= (three * u_x_s10) + round;
+        three_u_y_product_s11                  <= (three * u_y_s10) + round;
+        nine_half_u_x_squared_product_s11      <= (nine_quarters * (u_x_squared_s10 <<< 1)) + round;
+        nine_half_u_y_squared_product_s11      <= (nine_quarters * (u_y_squared_s10 <<< 1)) + round;
+        three_x_plus_y_product_s11             <= (three * x_plus_y_s10) + round;
+        three_neg_x_plus_y_product_s11         <= (three * neg_x_plus_y_s10) + round;
+        three_x_minus_y_product_s11            <= (three * x_minus_y_s10) + round;
+        three_neg_x_minus_y_product_s11        <= (three * neg_x_minus_y_s10) + round;
+        nine_half_x_plus_y_squared_product_s11 <= (nine_quarters * (x_plus_y_squared_s10 <<< 1)) + round;
+        nine_half_x_minus_y_squared_product_s11<= (nine_quarters * (x_minus_y_squared_s10 <<< 1)) + round;
     end
 end
 
@@ -335,8 +342,7 @@ end
 // ------------------------
 `DECLARE(s12)
 
-reg signed [15:0] x_plus_y_s12, x_minus_y_s12, neg_x_plus_y_s12, neg_x_minus_y_s12;
-reg signed [15:0] x_plus_y_squared_s12, x_minus_y_squared_s12, u_x_squared_s12, u_y_squared_s12;
+reg signed [15:0] three_halves_u_squared_s12, three_u_x_s12, three_u_y_s12, nine_half_u_x_squared_s12, nine_half_u_y_squared_s12, three_x_plus_y_s12, three_neg_x_plus_y_s12, three_x_minus_y_s12, three_neg_x_minus_y_s12, nine_half_x_plus_y_squared_s12, nine_half_x_minus_y_squared_s12;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -344,16 +350,50 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s11, s12)
 
-        u_x_squared_s12        <= u_x_squared_s11;
-        u_y_squared_s12        <= u_y_squared_s11;
-        x_plus_y_squared_s12   <= x_plus_y_squared_s11;
-        x_minus_y_squared_s12  <= x_minus_y_squared_s11;
-        u_squared_s12          <= u_x_squared_s11 + u_y_squared_s11;
+        three_halves_u_squared_s12 <= (three_halves_u_squared_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                      (three_halves_u_squared_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                      three_halves_u_squared_product_s11 >>> 13;
 
-        x_plus_y_s12           <= u_x_s11 + u_y_s11;
-        x_minus_y_s12          <= u_x_s11 - u_y_s11;
-        neg_x_plus_y_s12       <= -(u_x_s11 + u_y_s11);
-        neg_x_minus_y_s12      <= -(u_x_s11 - u_y_s11);
+        three_u_x_s12 <= (three_u_x_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                         (three_u_x_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                         three_u_x_product_s11 >>> 13;
+
+        three_u_y_s12 <= (three_u_y_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                         (three_u_y_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                         three_u_y_product_s11 >>> 13;
+
+        nine_half_u_x_squared_s12 <= (nine_half_u_x_squared_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                     (nine_half_u_x_squared_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                     nine_half_u_x_squared_product_s11 >>> 13;
+
+        nine_half_u_y_squared_s12 <= (nine_half_u_y_squared_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                     (nine_half_u_y_squared_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                     nine_half_u_y_squared_product_s11 >>> 13;
+
+        three_x_plus_y_s12 <= (three_x_plus_y_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                              (three_x_plus_y_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                              three_x_plus_y_product_s11 >>> 13;
+
+        three_neg_x_plus_y_s12 <= (three_neg_x_plus_y_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                  (three_neg_x_plus_y_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                  three_neg_x_plus_y_product_s11 >>> 13;
+
+        three_x_minus_y_s12 <= (three_x_minus_y_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                               (three_x_minus_y_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                               three_x_minus_y_product_s11 >>> 13;
+
+        three_neg_x_minus_y_s12 <= (three_neg_x_minus_y_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                   (three_neg_x_minus_y_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                   three_neg_x_minus_y_product_s11 >>> 13;
+
+        nine_half_x_plus_y_squared_s12 <= (nine_half_x_plus_y_squared_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                          (nine_half_x_plus_y_squared_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                          nine_half_x_plus_y_squared_product_s11 >>> 13;
+
+        nine_half_x_minus_y_squared_s12 <= (nine_half_x_minus_y_squared_product_s11 > 32'sh10000000) ? 16'sh7FFF :
+                                           (nine_half_x_minus_y_squared_product_s11 < 32'shf0000000) ? 16'sh8000 :
+                                           nine_half_x_minus_y_squared_product_s11 >>> 13;
+
     end
 end
 
@@ -362,7 +402,8 @@ end
 // ------------------------
 `DECLARE(s13)
 
-reg signed [31:0] three_halves_u_squared_product_s13, three_u_x_product_s13, three_u_y_product_s13, nine_half_u_x_squared_product_s13, nine_half_u_y_squared_product_s13, three_x_plus_y_product_s13, three_neg_x_plus_y_product_s13, three_x_minus_y_product_s13, three_neg_x_minus_y_product_s13, nine_half_x_plus_y_squared_product_s13, nine_half_x_minus_y_squared_product_s13;
+reg signed [15:0] polynomial_n_s13, polynomial_s_s13, polynomial_e_s13, polynomial_w_s13;
+reg signed [15:0] polynomial_ne_s13, polynomial_sw_s13, polynomial_nw_s13, polynomial_se_s13;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -370,17 +411,14 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s12, s13)
 
-        three_halves_u_squared_product_s13     <= (three_halves * u_squared_s12) + round;
-        three_u_x_product_s13                  <= (three * u_x_s12) + round;
-        three_u_y_product_s13                  <= (three * u_y_s12) + round;
-        nine_half_u_x_squared_product_s13      <= (nine_quarters * (u_x_squared_s12 <<< 1)) + round;
-        nine_half_u_y_squared_product_s13      <= (nine_quarters * (u_y_squared_s12 <<< 1)) + round;
-        three_x_plus_y_product_s13             <= (three * x_plus_y_s12) + round;
-        three_neg_x_plus_y_product_s13         <= (three * neg_x_plus_y_s12) + round;
-        three_x_minus_y_product_s13            <= (three * x_minus_y_s12) + round;
-        three_neg_x_minus_y_product_s13        <= (three * neg_x_minus_y_s12) + round;
-        nine_half_x_plus_y_squared_product_s13 <= (nine_quarters * (x_plus_y_squared_s12 <<< 1)) + round;
-        nine_half_x_minus_y_squared_product_s13<= (nine_quarters * (x_minus_y_squared_s12 <<< 1)) + round;
+        polynomial_n_s13  <= one + three_u_y_s12         + nine_half_u_y_squared_s12         - three_halves_u_squared_s12;
+        polynomial_s_s13  <= one - three_u_y_s12         + nine_half_u_y_squared_s12         - three_halves_u_squared_s12;
+        polynomial_e_s13  <= one + three_u_x_s12         + nine_half_u_x_squared_s12         - three_halves_u_squared_s12;
+        polynomial_w_s13  <= one - three_u_x_s12         + nine_half_u_x_squared_s12         - three_halves_u_squared_s12;
+        polynomial_ne_s13 <= one + three_x_plus_y_s12    + nine_half_x_plus_y_squared_s12    - three_halves_u_squared_s12;
+        polynomial_sw_s13 <= one + three_neg_x_plus_y_s12+ nine_half_x_plus_y_squared_s12    - three_halves_u_squared_s12;
+        polynomial_nw_s13 <= one + three_neg_x_minus_y_s12+ nine_half_x_minus_y_squared_s12  - three_halves_u_squared_s12;
+        polynomial_se_s13 <= one + three_x_minus_y_s12   + nine_half_x_minus_y_squared_s12   - three_halves_u_squared_s12;
     end
 end
 
@@ -389,9 +427,8 @@ end
 // ------------------------
 `DECLARE(s14)
 
-reg signed [31:0] three_halves_u_squared_product_s14, three_u_x_product_s14, three_u_y_product_s14, nine_half_u_x_squared_product_s14, nine_half_u_y_squared_product_s14, three_x_plus_y_product_s14, three_neg_x_plus_y_product_s14, three_x_minus_y_product_s14, three_neg_x_minus_y_product_s14, nine_half_x_plus_y_squared_product_s14, nine_half_x_minus_y_squared_product_s14;
-
-reg signed [15:0] three_halves_u_squared_shifted_s14, three_u_x_shifted_s14, three_u_y_shifted_s14, nine_half_u_x_squared_shifted_s14, nine_half_u_y_squared_shifted_s14, three_x_plus_y_shifted_s14, three_neg_x_plus_y_shifted_s14, three_x_minus_y_shifted_s14, three_neg_x_minus_y_shifted_s14, nine_half_x_plus_y_squared_shifted_s14, nine_half_x_minus_y_squared_shifted_s14;
+reg signed [31:0] f_eq_n_intermediate_product_s14, f_eq_s_intermediate_product_s14, f_eq_e_intermediate_product_s14, f_eq_w_intermediate_product_s14;
+reg signed [31:0] f_eq_ne_intermediate_product_s14, f_eq_sw_intermediate_product_s14, f_eq_nw_intermediate_product_s14, f_eq_se_intermediate_product_s14;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -399,42 +436,25 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s13, s14)
 
-        // Pipeline products
-        three_halves_u_squared_product_s14     <= three_halves_u_squared_product_s13;
-        three_u_x_product_s14                  <= three_u_x_product_s13;
-        three_u_y_product_s14                  <= three_u_y_product_s13;
-        nine_half_u_x_squared_product_s14      <= nine_half_u_x_squared_product_s13;
-        nine_half_u_y_squared_product_s14      <= nine_half_u_y_squared_product_s13;
-        three_x_plus_y_product_s14             <= three_x_plus_y_product_s13;
-        three_neg_x_plus_y_product_s14         <= three_neg_x_plus_y_product_s13;
-        three_x_minus_y_product_s14            <= three_x_minus_y_product_s13;
-        three_neg_x_minus_y_product_s14        <= three_neg_x_minus_y_product_s13;
-        nine_half_x_plus_y_squared_product_s14 <= nine_half_x_plus_y_squared_product_s13;
-        nine_half_x_minus_y_squared_product_s14<= nine_half_x_minus_y_squared_product_s13;
+        f_eq_n_intermediate_product_s14  <= (w_side * polynomial_n_s13)  + round;
+        f_eq_s_intermediate_product_s14  <= (w_side * polynomial_s_s13)  + round;
+        f_eq_e_intermediate_product_s14  <= (w_side * polynomial_e_s13)  + round;
+        f_eq_w_intermediate_product_s14  <= (w_side * polynomial_w_s13)  + round;
 
-        // Shifted versions
-        three_halves_u_squared_shifted_s14     <= three_halves_u_squared_product_s13 >>> 13;
-        three_u_x_shifted_s14                  <= three_u_x_product_s13 >>> 13;
-        three_u_y_shifted_s14                  <= three_u_y_product_s13 >>> 13;
-        nine_half_u_x_squared_shifted_s14      <= nine_half_u_x_squared_product_s13 >>> 13;
-        nine_half_u_y_squared_shifted_s14      <= nine_half_u_y_squared_product_s13 >>> 13;
-        three_x_plus_y_shifted_s14             <= three_x_plus_y_product_s13 >>> 13;
-        three_neg_x_plus_y_shifted_s14         <= three_neg_x_plus_y_product_s13 >>> 13;
-        three_x_minus_y_shifted_s14            <= three_x_minus_y_product_s13 >>> 13;
-        three_neg_x_minus_y_shifted_s14        <= three_neg_x_minus_y_product_s13 >>> 13;
-        nine_half_x_plus_y_squared_shifted_s14 <= nine_half_x_plus_y_squared_product_s13 >>> 13;
-        nine_half_x_minus_y_squared_shifted_s14<= nine_half_x_minus_y_squared_product_s13 >>> 13;
-
+        f_eq_ne_intermediate_product_s14 <= (w_diag * polynomial_ne_s13) + round;
+        f_eq_sw_intermediate_product_s14 <= (w_diag * polynomial_sw_s13) + round;
+        f_eq_nw_intermediate_product_s14 <= (w_diag * polynomial_nw_s13) + round;
+        f_eq_se_intermediate_product_s14 <= (w_diag * polynomial_se_s13) + round;
     end
 end
-
 
 // ------------------------
 // Stage 15:
 // ------------------------
 `DECLARE(s15)
 
-reg signed [15:0] three_halves_u_squared_s15, three_u_x_s15, three_u_y_s15, nine_half_u_x_squared_s15, nine_half_u_y_squared_s15, three_x_plus_y_s15, three_neg_x_plus_y_s15, three_x_minus_y_s15, three_neg_x_minus_y_s15, nine_half_x_plus_y_squared_s15, nine_half_x_minus_y_squared_s15;
+reg signed [15:0] f_eq_n_intermediate_s15, f_eq_s_intermediate_s15, f_eq_e_intermediate_s15, f_eq_w_intermediate_s15;
+reg signed [15:0] f_eq_ne_intermediate_s15, f_eq_sw_intermediate_s15, f_eq_nw_intermediate_s15, f_eq_se_intermediate_s15;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -442,50 +462,37 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s14, s15)
 
-        three_halves_u_squared_s15 <= (three_halves_u_squared_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                      (three_halves_u_squared_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                      three_halves_u_squared_shifted_s14;
+        f_eq_n_intermediate_s15  <= (f_eq_n_intermediate_product_s14  > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_n_intermediate_product_s14  < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_n_intermediate_product_s14 >>> 13;
 
-        three_u_x_s15 <= (three_u_x_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                         (three_u_x_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                         three_u_x_shifted_s14;
+        f_eq_s_intermediate_s15  <= (f_eq_s_intermediate_product_s14  > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_s_intermediate_product_s14  < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_s_intermediate_product_s14 >>> 13;
 
-        three_u_y_s15 <= (three_u_y_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                         (three_u_y_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                         three_u_y_shifted_s14;
+        f_eq_e_intermediate_s15  <= (f_eq_e_intermediate_product_s14  > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_e_intermediate_product_s14  < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_e_intermediate_product_s14 >>> 13;
 
-        nine_half_u_x_squared_s15 <= (nine_half_u_x_squared_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                     (nine_half_u_x_squared_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                     nine_half_u_x_squared_shifted_s14;
+        f_eq_w_intermediate_s15  <= (f_eq_w_intermediate_product_s14  > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_w_intermediate_product_s14  < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_w_intermediate_product_s14 >>> 13;
 
-        nine_half_u_y_squared_s15 <= (nine_half_u_y_squared_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                     (nine_half_u_y_squared_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                     nine_half_u_y_squared_shifted_s14;
+        f_eq_ne_intermediate_s15 <= (f_eq_ne_intermediate_product_s14 > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_ne_intermediate_product_s14 < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_ne_intermediate_product_s14 >>> 13;
 
-        three_x_plus_y_s15 <= (three_x_plus_y_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                              (three_x_plus_y_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                              three_x_plus_y_shifted_s14;
+        f_eq_sw_intermediate_s15 <= (f_eq_sw_intermediate_product_s14 > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_sw_intermediate_product_s14 < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_sw_intermediate_product_s14 >>> 13;
 
-        three_neg_x_plus_y_s15 <= (three_neg_x_plus_y_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                  (three_neg_x_plus_y_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                  three_neg_x_plus_y_shifted_s14;
+        f_eq_nw_intermediate_s15 <= (f_eq_nw_intermediate_product_s14 > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_nw_intermediate_product_s14 < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_nw_intermediate_product_s14 >>> 13;
 
-        three_x_minus_y_s15 <= (three_x_minus_y_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                               (three_x_minus_y_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                               three_x_minus_y_shifted_s14;
-
-        three_neg_x_minus_y_s15 <= (three_neg_x_minus_y_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                   (three_neg_x_minus_y_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                   three_neg_x_minus_y_shifted_s14;
-
-        nine_half_x_plus_y_squared_s15 <= (nine_half_x_plus_y_squared_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                          (nine_half_x_plus_y_squared_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                          nine_half_x_plus_y_squared_shifted_s14;
-
-        nine_half_x_minus_y_squared_s15 <= (nine_half_x_minus_y_squared_product_s14 > 32'sh10000000) ? 16'sh7FFF :
-                                           (nine_half_x_minus_y_squared_product_s14 < 32'shf0000000) ? 16'sh8000 :
-                                           nine_half_x_minus_y_squared_shifted_s14;
-
+        f_eq_se_intermediate_s15 <= (f_eq_se_intermediate_product_s14 > 32'sh10000000) ? 16'sh7FFF :
+                                    (f_eq_se_intermediate_product_s14 < 32'shf0000000) ? 16'sh8000 :
+                                    f_eq_se_intermediate_product_s14 >>> 13;
     end
 end
 
@@ -494,8 +501,8 @@ end
 // ------------------------
 `DECLARE(s16)
 
-reg signed [15:0] polynomial_n_s16, polynomial_s_s16, polynomial_e_s16, polynomial_w_s16;
-reg signed [15:0] polynomial_ne_s16, polynomial_sw_s16, polynomial_nw_s16, polynomial_se_s16;
+reg signed [31:0] f_eq_n_product_s16, f_eq_s_product_s16, f_eq_e_product_s16, f_eq_w_product_s16;
+reg signed [31:0] f_eq_ne_product_s16, f_eq_sw_product_s16, f_eq_nw_product_s16, f_eq_se_product_s16;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -503,14 +510,15 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s15, s16)
 
-        polynomial_n_s16  <= one + three_u_y_s15         + nine_half_u_y_squared_s15         - three_halves_u_squared_s15;
-        polynomial_s_s16  <= one - three_u_y_s15         + nine_half_u_y_squared_s15         - three_halves_u_squared_s15;
-        polynomial_e_s16  <= one + three_u_x_s15         + nine_half_u_x_squared_s15         - three_halves_u_squared_s15;
-        polynomial_w_s16  <= one - three_u_x_s15         + nine_half_u_x_squared_s15         - three_halves_u_squared_s15;
-        polynomial_ne_s16 <= one + three_x_plus_y_s15    + nine_half_x_plus_y_squared_s15    - three_halves_u_squared_s15;
-        polynomial_sw_s16 <= one + three_neg_x_plus_y_s15+ nine_half_x_plus_y_squared_s15    - three_halves_u_squared_s15;
-        polynomial_nw_s16 <= one + three_neg_x_minus_y_s15+ nine_half_x_minus_y_squared_s15  - three_halves_u_squared_s15;
-        polynomial_se_s16 <= one + three_x_minus_y_s15   + nine_half_x_minus_y_squared_s15   - three_halves_u_squared_s15;
+        f_eq_n_product_s16  <= (rho_s15 * f_eq_n_intermediate_s15)  + round;
+        f_eq_s_product_s16  <= (rho_s15 * f_eq_s_intermediate_s15)  + round;
+        f_eq_e_product_s16  <= (rho_s15 * f_eq_e_intermediate_s15)  + round;
+        f_eq_w_product_s16  <= (rho_s15 * f_eq_w_intermediate_s15)  + round;
+
+        f_eq_ne_product_s16 <= (rho_s15 * f_eq_ne_intermediate_s15) + round;
+        f_eq_sw_product_s16 <= (rho_s15 * f_eq_sw_intermediate_s15) + round;
+        f_eq_nw_product_s16 <= (rho_s15 * f_eq_nw_intermediate_s15) + round;
+        f_eq_se_product_s16 <= (rho_s15 * f_eq_se_intermediate_s15) + round;
     end
 end
 
@@ -519,8 +527,8 @@ end
 // ------------------------
 `DECLARE(s17)
 
-reg signed [31:0] f_eq_n_intermediate_product_s17, f_eq_s_intermediate_product_s17, f_eq_e_intermediate_product_s17, f_eq_w_intermediate_product_s17;
-reg signed [31:0] f_eq_ne_intermediate_product_s17, f_eq_sw_intermediate_product_s17, f_eq_nw_intermediate_product_s17, f_eq_se_intermediate_product_s17;
+reg signed [15:0] f_eq_n_s17, f_eq_s_s17, f_eq_e_s17, f_eq_w_s17;
+reg signed [15:0] f_eq_ne_s17, f_eq_sw_s17, f_eq_nw_s17, f_eq_se_s17;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -528,15 +536,37 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s16, s17)
 
-        f_eq_n_intermediate_product_s17  <= (w_side * polynomial_n_s16)  + round;
-        f_eq_s_intermediate_product_s17  <= (w_side * polynomial_s_s16)  + round;
-        f_eq_e_intermediate_product_s17  <= (w_side * polynomial_e_s16)  + round;
-        f_eq_w_intermediate_product_s17  <= (w_side * polynomial_w_s16)  + round;
+        f_eq_n_s17  <= (f_eq_n_product_s16  > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_n_product_s16  < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_n_product_s16 >>> 13;
 
-        f_eq_ne_intermediate_product_s17 <= (w_diag * polynomial_ne_s16) + round;
-        f_eq_sw_intermediate_product_s17 <= (w_diag * polynomial_sw_s16) + round;
-        f_eq_nw_intermediate_product_s17 <= (w_diag * polynomial_nw_s16) + round;
-        f_eq_se_intermediate_product_s17 <= (w_diag * polynomial_se_s16) + round;
+        f_eq_s_s17  <= (f_eq_s_product_s16  > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_s_product_s16  < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_s_product_s16 >>> 13;
+
+        f_eq_e_s17  <= (f_eq_e_product_s16  > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_e_product_s16  < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_e_product_s16 >>> 13;
+
+        f_eq_w_s17  <= (f_eq_w_product_s16  > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_w_product_s16  < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_w_product_s16 >>> 13;
+
+        f_eq_ne_s17 <= (f_eq_ne_product_s16 > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_ne_product_s16 < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_ne_product_s16 >>> 13;
+
+        f_eq_sw_s17 <= (f_eq_sw_product_s16 > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_sw_product_s16 < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_sw_product_s16 >>> 13;
+
+        f_eq_nw_s17 <= (f_eq_nw_product_s16 > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_nw_product_s16 < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_nw_product_s16 >>> 13;
+
+        f_eq_se_s17 <= (f_eq_se_product_s16 > 32'sh10000000) ? 16'sh7FFF :
+                       (f_eq_se_product_s16 < 32'shf0000000) ? 16'sh8000 :
+                       f_eq_se_product_s16 >>> 13;
     end
 end
 
@@ -545,11 +575,8 @@ end
 // ------------------------
 `DECLARE(s18)
 
-reg signed [31:0] f_eq_n_intermediate_product_s18, f_eq_s_intermediate_product_s18, f_eq_e_intermediate_product_s18, f_eq_w_intermediate_product_s18;
-reg signed [31:0] f_eq_ne_intermediate_product_s18, f_eq_sw_intermediate_product_s18, f_eq_nw_intermediate_product_s18, f_eq_se_intermediate_product_s18;
-
-reg signed [15:0] f_eq_n_shifted_s18, f_eq_s_shifted_s18, f_eq_e_shifted_s18, f_eq_w_shifted_s18;
-reg signed [15:0] f_eq_ne_shifted_s18, f_eq_sw_shifted_s18, f_eq_nw_shifted_s18, f_eq_se_shifted_s18;
+reg signed [31:0] delta_f_n_product_s18, delta_f_ne_product_s18, delta_f_e_product_s18, delta_f_se_product_s18;
+reg signed [31:0] delta_f_s_product_s18, delta_f_sw_product_s18, delta_f_w_product_s18, delta_f_nw_product_s18;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -557,26 +584,14 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s17, s18)
 
-        // Pipeline product values
-        f_eq_n_intermediate_product_s18  <= f_eq_n_intermediate_product_s17;
-        f_eq_s_intermediate_product_s18  <= f_eq_s_intermediate_product_s17;
-        f_eq_e_intermediate_product_s18  <= f_eq_e_intermediate_product_s17;
-        f_eq_w_intermediate_product_s18  <= f_eq_w_intermediate_product_s17;
-        f_eq_ne_intermediate_product_s18 <= f_eq_ne_intermediate_product_s17;
-        f_eq_sw_intermediate_product_s18 <= f_eq_sw_intermediate_product_s17;
-        f_eq_nw_intermediate_product_s18 <= f_eq_nw_intermediate_product_s17;
-        f_eq_se_intermediate_product_s18 <= f_eq_se_intermediate_product_s17;
-
-        // Shifted versions
-        f_eq_n_shifted_s18  <= f_eq_n_intermediate_product_s17  >>> 13;
-        f_eq_s_shifted_s18  <= f_eq_s_intermediate_product_s17  >>> 13;
-        f_eq_e_shifted_s18  <= f_eq_e_intermediate_product_s17  >>> 13;
-        f_eq_w_shifted_s18  <= f_eq_w_intermediate_product_s17  >>> 13;
-        f_eq_ne_shifted_s18 <= f_eq_ne_intermediate_product_s17 >>> 13;
-        f_eq_sw_shifted_s18 <= f_eq_sw_intermediate_product_s17 >>> 13;
-        f_eq_nw_shifted_s18 <= f_eq_nw_intermediate_product_s17 >>> 13;
-        f_eq_se_shifted_s18 <= f_eq_se_intermediate_product_s17 >>> 13;
-
+        delta_f_n_product_s18  <= (omega * (f_eq_n_s17  - f_n_s17))  + round;
+        delta_f_ne_product_s18 <= (omega * (f_eq_ne_s17 - f_ne_s17)) + round;
+        delta_f_e_product_s18  <= (omega * (f_eq_e_s17  - f_e_s17))  + round;
+        delta_f_se_product_s18 <= (omega * (f_eq_se_s17 - f_se_s17)) + round;
+        delta_f_s_product_s18  <= (omega * (f_eq_s_s17  - f_s_s17))  + round;
+        delta_f_sw_product_s18 <= (omega * (f_eq_sw_s17 - f_sw_s17)) + round;
+        delta_f_w_product_s18  <= (omega * (f_eq_w_s17  - f_w_s17))  + round;
+        delta_f_nw_product_s18 <= (omega * (f_eq_nw_s17 - f_nw_s17)) + round;
     end
 end
 
@@ -585,8 +600,8 @@ end
 // ------------------------
 `DECLARE(s19)
 
-reg signed [15:0] f_eq_n_intermediate_s19, f_eq_s_intermediate_s19, f_eq_e_intermediate_s19, f_eq_w_intermediate_s19;
-reg signed [15:0] f_eq_ne_intermediate_s19, f_eq_sw_intermediate_s19, f_eq_nw_intermediate_s19, f_eq_se_intermediate_s19;
+reg signed [15:0] delta_f_n_s19, delta_f_ne_s19, delta_f_e_s19, delta_f_se_s19;
+reg signed [15:0] delta_f_s_s19, delta_f_sw_s19, delta_f_w_s19, delta_f_nw_s19;
 
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -594,266 +609,42 @@ always @(posedge clk or negedge rst) begin
     end else begin
         `PIPE(s18, s19)
 
-        f_eq_n_intermediate_s19  <= (f_eq_n_intermediate_product_s18  > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_n_intermediate_product_s18  < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_n_shifted_s18;
+        delta_f_n_s19  <= (delta_f_n_product_s18  > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_n_product_s18  < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_n_product_s18 >>> 13;
 
-        f_eq_s_intermediate_s19  <= (f_eq_s_intermediate_product_s18  > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_s_intermediate_product_s18  < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_s_shifted_s18;
+        delta_f_ne_s19 <= (delta_f_ne_product_s18 > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_ne_product_s18 < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_ne_product_s18 >>> 13;
 
-        f_eq_e_intermediate_s19  <= (f_eq_e_intermediate_product_s18  > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_e_intermediate_product_s18  < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_e_shifted_s18;
+        delta_f_e_s19  <= (delta_f_e_product_s18  > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_e_product_s18  < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_e_product_s18 >>> 13;
 
-        f_eq_w_intermediate_s19  <= (f_eq_w_intermediate_product_s18  > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_w_intermediate_product_s18  < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_w_shifted_s18;
+        delta_f_se_s19 <= (delta_f_se_product_s18 > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_se_product_s18 < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_se_product_s18 >>> 13;
 
-        f_eq_ne_intermediate_s19 <= (f_eq_ne_intermediate_product_s18 > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_ne_intermediate_product_s18 < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_ne_shifted_s18;
+        delta_f_s_s19  <= (delta_f_s_product_s18  > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_s_product_s18  < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_s_product_s18 >>> 13;
 
-        f_eq_sw_intermediate_s19 <= (f_eq_sw_intermediate_product_s18 > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_sw_intermediate_product_s18 < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_sw_shifted_s18;
+        delta_f_sw_s19 <= (delta_f_sw_product_s18 > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_sw_product_s18 < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_sw_product_s18 >>> 13;
 
-        f_eq_nw_intermediate_s19 <= (f_eq_nw_intermediate_product_s18 > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_nw_intermediate_product_s18 < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_nw_shifted_s18;
+        delta_f_w_s19  <= (delta_f_w_product_s18  > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_w_product_s18  < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_w_product_s18 >>> 13;
 
-        f_eq_se_intermediate_s19 <= (f_eq_se_intermediate_product_s18 > 32'sh10000000) ? 16'sh7FFF :
-                                    (f_eq_se_intermediate_product_s18 < 32'shf0000000) ? 16'sh8000 :
-                                    f_eq_se_shifted_s18;
+        delta_f_nw_s19 <= (delta_f_nw_product_s18 > 32'sh10000000) ? 16'sh7FFF :
+                          (delta_f_nw_product_s18 < 32'shf0000000) ? 16'sh8000 :
+                          delta_f_nw_product_s18 >>> 13;
     end
 end
 
 // ------------------------
 // Stage 20:
-// ------------------------
-`DECLARE(s20)
-
-reg signed [31:0] f_eq_n_product_s20, f_eq_s_product_s20, f_eq_e_product_s20, f_eq_w_product_s20;
-reg signed [31:0] f_eq_ne_product_s20, f_eq_sw_product_s20, f_eq_nw_product_s20, f_eq_se_product_s20;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s20)
-    end else begin
-        `PIPE(s19, s20)
-
-        f_eq_n_product_s20  <= (rho_s19 * f_eq_n_intermediate_s19)  + round;
-        f_eq_s_product_s20  <= (rho_s19 * f_eq_s_intermediate_s19)  + round;
-        f_eq_e_product_s20  <= (rho_s19 * f_eq_e_intermediate_s19)  + round;
-        f_eq_w_product_s20  <= (rho_s19 * f_eq_w_intermediate_s19)  + round;
-
-        f_eq_ne_product_s20 <= (rho_s19 * f_eq_ne_intermediate_s19) + round;
-        f_eq_sw_product_s20 <= (rho_s19 * f_eq_sw_intermediate_s19) + round;
-        f_eq_nw_product_s20 <= (rho_s19 * f_eq_nw_intermediate_s19) + round;
-        f_eq_se_product_s20 <= (rho_s19 * f_eq_se_intermediate_s19) + round;
-    end
-end
-
-// ------------------------
-// Stage 21:
-// ------------------------
-`DECLARE(s21)
-
-reg signed [31:0] f_eq_n_product_s21, f_eq_s_product_s21, f_eq_e_product_s21, f_eq_w_product_s21;
-reg signed [31:0] f_eq_ne_product_s21, f_eq_sw_product_s21, f_eq_nw_product_s21, f_eq_se_product_s21;
-
-reg signed [15:0] f_eq_n_shifted_s21, f_eq_s_shifted_s21, f_eq_e_shifted_s21, f_eq_w_shifted_s21;
-reg signed [15:0] f_eq_ne_shifted_s21, f_eq_sw_shifted_s21, f_eq_nw_shifted_s21, f_eq_se_shifted_s21;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s21)
-    end else begin
-        `PIPE(s20, s21)
-
-        // Pipeline product values
-        f_eq_n_product_s21  <= f_eq_n_product_s20;
-        f_eq_s_product_s21  <= f_eq_s_product_s20;
-        f_eq_e_product_s21  <= f_eq_e_product_s20;
-        f_eq_w_product_s21  <= f_eq_w_product_s20;
-        f_eq_ne_product_s21 <= f_eq_ne_product_s20;
-        f_eq_sw_product_s21 <= f_eq_sw_product_s20;
-        f_eq_nw_product_s21 <= f_eq_nw_product_s20;
-        f_eq_se_product_s21 <= f_eq_se_product_s20;
-
-        // Shifted versions
-        f_eq_n_shifted_s21  <= f_eq_n_product_s20  >>> 13;
-        f_eq_s_shifted_s21  <= f_eq_s_product_s20  >>> 13;
-        f_eq_e_shifted_s21  <= f_eq_e_product_s20  >>> 13;
-        f_eq_w_shifted_s21  <= f_eq_w_product_s20  >>> 13;
-        f_eq_ne_shifted_s21 <= f_eq_ne_product_s20 >>> 13;
-        f_eq_sw_shifted_s21 <= f_eq_sw_product_s20 >>> 13;
-        f_eq_nw_shifted_s21 <= f_eq_nw_product_s20 >>> 13;
-        f_eq_se_shifted_s21 <= f_eq_se_product_s20 >>> 13;
-    end
-end
-
-// ------------------------
-// Stage 22:
-// ------------------------
-`DECLARE(s22)
-
-reg signed [15:0] f_eq_n_s22, f_eq_s_s22, f_eq_e_s22, f_eq_w_s22;
-reg signed [15:0] f_eq_ne_s22, f_eq_sw_s22, f_eq_nw_s22, f_eq_se_s22;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s22)
-    end else begin
-        `PIPE(s21, s22)
-
-        f_eq_n_s22  <= (f_eq_n_product_s21  > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_n_product_s21  < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_n_shifted_s21;
-
-        f_eq_s_s22  <= (f_eq_s_product_s21  > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_s_product_s21  < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_s_shifted_s21;
-
-        f_eq_e_s22  <= (f_eq_e_product_s21  > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_e_product_s21  < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_e_shifted_s21;
-
-        f_eq_w_s22  <= (f_eq_w_product_s21  > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_w_product_s21  < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_w_shifted_s21;
-
-        f_eq_ne_s22 <= (f_eq_ne_product_s21 > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_ne_product_s21 < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_ne_shifted_s21;
-
-        f_eq_sw_s22 <= (f_eq_sw_product_s21 > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_sw_product_s21 < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_sw_shifted_s21;
-
-        f_eq_nw_s22 <= (f_eq_nw_product_s21 > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_nw_product_s21 < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_nw_shifted_s21;
-
-        f_eq_se_s22 <= (f_eq_se_product_s21 > 32'sh10000000) ? 16'sh7FFF :
-                       (f_eq_se_product_s21 < 32'shf0000000) ? 16'sh8000 :
-                       f_eq_se_shifted_s21;
-    end
-end
-
-// ------------------------
-// Stage 23:
-// ------------------------
-`DECLARE(s23)
-
-reg signed [31:0] delta_f_n_product_s23, delta_f_ne_product_s23, delta_f_e_product_s23, delta_f_se_product_s23;
-reg signed [31:0] delta_f_s_product_s23, delta_f_sw_product_s23, delta_f_w_product_s23, delta_f_nw_product_s23;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s23)
-    end else begin
-        `PIPE(s22, s23)
-
-        delta_f_n_product_s23  <= (omega * (f_eq_n_s22  - f_n_s22))  + round;
-        delta_f_ne_product_s23 <= (omega * (f_eq_ne_s22 - f_ne_s22)) + round;
-        delta_f_e_product_s23  <= (omega * (f_eq_e_s22  - f_e_s22))  + round;
-        delta_f_se_product_s23 <= (omega * (f_eq_se_s22 - f_se_s22)) + round;
-        delta_f_s_product_s23  <= (omega * (f_eq_s_s22  - f_s_s22))  + round;
-        delta_f_sw_product_s23 <= (omega * (f_eq_sw_s22 - f_sw_s22)) + round;
-        delta_f_w_product_s23  <= (omega * (f_eq_w_s22  - f_w_s22))  + round;
-        delta_f_nw_product_s23 <= (omega * (f_eq_nw_s22 - f_nw_s22)) + round;
-    end
-end
-// ------------------------
-// Stage 24:
-// ------------------------
-`DECLARE(s24)
-
-reg signed [31:0] delta_f_n_product_s24, delta_f_ne_product_s24, delta_f_e_product_s24, delta_f_se_product_s24;
-reg signed [31:0] delta_f_s_product_s24, delta_f_sw_product_s24, delta_f_w_product_s24, delta_f_nw_product_s24;
-
-reg signed [15:0] delta_f_n_shifted_s24, delta_f_ne_shifted_s24, delta_f_e_shifted_s24, delta_f_se_shifted_s24;
-reg signed [15:0] delta_f_s_shifted_s24, delta_f_sw_shifted_s24, delta_f_w_shifted_s24, delta_f_nw_shifted_s24;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s24)
-    end else begin
-        `PIPE(s23, s24)
-
-        // Pipeline product values
-        delta_f_n_product_s24  <= delta_f_n_product_s23;
-        delta_f_ne_product_s24 <= delta_f_ne_product_s23;
-        delta_f_e_product_s24  <= delta_f_e_product_s23;
-        delta_f_se_product_s24 <= delta_f_se_product_s23;
-        delta_f_s_product_s24  <= delta_f_s_product_s23;
-        delta_f_sw_product_s24 <= delta_f_sw_product_s23;
-        delta_f_w_product_s24  <= delta_f_w_product_s23;
-        delta_f_nw_product_s24 <= delta_f_nw_product_s23;
-
-        // Shifted versions
-        delta_f_n_shifted_s24  <= delta_f_n_product_s23  >>> 13;
-        delta_f_ne_shifted_s24 <= delta_f_ne_product_s23 >>> 13;
-        delta_f_e_shifted_s24  <= delta_f_e_product_s23  >>> 13;
-        delta_f_se_shifted_s24 <= delta_f_se_product_s23 >>> 13;
-        delta_f_s_shifted_s24  <= delta_f_s_product_s23  >>> 13;
-        delta_f_sw_shifted_s24 <= delta_f_sw_product_s23 >>> 13;
-        delta_f_w_shifted_s24  <= delta_f_w_product_s23  >>> 13;
-        delta_f_nw_shifted_s24 <= delta_f_nw_product_s23 >>> 13;
-    end
-end
-
-// ------------------------
-// Stage 25:
-// ------------------------
-`DECLARE(s25)
-
-reg signed [15:0] delta_f_n_s25, delta_f_ne_s25, delta_f_e_s25, delta_f_se_s25;
-reg signed [15:0] delta_f_s_s25, delta_f_sw_s25, delta_f_w_s25, delta_f_nw_s25;
-
-always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
-        `RESET(s25)
-    end else begin
-        `PIPE(s24, s25)
-
-        delta_f_n_s25  <= (delta_f_n_product_s24  > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_n_product_s24  < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_n_shifted_s24;
-
-        delta_f_ne_s25 <= (delta_f_ne_product_s24 > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_ne_product_s24 < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_ne_shifted_s24;
-
-        delta_f_e_s25  <= (delta_f_e_product_s24  > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_e_product_s24  < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_e_shifted_s24;
-
-        delta_f_se_s25 <= (delta_f_se_product_s24 > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_se_product_s24 < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_se_shifted_s24;
-
-        delta_f_s_s25  <= (delta_f_s_product_s24  > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_s_product_s24  < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_s_shifted_s24;
-
-        delta_f_sw_s25 <= (delta_f_sw_product_s24 > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_sw_product_s24 < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_sw_shifted_s24;
-
-        delta_f_w_s25  <= (delta_f_w_product_s24  > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_w_product_s24  < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_w_shifted_s24;
-
-        delta_f_nw_s25 <= (delta_f_nw_product_s24 > 32'sh10000000) ? 16'sh7FFF :
-                          (delta_f_nw_product_s24 < 32'shf0000000) ? 16'sh8000 :
-                          delta_f_nw_shifted_s24;
-    end
-end
-
-// ------------------------
-// Stage 26:
 // ------------------------
 always @(posedge clk or negedge rst) begin
     if (!rst || !en) begin
@@ -872,27 +663,27 @@ always @(posedge clk or negedge rst) begin
         f_new_w    <= 0;
         f_new_nw   <= 0;
     end else if(en) begin
-        newval_ready <= newval_ready_s25;
-        u_x        <= u_x_s25;
-        u_y        <= u_y_s25;
-        rho        <= rho_s25;
-        u_squared  <= u_squared_s25;
-        f_new_n    <= f_n_s25    + delta_f_n_s25;
-        f_new_ne   <= f_ne_s25   + delta_f_ne_s25;
-        f_new_e    <= f_e_s25    + delta_f_e_s25;
-        f_new_se   <= f_se_s25   + delta_f_se_s25;
-        f_new_s    <= f_s_s25    + delta_f_s_s25;
-        f_new_sw   <= f_sw_s25   + delta_f_sw_s25;
-        f_new_w    <= f_w_s25    + delta_f_w_s25;
-        f_new_nw   <= f_nw_s25   + delta_f_nw_s25;
-        f_new_null <= rho_s25 - (f_n_s25  + delta_f_n_s25  +
-                                     f_ne_s25 + delta_f_ne_s25 +
-                                     f_e_s25  + delta_f_e_s25  +
-                                     f_se_s25 + delta_f_se_s25 +
-                                     f_s_s25  + delta_f_s_s25  +
-                                     f_sw_s25 + delta_f_sw_s25 +
-                                     f_w_s25  + delta_f_w_s25  +
-                                     f_nw_s25 + delta_f_nw_s25);
+        newval_ready <= newval_ready_s19;
+        u_x        <= u_x_s19;
+        u_y        <= u_y_s19;
+        rho        <= rho_s19;
+        u_squared  <= u_squared_s19;
+        f_new_n    <= f_n_s19    + delta_f_n_s19;
+        f_new_ne   <= f_ne_s19   + delta_f_ne_s19;
+        f_new_e    <= f_e_s19    + delta_f_e_s19;
+        f_new_se   <= f_se_s19   + delta_f_se_s19;
+        f_new_s    <= f_s_s19    + delta_f_s_s19;
+        f_new_sw   <= f_sw_s19   + delta_f_sw_s19;
+        f_new_w    <= f_w_s19    + delta_f_w_s19;
+        f_new_nw   <= f_nw_s19   + delta_f_nw_s19;
+        f_new_null <= rho_s19 - (f_n_s19  + delta_f_n_s19  +
+                                     f_ne_s19 + delta_f_ne_s19 +
+                                     f_e_s19  + delta_f_e_s19  +
+                                     f_se_s19 + delta_f_se_s19 +
+                                     f_s_s19  + delta_f_s_s19  +
+                                     f_sw_s19 + delta_f_sw_s19 +
+                                     f_w_s19  + delta_f_w_s19  +
+                                     f_nw_s19 + delta_f_nw_s19);
     end
 end
 
