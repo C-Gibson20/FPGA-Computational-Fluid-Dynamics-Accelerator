@@ -10,6 +10,6 @@
 `define FIXED_ONE_9TH 16'sh038e
 `define FIXED_ONE_36TH 16'sh00e4
 `define RAM_READ_WAIT 2
-`define RAMS_TO_ACCESS 3 //max bit width of the brams are 12 so this can't be increase higher than 8
+`define RAMS_TO_ACCESS 2 //max bit width of the brams are 12 so this can't be increase higher than 8
 
 `endif

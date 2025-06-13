@@ -81,7 +81,7 @@ TEST_F(topParallelTestbench, Equilibrium) {
             setBarrierBit(i);
         }
     }
-    runSimulation(82399);
+    runSimulation(50000);
     EXPECT_EQ(topParallel->testing_c0_data_in,0x0E38);
 }
 

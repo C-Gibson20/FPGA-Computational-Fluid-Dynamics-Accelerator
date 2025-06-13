@@ -12,7 +12,7 @@
 
 
 		// Parameters of Axi Master Bus Interface M00_AXIS
-		parameter integer C_M00_AXIS_TDATA_WIDTH	= 32,
+		parameter integer C_M00_AXIS_TDATA_WIDTH	= 64,
 		parameter integer C_M00_AXIS_START_COUNT	= 32
 	)
 	(
@@ -23,6 +23,10 @@
         input wire [DATA_WIDTH-1:0] u_squared,
         input wire                  in_collision_state,
         input wire                  collider_ready,
+        output reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
+        output reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_din,
+        output reg                                  ram_wen,
+        output reg [ADDRESS_WIDTH-1:0]              ram_addr, // because 2 times
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -38,10 +42,7 @@
 	);
 
 	// Add user logic here
-    reg [DATA_WIDTH-1:0] uxs [DEPTH-1:0];
-    reg [DATA_WIDTH-1:0] uys [DEPTH-1:0];
-    reg [DATA_WIDTH-1:0] rhos [DEPTH-1:0];
-    reg [DATA_WIDTH-1:0] u2s [DEPTH-1:0];
+    // RAM format: rho u2 ux uy from MSB to LSB
     reg [ADDRESS_WIDTH-1:0] read_count;
 
     localparam FILL_DATA    = 2'd0;
@@ -52,17 +53,15 @@
     reg [ADDRESS_WIDTH-1 + 1: 0] write_count; // extra bit bc times 2
     reg     tvalid, next_tvalid, tlast;
     reg     write_incr;
-    reg [31:0] sender_out, dout;
-    reg init_write_count;
-
+    reg [C_M00_AXIS_TDATA_WIDTH-1:0] sender_out, dout;
 
     assign m00_axis_tvalid = tvalid;
     assign m00_axis_tdata  = dout;
     assign m00_axis_tlast = tlast;
-    assign m00_axis_tstrb = 4'hF;
+    assign m00_axis_tstrb = 8'hFF;
 
 
-    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn or posedge m00_axis_tready) begin
+    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if(!m00_axis_aresetn) begin
             current_state <= FILL_DATA;
             read_count <= 0;
@@ -73,27 +72,23 @@
 
             if(current_state == FILL_DATA) begin
                 if(in_collision_state && collider_ready) begin
-                    uxs[read_count] <= u_x;
-                    uys[read_count] <= u_y;
-                    rhos[read_count] <= rho;
-                    u2s[read_count] <= u_squared;
-                    read_count <= read_count + 1;
+                    // ram_addr <= read_count;
+                    ram_din <= {rho, u_squared, u_x, u_y};
+                    // ram_wen <= 1;
+                    read_count <= read_count + 1; // we write 64 bits to ram
                 end
                 else if(in_collision_state) begin
                     read_count <= read_count;
+                    // ram_wen <= 0;
                 end
                 else begin 
                     read_count <= 0;
+                    // ram_wen <= 0;
                 end
             end
 
             if(current_state == SEND) begin
-                // if(write_count <= DEPTH*2 && init_write_count) begin
-                //     sender_out <= {uxs[0],uys[0]};
-                //     write_count <= 2;
-                // end
-                if(write_count <= DEPTH*2) begin
-                    sender_out <= (write_count[0]) ? {uxs[(write_count-1)/2],uys[(write_count-1)/2]} : {rhos[write_count/2],u2s[write_count/2]};
+                if(write_count <= DEPTH) begin
                     write_count <= write_count + 1;
                 end
                 else begin
@@ -102,17 +97,11 @@
             end
 
             if(current_state == WAIT_READY && in_collision_state && !m00_axis_tready) begin // preempt next transition
-                uxs[read_count] <= u_x;
-                uys[read_count] <= u_y;
-                rhos[read_count] <= rho;
-                u2s[read_count] <= u_squared;
-                read_count <= read_count + 1;
+                ram_din <= {rho, u_squared, u_x, u_y};
+                // ram_wen <= 1;
+                read_count <= read_count + 1; // we write 64 bits to ram
             end
             
-            if(current_state == WAIT_READY && m00_axis_tready) begin // preempt another transition
-                write_count <= 2;
-                sender_out <= {uxs[0],uys[0]};
-            end
         end
 
     end
@@ -136,7 +125,7 @@
             end
 
             SEND : begin
-                if(write_count == DEPTH*2) 
+                if(write_count == DEPTH) // not minus 1 
                     next_state = FILL_DATA;
                 else
                     next_state = SEND;
@@ -149,25 +138,35 @@
 
     // output logic
     always @* begin
-        dout = sender_out;
+        dout = ram_dout;
         tvalid = 0;
         tlast = 0;
-        init_write_count = 0;
-        if(current_state == WAIT_READY ||(current_state == FILL_DATA && !in_collision_state)) begin
-            tvalid = 1;
-            init_write_count = 1;
-            dout = {rhos[0],u2s[0]}; // for correct timing
+        ram_wen = 0;
+        if(current_state == FILL_DATA && !in_collision_state) begin
+            tvalid = 0; // not ready until we transistion and the RAM data comes out
+            ram_addr = read_count;
+            ram_wen = 0;
         end
 
-        if(current_state == SEND && write_count == DEPTH*2)
+        if(current_state == WAIT_READY) begin // by now the value will be available from RAM
+            tvalid = 1;
+        end
+
+        if(current_state == SEND && write_count == DEPTH) begin
             tlast = 1;
+        end 
 
-        if(current_state == WAIT_READY && in_collision_state)
+        if(current_state == SEND) begin
+            ram_addr = write_count;
+        end
+
+        if(current_state == WAIT_READY && in_collision_state) begin
             tvalid = 0;
-
+            ram_wen = 1;
+        end
         if(current_state == WAIT_READY && m00_axis_tready) begin
-            init_write_count = 1;
-            dout = {rhos[0],u2s[0]}; // for correct timing
+            ram_addr = 1;
+            ram_wen = 0;
         end
 
     end
