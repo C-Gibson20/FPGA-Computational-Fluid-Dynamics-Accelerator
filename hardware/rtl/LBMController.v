@@ -5,7 +5,7 @@
 // 
 // Create Date: 28.05.2025 18:44:59
 // Design Name: 
-// Module Name: LBMSolver
+// Module Name: LBMController
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -158,8 +158,6 @@ module LBMController (
     input wire [`DATA_WIDTH-1:0]        init_cw,
     input wire [`DATA_WIDTH-1:0]        init_cnw,
 
-    output wire signed [15:0] testing_cs_n_data_in,
-
     // collider results
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
     output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
@@ -174,16 +172,17 @@ module LBMController (
     //States
     localparam IDLE             = 4'd0;
     localparam STREAM           = 4'd1;
-    localparam STREAM_WAIT      = 4'd2;
-    localparam BOUNDARY         = 4'd3;
-    localparam BOUNDARY_WAIT    = 4'd4;
-    localparam BOUNCE           = 4'd5;
-    localparam BOUNCE_READ      = 4'd6;
-    localparam BOUNCE_WAIT      = 4'd7;
-    localparam ZERO_BOUNCE      = 4'd8;
-    localparam ZERO_BOUNCE_WAIT = 4'd9;
-    localparam COLLIDE          = 4'd10;
-    localparam MEM_RESET        = 4'd11;
+    localparam STREAM_READ      = 4'd2;
+    localparam STREAM_WAIT      = 4'd3;      
+    localparam BOUNDARY         = 4'd4;
+    localparam BOUNDARY_WAIT    = 4'd5;
+    localparam BOUNCE           = 4'd6;
+    localparam BOUNCE_READ      = 4'd7;
+    localparam BOUNCE_WAIT      = 4'd8;
+    localparam ZERO_BOUNCE      = 4'd9;
+    localparam ZERO_BOUNCE_WAIT = 4'd10;
+    localparam COLLIDE          = 4'd11;
+    localparam MEM_RESET        = 4'd12;
 
 
 
@@ -208,23 +207,23 @@ module LBMController (
 
     // Data-in buses
     wire [`DATA_WIDTH-1:0] c0_array_data_in     [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] c0_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] c0_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cn_array_data_in     [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cn_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cn_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cne_array_data_in    [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cne_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cne_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] ce_array_data_in     [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] ce_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] ce_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cse_array_data_in    [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cse_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cse_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cs_array_data_in     [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cs_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cs_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] csw_array_data_in    [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] csw_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] csw_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cw_array_data_in     [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cw_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cw_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] cnw_array_data_in    [0:`RAMS_TO_ACCESS-1];
-    wire [`DATA_WIDTH-1:0] cnw_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
+    // wire [`DATA_WIDTH-1:0] cnw_array_n_data_in  [0:`RAMS_TO_ACCESS-1];
 
     // Data-out from collider
     wire [`DATA_WIDTH-1:0] u_x_array        [0:`RAMS_TO_ACCESS-1];
@@ -265,6 +264,7 @@ module LBMController (
     wire in_collision_state_array  [0:`RAMS_TO_ACCESS-1];
     wire read_wait_array          [0:`RAMS_TO_ACCESS-1];
     wire zero_barrier_array [0:`RAMS_TO_ACCESS-1];
+    wire nv_ready_array [0:`RAMS_TO_ACCESS-1];
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
     wire [`RAMS_TO_ACCESS-1:0] is_bw;
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
@@ -273,7 +273,7 @@ module LBMController (
     wire [`RAMS_TO_ACCESS-1:0] is_cs;
     wire [`RAMS_TO_ACCESS-1:0] is_cr;
     reg [15:0] width_count, next_width_count;
-    reg [2:0] sim_state, next_sim_state;
+    reg [3:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index;
     reg [`ADDRESS_WIDTH-1:0] next_index;
     
@@ -336,16 +336,16 @@ module LBMController (
         wire [`ADDRESS_WIDTH-1:0] width_mod = (width_count + i) % `WIDTH;
 
         LBMSolverParallel LBMSolverArray ( //potentially need to change the array data ins
-            .clk         (clk),
-            .rst         (rst),
-            .barriers    (barriers),
-            .en          (en),
-            .step        (step),
-            .omega       (omega),
-            .sim_state   (sim_state),
-            .index       (index + i),
-            .width_count (width_mod),
-
+            .clk            (clk),
+            .rst            (rst),
+            .barriers       (barriers),
+            .en             (en),
+            .step           (step),
+            .omega          (omega),
+            .sim_state      (sim_state),
+            .index          (index + i),
+            .width_count    (width_mod),
+            .ram_wait_count (ram_wait_count),
             // ───────── c0 ─────────
             .c0_data_in    (c0_array_data_in   [i]),
             .c0_data_out   (c0_data_out        [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
@@ -353,7 +353,7 @@ module LBMController (
             .init_c0       (init_c0),
 
             // ───────── c0_n ───────
-            .c0_n_data_in  (c0_array_n_data_in [i]),
+            // .c0_n_data_in  (c0_array_n_data_in [i]),
             .c0_n_data_out (c0_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .c0_n_write_en (c0_array_n_write_en[i]),
 
@@ -364,7 +364,7 @@ module LBMController (
             .init_cn       (init_cn),
 
             // ───────── cn_n ───────
-            .cn_n_data_in  (cn_array_n_data_in [i]),
+            // .cn_n_data_in  (cn_array_n_data_in [i]),
             .cn_n_data_out (cn_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cn_n_write_en (cn_array_n_write_en[i]),
 
@@ -375,7 +375,7 @@ module LBMController (
             .init_cne       (init_cne),
 
             // ───────── cne_n ──────
-            .cne_n_data_in (cne_array_n_data_in[i]),
+            // .cne_n_data_in (cne_array_n_data_in[i]),
             .cne_n_data_out(cne_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cne_n_write_en(cne_array_n_write_en[i]),
 
@@ -386,7 +386,7 @@ module LBMController (
             .init_ce       (init_ce),
 
             // ───────── ce_n ───────
-            .ce_n_data_in  (ce_array_n_data_in [i]),
+            // .ce_n_data_in  (ce_array_n_data_in [i]),
             .ce_n_data_out (ce_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .ce_n_write_en (ce_array_n_write_en[i]),
 
@@ -397,7 +397,7 @@ module LBMController (
             .init_cse       (init_cse),
 
             // ───────── cse_n ──────
-            .cse_n_data_in (cse_array_n_data_in[i]),
+            // .cse_n_data_in (cse_array_n_data_in[i]),
             .cse_n_data_out(cse_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cse_n_write_en(cse_array_n_write_en[i]),
 
@@ -408,7 +408,7 @@ module LBMController (
             .init_cs       (init_cs),
 
             // ───────── cs_n ───────
-            .cs_n_data_in  (cs_array_n_data_in [i]),
+            // .cs_n_data_in  (cs_array_n_data_in [i]),
             .cs_n_data_out (cs_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cs_n_write_en (cs_array_n_write_en[i]),
 
@@ -419,7 +419,7 @@ module LBMController (
             .init_csw       (init_csw),
 
             // ───────── csw_n ──────
-            .csw_n_data_in (csw_array_n_data_in[i]),
+            // .csw_n_data_in (csw_array_n_data_in[i]),
             .csw_n_data_out(csw_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .csw_n_write_en(csw_array_n_write_en[i]),
 
@@ -430,7 +430,7 @@ module LBMController (
             .init_cw       (init_cw),
 
             // ───────── cw_n ───────
-            .cw_n_data_in  (cw_array_n_data_in [i]),
+            // .cw_n_data_in  (cw_array_n_data_in [i]),
             .cw_n_data_out (cw_n_data_out      [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cw_n_write_en (cw_array_n_write_en[i]),
 
@@ -441,7 +441,7 @@ module LBMController (
             .init_cnw       (init_cnw),
 
             // ───────── cnw_n ──────
-            .cnw_n_data_in (cnw_array_n_data_in[i]),
+            // .cnw_n_data_in (cnw_array_n_data_in[i]),
             .cnw_n_data_out(cnw_n_data_out     [(i*`DATA_WIDTH)+:`DATA_WIDTH]),
             .cnw_n_write_en(cnw_array_n_write_en[i]),
 
@@ -454,6 +454,7 @@ module LBMController (
             .in_collision_state (in_collision_state_array [i]),
             .next_sim_state     (next_sim_state_array     [i]),
             .zero_barrier       (zero_barrier_array       [i]),
+            .nv_ready           (nv_ready_array           [i]),
             .read_wait          (read_wait_array          [i])
         );
 
@@ -472,57 +473,56 @@ module LBMController (
         u_squared[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_squared_array[j];
         rho[(j*`DATA_WIDTH)+:`DATA_WIDTH] = rho_array[j];
         c0_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = c0_array_n_write_en[j]
+            = (c0_array_n_write_en[j] || c0_array_write_en[j])
             ? c0_array_data_in[j]
-            : c0_n_stored_data;
+            : c0_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north
         cn_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cn_array_n_write_en[j]
+            = (cn_array_n_write_en[j]|| cn_array_write_en[j])
             ? cn_array_data_in[j]
-            : cn_n_stored_data;
+            : cn_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north-east
         cne_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cne_array_n_write_en[j]
+            = (cne_array_n_write_en[j] || cne_array_write_en[j])
             ? cne_array_data_in[j]
-            : cne_n_stored_data;
+            : cne_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // east
         ce_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = ce_array_n_write_en[j]
+            = (ce_array_n_write_en[j] || ce_array_write_en[j])
             ? ce_array_data_in[j]
-            : ce_n_stored_data;
+            : ce_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south-east
         cse_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cse_array_n_write_en[j]
+            = (cse_array_n_write_en[j] || cse_array_write_en[j])
             ? cse_array_data_in[j]
-            : cse_n_stored_data;
+            : cse_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south
         cs_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cs_array_n_write_en[j]
+            = (cs_array_n_write_en[j] || cs_array_write_en[j])
             ? cs_array_data_in[j]
-            : cs_n_stored_data;
+            : cs_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south-west
         csw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = csw_array_n_write_en[j]
+            = (csw_array_n_write_en[j] || csw_array_write_en[j])
             ? csw_array_data_in[j]
-            : csw_n_stored_data;
-
+            : csw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
         // west
         cw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cw_array_n_write_en[j]
+            = (cw_array_n_write_en[j] || cw_array_write_en[j])
             ? cw_array_data_in[j]
-            : cw_n_stored_data;
+            : cw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north-west
         cnw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = cnw_array_n_write_en[j]
+            = (cnw_array_n_write_en[j] || cnw_array_write_en[j])
             ? cnw_array_data_in[j]
-            : cnw_n_stored_data;
+            : cnw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
         end
     end
     endgenerate
@@ -534,13 +534,12 @@ module LBMController (
         assign is_bw[k] = (next_sim_state_array[k] == BOUNCE_WAIT);
         assign is_rw[k] = (read_wait_array[k]);
         assign is_zb[k] = (zero_barrier_array[k]);
-        assign is_nv[k] = (collider_ready_array[k]);
+        assign is_nv[k] = (nv_ready_array[k]);
         assign is_cs[k] = (in_collision_state_array[k]);
-        assign is_cr[k] = (collider_ready_array);
+        assign is_cr[k] = (collider_ready_array[k]);
     end
     endgenerate
 
-    assign testing_cs_n_data_in = cs_data_in;
     assign in_collision_state = |is_cs;
     assign collider_ready = |is_cr;
     wire any_bounce_wait = |is_bw;
@@ -597,7 +596,7 @@ module LBMController (
     begin
         if(!rst) 
         begin
-            sim_state <= IDLE;
+            sim_state <= MEM_RESET;
             index <= 0;
             width_count <= 0;
             ram_wait_count <= `RAM_READ_WAIT;
@@ -701,55 +700,55 @@ module LBMController (
         c0_next_write_addr = 0;
         c0_next_write_en = 0;
         c0_n_next_write_en = 0;
-        c0_n_next_stored_data = c0_n_stored_data;
+        c0_n_next_stored_data = 0;
         c0_n_read_from_write_address = 0;
 
         cn_next_write_addr = 0;
         cn_next_write_en = 0;
         cn_n_next_write_en = 0;
-        cn_n_next_stored_data = cn_n_stored_data;
+        cn_n_next_stored_data = 0;
         cn_n_read_from_write_address = 0;
 
         cne_next_write_addr = 0;
         cne_next_write_en = 0;
         cne_n_next_write_en = 0;
-        cne_n_next_stored_data = cne_n_stored_data;
+        cne_n_next_stored_data = 0;
         cne_n_read_from_write_address = 0;
 
         ce_next_write_addr = 0;
         ce_next_write_en = 0;
         ce_n_next_write_en = 0;
-        ce_n_next_stored_data = ce_n_stored_data;
+        ce_n_next_stored_data = 0;
         ce_n_read_from_write_address = 0;
-        
+
         cse_next_write_addr = 0;
         cse_next_write_en = 0;
         cse_n_next_write_en = 0;
-        cse_n_next_stored_data = cse_n_stored_data;
+        cse_n_next_stored_data = 0;
         cse_n_read_from_write_address = 0;
 
         cs_next_write_addr = 0;
         cs_next_write_en = 0;
         cs_n_next_write_en = 0;
-        cs_n_next_stored_data = cs_n_stored_data;
+        cs_n_next_stored_data = 0;
         cs_n_read_from_write_address = 0;
 
         csw_next_write_addr = 0;
         csw_next_write_en = 0;
         csw_n_next_write_en = 0;
-        csw_n_next_stored_data = csw_n_stored_data;
+        csw_n_next_stored_data = 0;
         csw_n_read_from_write_address = 0;
 
         cw_next_write_addr = 0;
         cw_next_write_en = 0;
         cw_n_next_write_en = 0;
-        cw_n_next_stored_data = cw_n_stored_data;
+        cw_n_next_stored_data = 0;
         cw_n_read_from_write_address = 0;
 
         cnw_next_write_addr = 0;
         cnw_next_write_en = 0;
         cnw_n_next_write_en = 0;
-        cnw_n_next_stored_data = cnw_n_stored_data;
+        cnw_n_next_stored_data = 0;
         cnw_n_read_from_write_address = 0;
 
         next_index = index;
@@ -763,6 +762,8 @@ module LBMController (
                 if(step >= step_count) begin
                     next_sim_state = STREAM;
                     next_ram_wait_count = `RAM_READ_WAIT;
+                    next_index = 0;
+                    next_width_count = 0;
                 end
                 else
                     next_sim_state = IDLE;
@@ -772,11 +773,38 @@ module LBMController (
                 if(any_read_wait) 
                 begin
                     next_ram_wait_count = `RAM_READ_WAIT;
-                    next_sim_state = STREAM_WAIT;
+                    next_sim_state = STREAM_READ;
+
+                    c0_next_write_addr = index;
+                    c0_n_read_from_write_address = 1'b1;
+
+                    cn_next_write_addr = index-`WIDTH;
+                    cn_n_read_from_write_address = 1'b1;
+
+                    cne_next_write_addr = index-`WIDTH+1;
+                    cne_n_read_from_write_address = 1'b1;
+                    
+                    ce_next_write_addr = index+1;
+                    ce_n_read_from_write_address = 1'b1;
+
+                    cse_next_write_addr = index+`WIDTH+1;
+                    cse_n_read_from_write_address = 1'b1;   
+
+                    cs_next_write_addr = index+`WIDTH;
+                    cs_n_read_from_write_address = 1'b1;
+
+                    csw_next_write_addr = index+`WIDTH-1;
+                    csw_n_read_from_write_address = 1'b1;
+
+                    cw_next_write_addr = index - 1;
+                    cw_n_read_from_write_address = 1'b1;
+
+                    cnw_next_write_addr = index - 1 - `WIDTH;
+                    cnw_n_read_from_write_address = 1'b1;
                 end  
-                else if(index+`RAMS_TO_ACCESS > `DEPTH) 
+                else if(index+`RAMS_TO_ACCESS >= `DEPTH-1) 
                 begin
-                    next_sim_state = BOUNCE;
+                    next_sim_state = BOUNDARY;
                     next_index = `WIDTH+1;
                     next_width_count = 1;
                 end
@@ -784,8 +812,42 @@ module LBMController (
                 begin
                     next_sim_state = STREAM;
                     next_index = index + `RAMS_TO_ACCESS;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + `RAMS_TO_ACCESS);
+                    next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                 end  
+            end
+            STREAM_READ:
+            begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1;
+                    next_sim_state = BOUNCE_READ;
+                    next_index = index;
+                    next_width_count = width_count;
+                end
+                else
+                begin
+                    c0_n_next_stored_data = c0_n_data_out;
+
+                    cn_n_next_stored_data = cn_n_data_out;
+
+                    cne_n_next_stored_data = cne_n_data_out;
+
+                    ce_n_next_stored_data = ce_n_data_out;
+
+                    cse_n_next_stored_data = cse_n_data_out;
+
+                    cs_n_next_stored_data = cs_n_data_out;
+
+                    csw_n_next_stored_data = csw_n_data_out;
+
+                    cw_n_next_stored_data = cw_n_data_out;
+
+                    cnw_n_next_stored_data = cnw_n_data_out;
+
+                    next_sim_state = STREAM_WAIT;
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_index = index;
+                    next_width_count = width_count;
+                end
             end
             STREAM_WAIT : // do the outside too
             begin
@@ -794,6 +856,24 @@ module LBMController (
                     next_sim_state = STREAM_WAIT;
                     next_index = index;
                     next_width_count = width_count;
+
+                    c0_n_next_stored_data = c0_n_data_out;
+
+                    cn_n_next_stored_data = cn_n_data_out;
+
+                    cne_n_next_stored_data = cne_n_data_out;
+
+                    ce_n_next_stored_data = ce_n_data_out;
+
+                    cse_n_next_stored_data = cse_n_data_out;
+
+                    cs_n_next_stored_data = cs_n_data_out;
+
+                    csw_n_next_stored_data = csw_n_data_out;
+
+                    cw_n_next_stored_data = cw_n_data_out;
+
+                    cnw_n_next_stored_data = cnw_n_data_out;
                 end 
                 else begin
                     
@@ -824,11 +904,11 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index == `DEPTH-1-`WIDTH-1) 
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1-`WIDTH-1) 
                     begin
                         next_index = `WIDTH + 1;
                         next_width_count = 1;
-                        next_sim_state = BOUNCE;
+                        next_sim_state = BOUNDARY;
                         
                     end
                     else
@@ -839,7 +919,140 @@ module LBMController (
                     end
                 end
             end
+            BOUNDARY:
+            begin
+                if(ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1;
+                    next_sim_state = BOUNDARY;
+                    next_index = index;
+                    next_width_count = width_count;
 
+                    c0_n_next_stored_data = c0_n_data_out;
+
+                    cn_n_next_stored_data = cn_n_data_out;
+
+                    cne_n_next_stored_data = cne_n_data_out;
+
+                    ce_n_next_stored_data = ce_n_data_out;
+
+                    cse_n_next_stored_data = cse_n_data_out;
+
+                    cs_n_next_stored_data = cs_n_data_out;
+
+                    csw_n_next_stored_data = csw_n_data_out;
+
+                    cw_n_next_stored_data = cw_n_data_out;
+
+                    cnw_n_next_stored_data = cnw_n_data_out;
+                end
+                else 
+                begin
+                    if((index <= 2*`WIDTH - 2) && (index + `RAM_READ_WAIT >= 2*`WIDTH -2)) begin // NE corner
+                        csw_next_write_addr = `WIDTH - 1; 
+                        // csw_n_next_write_en = 1;
+                        cs_next_write_addr = `WIDTH - 2;
+                        // cs_n_next_write_en = 1;
+                        cw_next_write_addr = 2*`WIDTH - 1;
+                        // cw_n_next_write_en = 1;
+
+                        csw_n_read_from_write_address = 1'b1;
+                        cs_n_read_from_write_address = 1'b1;
+                        cw_n_read_from_write_address = 1'b1;
+                        // csw_next_data_in = csw_data_out;
+                        // cs_next_data_in = cs_data_out;
+                        // cw_next_data_in = cw_data_out;
+                    end
+                    if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
+                        cs_next_write_addr = index - `WIDTH;
+                        cs_n_read_from_write_address = 1'b1;
+                        // cs_n_next_write_en = 1;
+                        // cs_next_data_in = cs_data_out;
+                    end
+                    if((index <= `WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `WIDTH + 1)) begin // NW corner
+                        cse_next_write_addr = 0;
+                        // cse_n_next_write_en = 1;
+                        cs_next_write_addr = 1;
+                        // cs_n_next_write_en = 1;
+                        ce_next_write_addr = `WIDTH;
+                        // ce_n_next_write_en = 1;
+                        cse_n_read_from_write_address = 1'b1;
+                        cs_n_read_from_write_address = 1'b1;
+                        ce_n_read_from_write_address = 1'b1;
+                        // cse_next_data_in = cse_data_out;
+                        // cs_next_data_in = cs_data_out;
+                        // ce_next_data_in = ce_data_out;
+                        
+                    end
+                    if ((index <= `DEPTH - `WIDTH - 2) && (index + `RAM_READ_WAIT >= `DEPTH - `WIDTH - 2)) begin // SE corner
+                        cnw_next_write_addr = `DEPTH - 1; 
+                        // cnw_n_next_write_en = 1;
+                        cn_next_write_addr = `DEPTH - 2; 
+                        // cn_n_next_write_en = 1;
+                        cw_next_write_addr = `DEPTH - `WIDTH - 1; 
+                        // cw_n_next_write_en = 1;
+
+                        cnw_n_read_from_write_address = 1'b1;
+                        cn_n_read_from_write_address = 1'b1;
+                        cw_n_read_from_write_address = 1'b1;
+                        // cnw_next_data_in = cnw_data_out;
+                        // cn_next_data_in = cn_data_out;
+                        // cw_next_data_in = cw_data_out;
+                        
+                    end
+                    if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
+                        cn_next_write_addr = index - `WIDTH;
+                        cn_n_read_from_write_address = 1'b1;
+                        // cn_n_next_write_en = 1;
+                        // cn_next_data_in = cn_data_out;
+                    end
+                    if ((index <= `DEPTH - 2*`WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `DEPTH - 2*`WIDTH + 1)) begin // SW corner
+                        cne_next_write_addr = `DEPTH - `WIDTH; 
+                        // cne_n_next_write_en = 1;
+                        cn_next_write_addr = `DEPTH - `WIDTH+1; 
+                        // cn_n_next_write_en = 1;
+                        ce_next_write_addr = `DEPTH - 2*`WIDTH; 
+                        // ce_n_next_write_en = 1;
+                        cne_n_read_from_write_address = 1'b1;
+                        cn_n_read_from_write_address = 1'b1;
+                        ce_n_read_from_write_address = 1'b1;
+                        // cne_next_data_in = cne_data_out;
+                        // cn_next_data_in = cn_data_out;
+                        // ce_next_data_in = ce_data_out;
+
+                    end
+                    if(width_count == 1) begin // left edge
+                        ce_next_write_addr = index - 1;
+                        ce_n_read_from_write_address = 1'b1;
+                        // ce_n_next_write_en = 1;
+                        // ce_next_data_in = ce_data_out;
+                    end
+                    if(width_count == `WIDTH - 2) begin // right edge 
+                        cw_next_write_addr = index + 1;
+                        cw_n_read_from_write_address = 1'b1;
+                        // cw_n_next_write_en = 1;
+                        // cw_next_data_in = cw_data_out;
+                    end
+                    
+                    if(`WIDTH + 1 <= index && index <= 2*`WIDTH - 2) begin // top edge
+                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + 3 + (`WIDTH - 2 - width_count): index + `RAMS_TO_ACCESS;
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : width_count + `RAMS_TO_ACCESS;
+                        next_sim_state = BOUNDARY;
+                        next_ram_wait_count = `RAM_READ_WAIT;
+                    end
+                    else if(`DEPTH - 2*`WIDTH + 1 <= index && index <= `DEPTH - `WIDTH - 2) begin // bottom edge 
+                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 0 : index + `RAMS_TO_ACCESS;
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 2 : width_count + `RAMS_TO_ACCESS;
+                        next_sim_state = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? BOUNCE : BOUNDARY;
+                        next_ram_wait_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? `RAM_READ_WAIT : 0;
+                    end
+                    else begin // everything else
+                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + 3: index + `WIDTH -3;
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : `WIDTH - 2;
+                        next_sim_state = BOUNDARY;
+                        next_ram_wait_count = `RAM_READ_WAIT;
+                    end
+                end
+            end
             BOUNCE:
             begin
                 if(all_bounce_wait) 
@@ -879,7 +1092,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
                 end
-                else if(index + `RAMS_TO_ACCESS > `DEPTH) 
+                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1-2*`WIDTH-2) 
                 begin
                     next_sim_state = ZERO_BOUNCE;
                     next_index = 0;
@@ -922,6 +1135,7 @@ module LBMController (
                     cnw_n_next_stored_data = cnw_n_data_out;
 
                     next_sim_state = BOUNCE_WAIT;
+                    next_ram_wait_count = `RAM_READ_WAIT;
                     next_index = index;
                     next_width_count = width_count;
                 end
@@ -934,6 +1148,24 @@ module LBMController (
                     next_sim_state = BOUNCE_WAIT;
                     next_index = index;
                     next_width_count = width_count;
+
+                    c0_n_next_stored_data = c0_n_stored_data;
+
+                    cn_n_next_stored_data = cn_n_stored_data;
+
+                    cne_n_next_stored_data = cne_n_stored_data;
+
+                    ce_n_next_stored_data = ce_n_stored_data;
+
+                    cse_n_next_stored_data = cse_n_stored_data;
+
+                    cs_n_next_stored_data = cs_n_stored_data;
+
+                    csw_n_next_stored_data = csw_n_stored_data;
+
+                    cw_n_next_stored_data = cw_n_stored_data;
+
+                    cnw_n_next_stored_data = cnw_n_stored_data;
                 end
                 else
                 begin
@@ -964,7 +1196,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
                         next_sim_state = ZERO_BOUNCE;
                         next_index = 0;
@@ -981,7 +1213,7 @@ module LBMController (
 
             ZERO_BOUNCE:
             begin
-                if(index + `RAMS_TO_ACCESS > `DEPTH)
+                if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                 begin
                     next_sim_state = COLLIDE;
                     next_index = 0;
@@ -1004,12 +1236,32 @@ module LBMController (
             begin
                 if(ram_wait_count > 0) begin
                     next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = COLLIDE;
+                    next_sim_state = ZERO_BOUNCE_WAIT;
                     next_index = index;
                     next_width_count = width_count;
+                    c0_n_next_stored_data = c0_n_data_out;
+
+                    cn_n_next_stored_data = cn_n_data_out;
+
+                    cne_n_next_stored_data = cne_n_data_out;
+
+                    ce_n_next_stored_data = ce_n_data_out;
+
+                    cse_n_next_stored_data = cse_n_data_out;
+
+                    cs_n_next_stored_data = cs_n_data_out;
+
+                    csw_n_next_stored_data = csw_n_data_out;
+
+                    cw_n_next_stored_data = cw_n_data_out;
+
+                    cnw_n_next_stored_data = cnw_n_data_out;
+                    
+                    
                 end
                 else
                 begin
+                    
                     c0_next_write_addr = index;
                     c0_n_read_from_write_address = 1'b1;
 
@@ -1037,7 +1289,7 @@ module LBMController (
                     cnw_next_write_addr = index;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
                         next_sim_state = COLLIDE;
                         next_index = 0;
@@ -1062,9 +1314,9 @@ module LBMController (
                 end
                 else if(all_nv_ready)
                 begin
-                    if(index + `RAMS_TO_ACCESS > `DEPTH)
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
-                        next_sim_state = STREAM;
+                        next_sim_state = IDLE;
                         next_index = 0;
                         next_width_count = 0;
                         incr_step = 1;

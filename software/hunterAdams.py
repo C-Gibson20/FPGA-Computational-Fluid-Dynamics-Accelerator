@@ -5,8 +5,8 @@ from matplotlib import rc
 plt.rcParams["figure.figsize"] = (50,3)
 
 # Parameters
-height = 50                     # grid height
-width = 50                     # grid width
+height = 100                     # grid height
+width = 100                     # grid width
 # viscosity = 0.002                # viscosity
 # omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 omega = 1.5
@@ -181,7 +181,7 @@ fig = plt.figure( figsize=(20,5) )
 
 # Initialize the barriers (occurs in previous section)
 initialize(10, 10, 15)
-
+initialize(20,5,25)
 def to_q313_hex(value):
     fixed_val = int(round(value * 8192)) & 0xFFFF  # wrap into 16-bit space
     return f"0x{fixed_val:04X}"

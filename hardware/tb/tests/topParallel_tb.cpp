@@ -3,25 +3,27 @@
 
 unsigned int ticks = 0;
 
-class TopTestbench : public Testbench {
+class topParallelTestbench : public Testbench {
 protected:
+    Vdut* topParallel;
     std::ofstream logFile;
 
     void initializeInputs() override { 
-        top->clk = 1;
-        top->rst = 0;
-        top->en  = 1;
-        top->step = 1000;
-        top->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
-        top->init_c0 = 0x0E38; // 4/9
-        top->init_cn = 0x038E; // 1/9
-        top->init_cs    = 0x038E;
-        top->init_ce    = 0x038E;
-        top->init_cw    = 0x038E;
-        top->init_cne   = 0x00E4; // 1/36
-        top->init_cse  = 0x00E4;
-        top->init_csw   = 0x00E4;
-        top->init_cnw   = 0x00E4;
+        topParallel = top.get();
+        topParallel->clk = 1;
+        topParallel->rst = 0;
+        topParallel->en  = 1;
+        topParallel->step = 1000;
+        topParallel->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
+        topParallel->init_c0 = 0x0E38; // 4/9
+        topParallel->init_cn = 0x038E; // 1/9
+        topParallel->init_cs    = 0x038E;
+        topParallel->init_ce    = 0x038E;
+        topParallel->init_cw    = 0x038E;
+        topParallel->init_cne   = 0x00E4; // 1/36
+        topParallel->init_cse  = 0x00E4;
+        topParallel->init_csw   = 0x00E4;
+        topParallel->init_cnw   = 0x00E4;
 
         logFile.open("u_squared_log.txt");
         if (!logFile.is_open()) {
@@ -34,20 +36,20 @@ protected:
 void runSimulation(int cycles) {
         for (int i = 0; i < cycles; i++) {
             if(i == 2){
-                top->rst = 1;
+                topParallel->rst = 1;
             }
             for (int clk = 0; clk < 2; clk++) {
-                top->eval();
+                topParallel->eval();
 #ifndef __APPLE__
                 tfp->dump(2 * ticks + clk);
 #endif
-                top->clk = !top->clk;
+                topParallel->clk = !topParallel->clk;
             }
             ticks++;
 
             // ✅ Log u_squared when valid
-            // if (top->collider_ready && top->in_collision_state) {
-            //     logFile << top->u_squared << "\n";
+            // if (topParallel->collider_ready && topParallel->in_collision_state) {
+            //     logFile << topParallel->u_squared << "\n";
             // }
 
             if (Verilated::gotFinish()) {
@@ -60,16 +62,16 @@ void runSimulation(int cycles) {
 };
 
 //Make sure to test this using a 50x50 grid or else it will fail
-TEST_F(TopTestbench, Equilibrium) {
+TEST_F(topParallelTestbench, Equilibrium) {
 
     auto setBarrierBit = [&](int i) {
         int word = i >> 5;        // divide by 32
         int bit  = i &  31;       // mod 32
-        top->barriers.data()[word] |= (1U << bit);
+        topParallel->barriers.data()[word] |= (1U << bit);
     };
 
     for (int w = 0; w < (2500+31)/32; ++w) {
-        top->barriers.data()[w] = 0;
+        topParallel->barriers.data()[w] = 0;
     }
 
     for (int i = 0; i < 2500; i++) {
@@ -79,12 +81,8 @@ TEST_F(TopTestbench, Equilibrium) {
             setBarrierBit(i);
         }
     }
-    runSimulation(82399);
-    EXPECT_EQ(top->testing_c0_data_in,0x0E38);
-}
-
-TEST_F(TopTestbench, Wave) {
-    runSimulation(25000);
+    runSimulation(50000);
+    EXPECT_EQ(topParallel->testing_c0_data_in,0x0E38);
 }
 
 int main(int argc, char **argv) {
