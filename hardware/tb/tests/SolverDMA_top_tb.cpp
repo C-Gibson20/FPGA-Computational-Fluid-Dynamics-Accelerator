@@ -18,6 +18,7 @@ protected:
         s->m00_axis_aclk = 0;
         s->m00_axis_aresetn = 1;
         s->m00_axis_tready = 0;
+        s->m00_axis_aclk = 1;
 
     }
 
@@ -48,27 +49,44 @@ TEST_F(DMATB, TestDataLoad) {
 
     runSimulation(2);
     for(int i = 1; i< 10; i++){
-        runSimulation(1);
+        
         s->in_collision_state = 1;
         // s->collider_ready = 1;
         s->u_x = i*2;
         s->u_y = i*3;
         s->rho = i*4;
         s->u_squared = i*5;
+        runSimulation(1);
 
     }
     s->in_collision_state = 0;
     runSimulation(1);
     EXPECT_EQ(s->m00_axis_tvalid, 1);
-    EXPECT_EQ(s->m00_axis_tdata, 0x00040005);
+    EXPECT_EQ(s->m00_axis_tdata, 0x0004000500020003);
     runSimulation(2);
     s->m00_axis_tready = 1;
     runSimulation();
     s->m00_axis_tready = 0;
-    EXPECT_EQ(s->m00_axis_tdata,0x00020003);
-    runSimulation(4998);
-    EXPECT_EQ(top->m00_axis_tlast, 1);
-
+    EXPECT_EQ(s->m00_axis_tdata,0x0008000A00040006);
+    runSimulation(2500);
+    // EXPECT_EQ(top->m00_axis_tlast, 1);
+    runSimulation(5); // test data load again
+    s->m00_axis_tready = 1; // test when slave always ready
+    for(int i = 1; i< 10; i++){
+        
+        s->in_collision_state = 1;
+        // s->collider_ready = 1;
+        s->u_x = 100*2;
+        s->u_y = 100*3;
+        s->rho = 100*4;
+        s->u_squared = 100*5;
+        runSimulation(1);
+    }
+    s->in_collision_state = 0;
+    runSimulation(10);
+    runSimulation(1);
+    s->m00_axis_tready = 0;
+    runSimulation(10);
 
 }
 

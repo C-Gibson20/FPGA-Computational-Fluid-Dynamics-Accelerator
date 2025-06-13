@@ -23,7 +23,7 @@
         input wire [DATA_WIDTH-1:0] u_squared,
         input wire                  in_collision_state,
         input wire                  collider_ready,
-        output reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
+        input reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
         output reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_din,
         output reg                                  ram_wen,
         output reg [ADDRESS_WIDTH-1:0]              ram_addr, // because 2 times
@@ -53,7 +53,8 @@
     reg [ADDRESS_WIDTH-1 + 1: 0] write_count; // extra bit bc times 2
     reg     tvalid, next_tvalid, tlast;
     reg     write_incr;
-    reg [C_M00_AXIS_TDATA_WIDTH-1:0] sender_out, dout;
+    reg [C_M00_AXIS_TDATA_WIDTH-1:0] dout;
+    reg [C_M00_AXIS_TDATA_WIDTH-1:0] clocked_ram_din;
 
     assign m00_axis_tvalid = tvalid;
     assign m00_axis_tdata  = dout;
@@ -73,7 +74,7 @@
             if(current_state == FILL_DATA) begin
                 if(in_collision_state && collider_ready) begin
                     // ram_addr <= read_count;
-                    ram_din <= {rho, u_squared, u_x, u_y};
+                    // clocked_ram_din <= {rho, u_squared, u_x, u_y};
                     // ram_wen <= 1;
                     read_count <= read_count + 1; // we write 64 bits to ram
                 end
@@ -96,11 +97,16 @@
                 end
             end
 
-            if(current_state == WAIT_READY && in_collision_state && !m00_axis_tready) begin // preempt next transition
-                ram_din <= {rho, u_squared, u_x, u_y};
+            if(current_state == WAIT_READY && in_collision_state && !m00_axis_tready && collider_ready) begin // preempt next transition
+                clocked_ram_din <= {rho, u_squared, u_x, u_y};
                 // ram_wen <= 1;
-                read_count <= read_count + 1; // we write 64 bits to ram
+                read_count <= 1; // we write 64 bits to ram
             end
+
+            if(current_state == WAIT_READY && m00_axis_tready) begin // preempt next transition
+                write_count <= 2;
+            end
+
             
         end
 
@@ -116,16 +122,16 @@
            end 
 
             WAIT_READY : begin
-                if(in_collision_state && !m00_axis_tready)
+                if(in_collision_state)
                     next_state = FILL_DATA;
-                else if(m00_axis_tready)
+                else if(m00_axis_tready && !in_collision_state)
                     next_state = SEND;
                 else 
                     next_state = WAIT_READY;
             end
 
             SEND : begin
-                if(write_count == DEPTH) // not minus 1 
+                if(write_count == DEPTH+1) // not minus 1 
                     next_state = FILL_DATA;
                 else
                     next_state = SEND;
@@ -142,17 +148,35 @@
         tvalid = 0;
         tlast = 0;
         ram_wen = 0;
+        ram_addr = 0;
+        ram_din = clocked_ram_din; // ram DIN from FF logic
         if(current_state == FILL_DATA && !in_collision_state) begin
             tvalid = 0; // not ready until we transistion and the RAM data comes out
             ram_addr = read_count;
             ram_wen = 0;
+        end
+        if(current_state == FILL_DATA && in_collision_state) begin
+            ram_din = {rho,u_squared,u_x,u_y};
+            ram_addr = read_count;
+            ram_wen = 1;
         end
 
         if(current_state == WAIT_READY) begin // by now the value will be available from RAM
             tvalid = 1;
         end
 
-        if(current_state == SEND && write_count == DEPTH) begin
+        if(current_state == WAIT_READY && in_collision_state) begin
+            tvalid = 0;
+            ram_addr = 0;
+            ram_din = {rho,u_squared,u_x,u_y};
+            ram_wen = 1;
+        end
+        if(current_state == WAIT_READY && m00_axis_tready && !in_collision_state) begin
+            ram_addr = 1;
+            ram_wen = 0;
+        end
+
+        if(current_state == SEND && write_count == DEPTH+1) begin
             tlast = 1;
         end 
 
@@ -160,14 +184,7 @@
             ram_addr = write_count;
         end
 
-        if(current_state == WAIT_READY && in_collision_state) begin
-            tvalid = 0;
-            ram_wen = 1;
-        end
-        if(current_state == WAIT_READY && m00_axis_tready) begin
-            ram_addr = 1;
-            ram_wen = 0;
-        end
+        
 
     end
 	// User logic ends
