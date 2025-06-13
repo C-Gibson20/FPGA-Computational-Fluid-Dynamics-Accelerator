@@ -7,7 +7,7 @@ protected:
 
     void initializeInputs() override {
         top->clk = 1;
-        top->rst = 1;
+        top->rst = 0;
         top->en  = 1;
         top->step = 1000;
         top->omega = 0x4000;
@@ -26,7 +26,7 @@ protected:
 TEST_F(TopPipelinedTestbench, Wavebb) {
     runSimulation(2);
     top->rst = 1;
-    runSimulation(110 000);
+    runSimulation(75000);
 }
 
 int main(int argc, char **argv) {
