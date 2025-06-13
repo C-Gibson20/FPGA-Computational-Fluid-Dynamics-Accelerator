@@ -10,6 +10,7 @@ protected:
         collider = top.get();
         collider->omega = 0x4000;
         collider->rst = 1;
+        collider->en = 1;
     }
 
     void loadEquilibriumValues() {
