@@ -1,7 +1,7 @@
 
 `timescale 1 ns / 1 ps
 
-	module Solver_DMA_Master #
+	module Solver_DMA_MasterX #
 	(
 		// Users to add parameters here
         parameter  DATA_WIDTH                = 16,
@@ -89,22 +89,26 @@
                 end
             end
 
-            if(current_state == WAIT_READY) begin
-                if(write_count <= DEPTH && m00_axis_tready) begin
+            if(current_state == SEND) begin
+                if(write_count <= DEPTH) begin
                     write_count <= write_count + 1;
-                end
-                else if(write_count <= DEPTH && !m00_axis_tready) begin
-                    write_count <= write_count;
-                end
-                else if(write_count == 0 && in_collision_state) begin
-                    read_count <= 1;
-                    write_count <= 0;
                 end
                 else begin
                     write_count <= 0;
                 end
             end
 
+            if(current_state == WAIT_READY && in_collision_state && !m00_axis_tready && collider_ready) begin // preempt next transition
+                clocked_ram_din <= {rho, u_squared, u_x, u_y};
+                // ram_wen <= 1;
+                read_count <= 1; // we write 64 bits to ram
+            end
+
+            if(current_state == WAIT_READY && m00_axis_tready) begin // preempt next transition
+                write_count <= 2;
+            end
+
+            
         end
 
     end
@@ -119,13 +123,22 @@
            end 
 
             WAIT_READY : begin
-                if(write_count == DEPTH + 1|| (write_count==0 && in_collision_state)) begin
-                // allow transition back if a transmission hasn't been started 
+                if(write_count == DEPTH) 
                     next_state = FILL_DATA;
-                end
-                else
-                    next_state = WAIT_READY;
+                // if(in_collision_state)
+                    // next_state = FILL_DATA;
+                // else if(m00_axis_tready && !in_collision_state)
+                //     next_state = SEND;
+                // else 
+                //     next_state = WAIT_READY;
             end
+
+            // SEND : begin
+            //     if(write_count == DEPTH+1) // not minus 1 
+            //         next_state = FILL_DATA;
+            //     else
+            //         next_state = SEND;
+            // end
 
             default: 
                 next_state = FILL_DATA;
@@ -153,23 +166,27 @@
 
         if(current_state == WAIT_READY) begin // by now the value will be available from RAM
             tvalid = 1;
-            ram_addr = write_count;
         end
 
+        if(current_state == WAIT_READY && in_collision_state) begin
+            tvalid = 0;
+            ram_addr = 0;
+            ram_din = {rho,u_squared,u_x,u_y};
+            ram_wen = 1;
+        end
         if(current_state == WAIT_READY && m00_axis_tready && !in_collision_state) begin
-            ram_addr = write_count;
+            ram_addr = 1;
             ram_wen = 0;
         end
 
-        if(current_state == WAIT_READY && (write_count==0 && in_collision_state)) begin
-            tvalid = 0;
-            ram_wen = 1;
-            ram_addr = 0;
-            ram_din = {rho,u_squared,u_x,u_y};
+        if(current_state == SEND && write_count == DEPTH+1) begin
+            tlast = 1;
+        end 
+
+        if(current_state == SEND) begin
+            ram_addr = write_count;
         end
 
-        if(current_state == WAIT_READY && write_count == DEPTH+1)
-            tlast = 1;
         
 
     end

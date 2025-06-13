@@ -26,7 +26,7 @@ protected:
 TEST_F(TopPipelinedTestbench, Wavebb) {
     runSimulation(2);
     top->rst = 1;
-    runSimulation(75000);
+    runSimulation(25000);
 }
 
 int main(int argc, char **argv) {

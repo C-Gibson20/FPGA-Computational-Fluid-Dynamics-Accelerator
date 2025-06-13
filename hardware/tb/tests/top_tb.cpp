@@ -84,7 +84,7 @@ TEST_F(TopTestbench, Equilibrium) {
 }
 
 TEST_F(TopTestbench, Wave) {
-    runSimulation(25000);
+    runSimulation(22000);
 }
 
 int main(int argc, char **argv) {
