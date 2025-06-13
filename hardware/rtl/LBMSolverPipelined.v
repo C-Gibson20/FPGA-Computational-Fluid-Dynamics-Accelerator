@@ -161,8 +161,6 @@ module LBMSolverPipelined (
     input wire [`DATA_WIDTH-1:0]        init_cw,
     input wire [`DATA_WIDTH-1:0]        init_cnw,
 
-    
-
     // collider results
     output wire [`DATA_WIDTH-1:0] u_x, 
     output wire [`DATA_WIDTH-1:0] u_y, 
@@ -189,13 +187,13 @@ module LBMSolverPipelined (
     localparam COLLIDE          = 4'd8;
     localparam MEM_RESET        = 4'd9;
     
-    reg [15:0] width_count, next_width_count;
+    reg [15:0] width_count, next_width_count, newval_width_count;
     reg [3:0] sim_state, next_sim_state;
-    reg [`ADDRESS_WIDTH-1:0] index, next_index;
+    reg [`ADDRESS_WIDTH-1:0] index, next_index, newval_index;
     
     // collider flags
     wire c_busy;
-    wire nv_ready;
+    wire newval_ready;
     wire v_d_ready;
         
     reg [`DATA_WIDTH-1:0] c0_next_data_in;
@@ -248,7 +246,7 @@ module LBMSolverPipelined (
     // Add 1 cycle delay for RAM reads - Nishant
     // note to self: cx and cx_n are driven by the same ADDR, DIN ports. just called cx
 
-    assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0);
+    assign collider_ready = newval_ready && (sim_state == COLLIDE) && (ram_wait_count == 0);
     assign in_collision_state = (sim_state == COLLIDE);
     assign step_countn = step_count;
 
@@ -257,6 +255,8 @@ module LBMSolverPipelined (
         .clk(clk),
         .rst(rst),
         .en(collider_en),
+        .collider_index(index),
+        .collider_width_count(width_count),
         .omega(omega),
         .f_null(c0_n_data_out),
         .f_n(cn_n_data_out),
@@ -276,12 +276,14 @@ module LBMSolverPipelined (
         .f_new_sw(c_csw),
         .f_new_w(c_cw),
         .f_new_nw(c_cnw),
-        .collider_busy(c_busy),
-        .newval_ready(nv_ready),
         .u_x(u_x),
         .u_y(u_y),
         .rho(rho),
-        .u_squared(u_squared)
+        .u_squared(u_squared),
+        .collider_busy(c_busy),
+        .newval_ready(newval_ready),
+        .newval_width_count(newval_width_count),
+        .newval_index(newval_index)
     );
 
     //Update stream state
@@ -772,75 +774,67 @@ module LBMSolverPipelined (
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                end
-                else if(nv_ready) 
+                if(newval_ready) 
                     begin
-                        if(index == `DEPTH-1) 
-                        begin
+                        if(newval_index >= `WIDTH && newval_index <= `DEPTH-`WIDTH-1 && newval_width_count != 0 && newval_width_count != `WIDTH-1) begin // only do for inside the margin
+                            c0_next_write_addr = newval_index;
+                            c0_next_write_en = 1'b1;
+                            c0_next_data_in = (barriers[newval_index] == 1) ? 0 : c_c0;
+
+                            cn_next_write_addr = newval_index;
+                            cn_next_write_en = 1'b1;
+                            cn_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cn;
+
+                            cne_next_write_addr = newval_index;
+                            cne_next_write_en = 1'b1;
+                            cne_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cne;
+
+                            ce_next_write_addr = newval_index;
+                            ce_next_write_en = 1'b1;
+                            ce_next_data_in = (barriers[newval_index] == 1) ? 0 : c_ce;
+
+                            cse_next_write_addr = newval_index;
+                            cse_next_write_en = 1'b1;
+                            cse_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cse;
+
+                            cs_next_write_addr = newval_index;
+                            cs_next_write_en = 1'b1;
+                            cs_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cs;
+
+                            csw_next_write_addr = newval_index;
+                            csw_next_write_en = 1'b1;
+                            csw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_csw;
+
+                            cw_next_write_addr = newval_index;
+                            cw_next_write_en = 1'b1;
+                            cw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cw;
+
+                            cnw_next_write_addr = newval_index;
+                            cnw_next_write_en = 1'b1;
+                            cnw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
+                        end
+
+                        if(newval_index == `DEPTH-1) begin
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = IDLE;
                             incr_step = 1;
-                            // next_ram_wait_count = 2;
-                            // next_step_count = step_count + 1;
-                        end
-                        else
-                        begin
-                            next_index = index + 1;
-                            next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                            next_sim_state = COLLIDE;
-                            next_ram_wait_count = `RAM_READ_WAIT;
-                        end
-
-                        if(index >= `WIDTH && index <= `DEPTH-`WIDTH-1 && width_count != 0 && width_count != `WIDTH-1) begin // only do for inside the margin
-                            c0_next_write_addr = index;
-                            c0_next_write_en = 1'b1;
-                            c0_next_data_in = (barriers[index] == 1) ? 0 : c_c0;
-
-                            cn_next_write_addr = index;
-                            cn_next_write_en = 1'b1;
-                            cn_next_data_in = (barriers[index] == 1) ? 0 : c_cn;
-
-                            cne_next_write_addr = index;
-                            cne_next_write_en = 1'b1;
-                            cne_next_data_in = (barriers[index] == 1) ? 0 : c_cne;
-
-                            ce_next_write_addr = index;
-                            ce_next_write_en = 1'b1;
-                            ce_next_data_in = (barriers[index] == 1) ? 0 : c_ce;
-
-                            cse_next_write_addr = index;
-                            cse_next_write_en = 1'b1;
-                            cse_next_data_in = (barriers[index] == 1) ? 0 : c_cse;
-
-                            cs_next_write_addr = index;
-                            cs_next_write_en = 1'b1;
-                            cs_next_data_in = (barriers[index] == 1) ? 0 : c_cs;
-
-                            csw_next_write_addr = index;
-                            csw_next_write_en = 1'b1;
-                            csw_next_data_in = (barriers[index] == 1) ? 0 : c_csw;
-
-                            cw_next_write_addr = index;
-                            cw_next_write_en = 1'b1;
-                            cw_next_data_in = (barriers[index] == 1) ? 0 : c_cw;
-
-                            cnw_next_write_addr = index;
-                            cnw_next_write_en = 1'b1;
-                            cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
+                            collider_en = 0;
                         end
                     end
-                else begin
-                    collider_en = 1;
+                else if (ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
                     next_sim_state = COLLIDE;
                     next_index = index;
                     next_width_count = width_count;
+                    collider_en = 0;
+                end
+                else begin // ram_wait_count == 0
+                        next_index = index + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                        next_sim_state = COLLIDE;
+                        next_ram_wait_count = `RAM_READ_WAIT;
+                        collider_en = 1;
                 end
             end
 
