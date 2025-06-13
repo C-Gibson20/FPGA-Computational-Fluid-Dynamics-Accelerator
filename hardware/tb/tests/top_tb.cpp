@@ -83,6 +83,10 @@ TEST_F(TopTestbench, Equilibrium) {
     EXPECT_EQ(top->testing_c0_data_in,0x0E38);
 }
 
+TEST_F(TopTestbench, Wave) {
+    runSimulation(25000);
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

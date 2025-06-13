@@ -1,9 +1,14 @@
 `timescale 1ns / 1ps
+
+`include "def.vh" 
+
 `define DECLARE(stage) \
     reg signed [15:0] omega_``stage``, rho_``stage``, u_x_``stage``, u_y_``stage``, u_squared_``stage``; \
     reg signed [15:0] f_null_``stage``, f_n_``stage``, f_ne_``stage``, f_e_``stage``, f_se_``stage``; \
     reg signed [15:0] f_s_``stage``, f_sw_``stage``, f_w_``stage``, f_nw_``stage``; \
-    reg newval_ready_``stage``;
+    reg newval_ready_``stage``; \
+    reg [`ADDRESS_WIDTH-1:0] collider_index_``stage``; \
+    reg [15:0] collider_width_count_``stage``;
 
 
 `define PIPE(src, dst) \
@@ -22,6 +27,8 @@
     f_w_``dst``    <= f_w_``src``;    \
     f_nw_``dst``   <= f_nw_``src``;   \
     newval_ready_``dst`` <= newval_ready_``src``; \
+    collider_index_``dst`` <= collider_index_``src``; \
+    collider_width_count_``dst`` <= collider_width_count_``src``;
 
 `define RESET(stage) \
     omega_``stage`` <= 0; \
@@ -38,12 +45,16 @@
     f_sw_``stage`` <= 0; \
     f_w_``stage`` <= 0; \
     f_nw_``stage`` <= 0; \
-    newval_ready_``stage``<=0;
+    newval_ready_``stage``<=0;\
+    collider_index_``stage``<=0;\
+    collider_width_count_``stage``<=0;
 
 module colliderPipelined(
     input  wire clk,
     input  wire rst,
     input wire en,
+    input wire [`ADDRESS_WIDTH-1:0] collider_index,
+    input wire [15:0] collider_width_count,
 
     input  wire signed [15:0] omega, // 1/tau
     input  wire signed [15:0] f_null, f_n, f_ne, f_e, f_se, f_s, f_sw, f_w, f_nw,
@@ -51,7 +62,9 @@ module colliderPipelined(
     output reg signed [15:0] f_new_null, f_new_n, f_new_ne, f_new_e, f_new_se, f_new_s, f_new_sw, f_new_w, f_new_nw,
     output reg signed [15:0] u_x, u_y, rho, u_squared,
     output wire collider_busy,
-    output reg newval_ready
+    output reg newval_ready,
+    output reg [`ADDRESS_WIDTH-1:0] newval_index,
+    output reg [15:0] newval_width_count
 );
 
 assign collider_busy = 1'b1;
@@ -85,6 +98,8 @@ always @(posedge clk or negedge rst) begin
         f_null_s0 <= f_null; f_n_s0 <= f_n; f_ne_s0 <= f_ne; f_e_s0 <= f_e;
         f_se_s0   <= f_se;   f_s_s0 <= f_s; f_sw_s0 <= f_sw; f_w_s0 <= f_w; f_nw_s0 <= f_nw;
         newval_ready_s0 <= 1;
+        collider_index_s0 <= collider_index;
+        collider_width_count_s0 <= collider_width_count;
     end
 end
 
@@ -96,7 +111,7 @@ end
 reg signed [15:0] rho_u_x_s1, rho_u_y_s1;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s1)
     end else begin
         `PIPE(s0, s1)
@@ -119,7 +134,7 @@ reg signed [15:0] rho_u_x_s2, rho_u_y_s2;
 
 reg signed [31:0] rho_x1_product_s2;
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s2)
     end else begin
         `PIPE(s1, s2)
@@ -139,7 +154,7 @@ reg signed [15:0] rho_u_x_s3, rho_u_y_s3;
 reg signed [31:0] rho_x1_product_s3, x2_product_s3;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s3)
         rho_x1_product_s3 <= 0;
     end else begin
@@ -162,7 +177,7 @@ reg signed [15:0] rho_u_x_s4, rho_u_y_s4;
 reg signed [31:0] rho_x2_product_s4;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s4)
     end else begin
         `PIPE(s3, s4)
@@ -183,7 +198,7 @@ reg signed [15:0] rho_u_x_s5, rho_u_y_s5;
 reg signed [31:0] x3_product_s5;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s5)
     end else begin
         `PIPE(s4, s5)
@@ -202,7 +217,7 @@ end
 reg signed [31:0] u_x_product_s6, u_y_product_s6;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s6)
     end else begin
         `PIPE(s5, s6)
@@ -218,7 +233,7 @@ end
 `DECLARE(s7)
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s7)
     end else begin
         `PIPE(s6, s7)
@@ -239,7 +254,7 @@ end
 reg signed [31:0] u_x_squared_product_s8, u_y_squared_product_s8, x_plus_y_squared_product_s8, x_minus_y_squared_product_s8;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s8)
     end else begin
         `PIPE(s7, s8)
@@ -259,7 +274,7 @@ end
 reg signed [15:0] u_x_squared_s9, u_y_squared_s9, x_plus_y_squared_s9, x_minus_y_squared_s9;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s9)
     end else begin
         `PIPE(s8, s9)
@@ -292,7 +307,7 @@ reg signed [15:0] x_plus_y_s10, x_minus_y_s10, neg_x_plus_y_s10, neg_x_minus_y_s
 reg signed [15:0] x_plus_y_squared_s10, x_minus_y_squared_s10, u_x_squared_s10, u_y_squared_s10;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s10)
     end else begin
         `PIPE(s9, s10)
@@ -318,7 +333,7 @@ end
 reg signed [31:0] three_halves_u_squared_product_s11, three_u_x_product_s11, three_u_y_product_s11, nine_half_u_x_squared_product_s11, nine_half_u_y_squared_product_s11, three_x_plus_y_product_s11, three_neg_x_plus_y_product_s11, three_x_minus_y_product_s11, three_neg_x_minus_y_product_s11, nine_half_x_plus_y_squared_product_s11, nine_half_x_minus_y_squared_product_s11;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s11)
     end else begin
         `PIPE(s10, s11)
@@ -345,7 +360,7 @@ end
 reg signed [15:0] three_halves_u_squared_s12, three_u_x_s12, three_u_y_s12, nine_half_u_x_squared_s12, nine_half_u_y_squared_s12, three_x_plus_y_s12, three_neg_x_plus_y_s12, three_x_minus_y_s12, three_neg_x_minus_y_s12, nine_half_x_plus_y_squared_s12, nine_half_x_minus_y_squared_s12;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s12)
     end else begin
         `PIPE(s11, s12)
@@ -406,7 +421,7 @@ reg signed [15:0] polynomial_n_s13, polynomial_s_s13, polynomial_e_s13, polynomi
 reg signed [15:0] polynomial_ne_s13, polynomial_sw_s13, polynomial_nw_s13, polynomial_se_s13;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s13)
     end else begin
         `PIPE(s12, s13)
@@ -431,7 +446,7 @@ reg signed [31:0] f_eq_n_intermediate_product_s14, f_eq_s_intermediate_product_s
 reg signed [31:0] f_eq_ne_intermediate_product_s14, f_eq_sw_intermediate_product_s14, f_eq_nw_intermediate_product_s14, f_eq_se_intermediate_product_s14;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s14)
     end else begin
         `PIPE(s13, s14)
@@ -457,7 +472,7 @@ reg signed [15:0] f_eq_n_intermediate_s15, f_eq_s_intermediate_s15, f_eq_e_inter
 reg signed [15:0] f_eq_ne_intermediate_s15, f_eq_sw_intermediate_s15, f_eq_nw_intermediate_s15, f_eq_se_intermediate_s15;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s15)
     end else begin
         `PIPE(s14, s15)
@@ -505,7 +520,7 @@ reg signed [31:0] f_eq_n_product_s16, f_eq_s_product_s16, f_eq_e_product_s16, f_
 reg signed [31:0] f_eq_ne_product_s16, f_eq_sw_product_s16, f_eq_nw_product_s16, f_eq_se_product_s16;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s16)
     end else begin
         `PIPE(s15, s16)
@@ -531,7 +546,7 @@ reg signed [15:0] f_eq_n_s17, f_eq_s_s17, f_eq_e_s17, f_eq_w_s17;
 reg signed [15:0] f_eq_ne_s17, f_eq_sw_s17, f_eq_nw_s17, f_eq_se_s17;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s17)
     end else begin
         `PIPE(s16, s17)
@@ -579,7 +594,7 @@ reg signed [31:0] delta_f_n_product_s18, delta_f_ne_product_s18, delta_f_e_produ
 reg signed [31:0] delta_f_s_product_s18, delta_f_sw_product_s18, delta_f_w_product_s18, delta_f_nw_product_s18;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s18)
     end else begin
         `PIPE(s17, s18)
@@ -604,7 +619,7 @@ reg signed [15:0] delta_f_n_s19, delta_f_ne_s19, delta_f_e_s19, delta_f_se_s19;
 reg signed [15:0] delta_f_s_s19, delta_f_sw_s19, delta_f_w_s19, delta_f_nw_s19;
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s19)
     end else begin
         `PIPE(s18, s19)
@@ -647,7 +662,7 @@ end
 // Stage 20:
 // ------------------------
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         newval_ready <= 0;
         u_x        <= 0;
         u_y        <= 0;
@@ -662,8 +677,10 @@ always @(posedge clk or negedge rst) begin
         f_new_sw   <= 0;
         f_new_w    <= 0;
         f_new_nw   <= 0;
-    end else if(en) begin
+    end else begin
         newval_ready <= newval_ready_s19;
+        newval_index <= collider_index_s19;
+        newval_width_count <= collider_width_count_s19;
         u_x        <= u_x_s19;
         u_y        <= u_y_s19;
         rho        <= rho_s19;
