@@ -7,9 +7,16 @@ import numpy as np
 import time
 import win32gui
 import win32con
+import socket
 
-python_win_title = "DrawingApp"
-unity_win_title = "Unit"
+HOST = '192.168.2.99'
+PORT = 9006
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
+python_win_title = "BarrierDrawingApplication"
+unity_win_title = "Fluid_Simulation_Test"
 
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
 pygame.init()
@@ -23,6 +30,8 @@ screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
 font = pygame.font.SysFont('Lato', 30)
 
+pygame.display.set_caption(python_win_title)
+pygame.display.flip() # force window creation
 
 # Wait a moment for windows to be created
 time.sleep(1)
@@ -38,23 +47,33 @@ hwnd_python = find_window(python_win_title)
 hwnd_unity = find_window(unity_win_title)
 
 if hwnd_python != 0 and hwnd_unity != 0:
-    # Set Python window as child of Unity window
+    uw_style = win32gui.GetWindowLong(hwnd_unity, win32con.GWL_STYLE)
+    uw_style |= win32con.WS_CLIPCHILDREN
+    win32gui.SetWindowLong(hwnd_unity, win32con.GWL_STYLE, uw_style)
+    
+    # force Unity to reapply its styles
+    win32gui.SetWindowPos(hwnd_unity, None, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
+
+    # make Pygame window visible and unminimized
+    win32gui.ShowWindow(hwnd_python, win32con.SW_RESTORE)
+    win32gui.UpdateWindow(hwnd_python)
+
+    # make unity parent
     win32gui.SetParent(hwnd_python, hwnd_unity)
 
-    # Resize and position the Python window inside Unity
-    # Adjust these values based on how/where you want it
-    win32gui.MoveWindow(hwnd_python, 100, 100, 800, 800, True)
-
-    # Optional: remove window decorations (title bar, borders) for cleaner embedding
-    style = win32gui.GetWindowLong(hwnd_python, win32con.GWL_STYLE)
-    style = style & ~win32con.WS_CAPTION & ~win32con.WS_THICKFRAME
-    win32gui.SetWindowLong(hwnd_python, win32con.GWL_STYLE, style)
+    # pygame window clipping and visible flags
+    child_style = win32gui.GetWindowLong(hwnd_python, win32con.GWL_STYLE)
+    child_style &= ~(win32con.WS_CAPTION | win32con.WS_THICKFRAME)
+    child_style |= (win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.WS_CLIPSIBLINGS | win32con.WS_CLIPCHILDREN | win32con.WS_TABSTOP)
+    win32gui.SetWindowLong(hwnd_python, win32con.GWL_STYLE, child_style)
+    win32gui.SetWindowPos(hwnd_python, win32con.HWND_TOP, 2980, 1020, 800, 800, win32con.SWP_SHOWWINDOW | win32con.SWP_NOACTIVATE | win32con.SWP_FRAMECHANGED)
+    win32gui.BringWindowToTop(hwnd_python)
 else:
     print("Could not find one or both windows")
 
 #append all classes here
 objects = []
-lines = []
+lines = [{"points": [], "width": 0}]
 current_line = []
 images = []
 polygons = []
@@ -107,6 +126,7 @@ class Button():
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
+        self.width = 160
         self.color = pygame.Color("#ffffff")
         self.text = text
         self.txt_surface = font.render(text, True, self.color)
@@ -123,7 +143,7 @@ class InputBox:
             self.txt_surface = font.render(self.text, True, self.color)
 
     def update(self):
-        self.rect.w = max(200, self.txt_surface.get_width() + 10)
+        self.rect.w = self.width
 
     def draw(self, screen):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -305,41 +325,73 @@ def clear():
     circles.clear()
     rectangles.clear()
 
-#saves image in a flattened 2500 bit array to send to pynq
+
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
 def save():
     file_name_orig = "canvas" + str(int(time.time())) + ".png"
     pygame.image.save(canvas, file_name_orig)
 
-    #downsize image into 50x50
+    # Downsize image and convert to binary
     img = Image.open(file_name_orig).convert("L").resize((50, 50), Image.LANCZOS)
     img.save("50x50img.png")
 
-    #convert image into black and white and convert into binary array
     binary_array = (np.array(img) < 128).astype(np.uint8).flatten()
     packed_bits = np.packbits(binary_array)
 
-    #store 
+    # Store for reference
     file_name_bin = str(int(time.time())) + "_data.bin"
     with open(file_name_bin, "wb") as f:
         f.write(packed_bits.tobytes())
 
+    return packed_bits.tobytes()
+
+def send():
+    data = save()  # Get packed image data
+    for attempt in range(MAX_RETRIES):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                print(f"Attempt {attempt + 1}/{MAX_RETRIES}: Connecting to {HOST}:{PORT}...")
+                s.settimeout(10)
+                s.connect((HOST, PORT))
+                print("Connection established")
+
+                s.sendall(data)
+                print(f"Sent {len(data)} bytes")
+                break  # Success
+        except socket.timeout:
+            print("Connection timed out")
+        except ConnectionRefusedError:
+            print("Connection refused - is the server running?")
+        except Exception as e:
+            print(f"Connection error: {e}")
+        
+        if attempt < MAX_RETRIES - 1:
+            print(f"Retrying in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+    else:
+        print("Failed to connect after retries")
+
+
+
 Button(25, 25, 160, 35, 'Polygon', draw_polygon)
 screen_label = font.render("Insert no of sides", True, (255, 255, 255))
-input_box1 = [InputBox(0, 100, 50, 25)]
+input_box1 = [InputBox(25, 100, 50, 25)]
 
 Button(25, 140, 160, 35, 'Circle', draw_circle)
 screen_label2 = font.render("Radius", True, (255, 255, 255))
-input_box2 = [InputBox(0, 210, 10, 25)]
+input_box2 = [InputBox(25, 210, 10, 25)]
 
-for i, (btn_name, func) in enumerate([('Save', save), ('Clear', clear)]):
+for i, (btn_name, func) in enumerate([('Save', send), ('Clear', clear)]):
     Button(25, 250 + i * 60, 160, 35, btn_name, func)
 
 Button(25, 370, 160, 35, 'Rectangle', draw_rectangle)
 screen_label3 = font.render("Width", True, (255, 255, 255))
-input_box3 = [InputBox(0, 440, 10, 25)]
+input_box3 = [InputBox(25, 440, 10, 25)]
 
 screen_label4 = font.render("Height", True, (255, 255, 255))
-input_box4 = [InputBox(0, 510, 10, 25)]
+input_box4 = [InputBox(25, 510, 10, 25)]
 
 slider = Slider((25, 580))
 canvas = pygame.Surface(canvasSize)
@@ -352,8 +404,8 @@ while True:
     canvas.fill((255, 255, 255))
     for poly in polygons: poly.draw(canvas)
     for line in lines:
-        if len(line) >= 2:
-            pygame.draw.lines(canvas, drawColor, False, line, brushSize)
+        if len(line["points"]) >= 2:
+            pygame.draw.lines(canvas, drawColor, False, line["points"], line["width"])
     if len(current_line) >= 2:
         pygame.draw.lines(canvas, drawColor, False, current_line, brushSize)
     for img in images:
@@ -394,7 +446,8 @@ while True:
                         break
 
         if event.type == pygame.MOUSEBUTTONUP:
-            if len(current_line) > 1: lines.append(current_line)
+            if len(current_line) > 1: lines.append({"points": current_line[:], "width": brushSize})
+            
             current_line, selected_vertex, selected_polygon = [], None, None
             for img in images: img.stop_drag()
             for rect in rectangles: rect.stop_drag()
@@ -450,6 +503,7 @@ while True:
             dx, dy = mx - buttonAreaWidth, my
             if not current_line or math.hypot(dx - current_line[-1][0], dy - current_line[-1][1]) > brushSize / 2:
                 current_line.append((dx, dy))
+                circles.append(Circle((dx, dy), (brushSize * 0.95)//2))
 
     if selected_polygon and selected_vertex is not None:
         mx, my = pygame.mouse.get_pos()
