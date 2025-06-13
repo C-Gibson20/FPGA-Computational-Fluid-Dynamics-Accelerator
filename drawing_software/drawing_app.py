@@ -5,8 +5,8 @@ import math
 from PIL import Image
 import numpy as np
 import time
-import win32gui
-import win32con
+# import win32gui
+# import win32con
 import socket
 
 HOST = '192.168.2.99'
