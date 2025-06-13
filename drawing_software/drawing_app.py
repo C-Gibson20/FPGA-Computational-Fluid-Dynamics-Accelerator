@@ -10,7 +10,7 @@ import win32con
 import socket
 
 HOST = '192.168.2.99'
-PORT = 9006
+PORT = 9005
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -346,6 +346,34 @@ def save():
         f.write(packed_bits.tobytes())
 
     return packed_bits.tobytes()
+
+def send():
+    data = save()  # Get packed image data
+    for attempt in range(MAX_RETRIES):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                print(f"Attempt {attempt + 1}/{MAX_RETRIES}: Connecting to {HOST}:{PORT}...")
+                s.settimeout(10)
+                s.connect((HOST, PORT))
+                print("Connection established")
+
+                s.sendall(data)
+                print(f"Sent {len(data)} bytes")
+                break  # Success
+        except socket.timeout:
+            print("Connection timed out")
+        except ConnectionRefusedError:
+            print("Connection refused - is the server running?")
+        except Exception as e:
+            print(f"Connection error: {e}")
+        
+        if attempt < MAX_RETRIES - 1:
+            print(f"Retrying in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+    else:
+        print("Failed to connect after retries")
+
+    return data.tobytes()
 
 def send():
     data = save()  # Get packed image data
