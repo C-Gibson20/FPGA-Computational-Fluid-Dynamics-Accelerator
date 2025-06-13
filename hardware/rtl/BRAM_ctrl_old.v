@@ -1,7 +1,3 @@
-// once fill data is high keep reading zero
-// then when m00_axis_tready is high send the zero data bit
-// begin read request cycle
-
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: me
@@ -28,9 +24,10 @@ module BRAM_ctrl#(
     parameter  DATA_WIDTH                = 16,
     parameter  DEPTH                     = 2500,
     parameter  ADDRESS_WIDTH             = 12
-    //parameter  C_m00_axis_tdata_WIDTH    = 144
 )(
+    input wire clk,
     input wire frame_ready,
+    input wire rst,
     //take data of all 9 directions for each pixel at a time
     input wire [15:0] n1,
     input wire [15:0] null1,
@@ -41,18 +38,12 @@ module BRAM_ctrl#(
     input wire [15:0] sw1,
     input wire [15:0] w1,
     input wire [15:0] nw1,
-    
+    output reg [143:0] pixel_data,
     // AXI flags
+    input wire tready,
     output reg [11:0] read_addr,
-
-    // Ports of Axi Master Bus Interface M00_AXIS
-    input wire  m00_axis_aclk,
-    input wire  m00_axis_aresetn,
-    output wire  m00_axis_tvalid,
-    output reg [144-1 : 0] m00_axis_tdata,
-    output wire [(144/8)-1 : 0] m00_axis_tstrb,
-    output wire  m00_axis_tlast,
-    input wire  m00_axis_tready
+    output reg tvalid, tlast,
+    output reg [31:0] tkeep
 );
     
     //iterate through all 2500 pixels
@@ -60,25 +51,30 @@ module BRAM_ctrl#(
     reg [1:0] current_state;
     reg [1:0] next_state;
     reg [5:0] count;
-    reg was_reset;
 
     //states
     localparam FILL_DATA    = 2'd0;
     localparam IDLE         = 2'd1;
     localparam SEND         = 2'd2;
 
-    assign m00_axis_tstrb = {18{1'b1}};
+    always @(posedge clk) begin
+        if(rst || frame_ready) begin
+            read_addr <= 0;
+            output_data <= 0;
+            tvalid <= 0;
+            tlast <= 0;
+            tkeep <= 0;
+            count <= 0;
 
-    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
-        if (m00_axis_aresetn) begin
-            current_state <= IDLE;
-            was_reset <= 1;
-        end
+            if (frame_ready) begin
+                current_state <= FILL_DATA;
+            end else begin
+                current_state <= IDLE;
+            end
+        end 
         else begin
             current_state <= next_state;
-            was_reset <= 0;
         end
-
     end
 ////////////////////////////////////////////////////////////////////////////
 
@@ -86,20 +82,32 @@ module BRAM_ctrl#(
     always @* begin
        case(current_state)
         IDLE: begin
-            read_addr = (was_reset) ? 0 : read_addr;
-            m00_axis_tlast = (was_reset) ? 0 : read_addr;
-            m00_axis_tvalid = (was_reset) ? 0 : read_addr;
+            tvalid = 0;
+            tlast = 0;
         end
        
         FILL_DATA: begin
-            m00_axis_tvalid = 0;
+            // fill one pixel
+            output_data = {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
+            tvalid = 0;
+            tlast = 1;
+            tkeep = 32'hFFFFFFFF;
         end
         
         SEND: begin
-            m00_axis_tlast = (read_addr == DEPTH - 1);
+            tvalid = 1;
+            pixel_data = output_data;
+            tvalid = 0;
+            if (read_addr == DEPTH - 1) begin
+                read_addr = 0;
+            end
+            else begin
+                read_addr += 1;
+            end
         end
-
         default: begin
+            tvalid = 0;
+            tlast = 0;
         end
        endcase
     end
@@ -111,43 +119,32 @@ module BRAM_ctrl#(
     always @* begin
         case(current_state)
         IDLE: begin
-            if (m00_axis_tready && read_addr > 0) next_state = SEND;
-            else if (frame_ready && read_addr == 0) next_state = FILL_DATA;
-            else next_state = IDLE;
+            if(tready)
+                next_state = SEND;
+            else if (frame_ready)
+                next_state = FILL_DATA;
+                read_addr = 12'b0;
         end
-
         FILL_DATA: begin
             next_state = IDLE;
+            // if(count = 5'b1)
+            //     next_state = IDLE;
+            // else
+            //     next_state = FILL_DATA;
         end
-        
         SEND: begin
-            next_state = (m00_axis_tlast) ? IDLE : FILL_DATA;
+            //someone check what tlast is again pls
+            next_state = (tlast) ? FILL_DATA : SEND;
+            // if (tlast)
+            //     next_state = FILL_DATA;
+            // else
+            //     next_state = SEND;
         end
-        
         default: begin
-            next_state = IDLE;
+            tvalid = 0;
+            tlast = 0;
         end
     endcase
     end
-
-/////////////////////////////////////////////////////////////////
-
-    // state logic
-    always @* begin
-        case(current_state)
-        FILL_DATA: begin
-            output_data = {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
-        end
-        
-        SEND: begin
-            read_addr += 1;
-            m00_axis_tdata = output_data;
-        end
-        
-        default: ;
-    endcase
-    end
-
-
 
 endmodule
