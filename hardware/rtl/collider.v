@@ -67,63 +67,25 @@ wire signed [15:0] rho_ux = (f_e - f_w + f_ne - f_sw - f_nw + f_se);
 wire signed [15:0] rho_uy = (f_n - f_s + f_ne - f_sw + f_nw - f_se);
 
 // Newton-Raphson Reciprocal Approximation (3 iteration) 
-// assuming 0.85 << rho << 1.15
+// assuming 0.85 << rho << 1.15, xn ≈ 1 / rho
+// Initial guess: x0 = 1.0 in Q3.13
 // x0 = 1
 // x1 = x0 * (2 - rho * x0)
-// wher x0 ≈ 1 / rho
-
-// Initial guess: x0 = 1.0 in Q3.13
-//x1 iteration
 // wire signed [15:0] x1 = two - rho;
 
 //x2 iteration
-wire signed [15:0] rho_x1 = multiply(rho, two - rho);
-// wire signed [31:0] rho_x1_product = (rho * (two - rho)) + round;
-// wire signed [15:0] rho_x1_shifted = rho_x1_product >>> 13;
-// wire signed [15:0] rho_x1 = (rho_x1_product > 32'sh10000000) ? 16'sh7FFF :
-//                             (rho_x1_product < 32'shf0000000) ? 16'sh8000 :
-//                             rho_x1_shifted;
-
-wire signed [15:0] x2 = multiply(two - rho, two - rho_x1);
-// wire signed [31:0] x2_product = ((two - rho) * (two - rho_x1)) + round;
-// wire signed [15:0] x2_shifted = x2_product >>> 13;
-
-// wire signed [15:0] x2 = (x2_product > 32'sh10000000) ? 16'sh7FFF :
-//                         (x2_product < 32'shf0000000) ? 16'sh8000 :
-//                         x2_shifted;
-
+wire signed [31:0] rho_x1_product = rho * (two - rho); 
+wire signed [15:0] rho_x1 = rho_x1_product >>> 13;
+wire signed [31:0] x2_product = (two - rho) * (two - rho_x1);
+wire signed [15:0] x2 = x2_product >> 13;
 
 //x3 iteration
-// wire signed [15:0] rho_x2 = multiply(rho, x2);
-wire signed [31:0] rho_x2_product = (rho * x2) + round;
-wire signed [15:0] rho_x2_shifted = rho_x2_product >>> 13;
-wire signed [15:0] rho_x2 = (rho_x2_product > 32'sh10000000) ? 16'sh7FFF :
-                            (rho_x2_product < 32'shf0000000) ? 16'sh8000 :
-                            rho_x2_shifted;
-
-wire signed [15:0] x3 = multiply(x2, (two - rho_x2));
-// wire signed [31:0] x3_product = (x2 * (two - rho_x2)) + round;
-// wire signed [15:0] x3_shifted = x3_product >>> 13;
-// wire signed [15:0] x3 = (x3_product > 32'sh10000000) ? 16'sh7FFF :
-//                         (x3_product < 32'shf0000000) ? 16'sh8000 :
-//                         x3_shifted;
-
-
-// ----- u_x -----
-wire signed [31:0] u_x_product = (rho_ux * x3) + round;
-wire signed [15:0] u_x_shifted = u_x_product >>> 13;
-
-assign u_x = (u_x_product > 32'sh10000000) ? 16'sh7FFF :
-             (u_x_product < 32'shf0000000) ? 16'sh8000 :
-             u_x_shifted;
-
-// ----- u_y -----
-wire signed [31:0] u_y_product = (rho_uy * x3) + round;
-wire signed [15:0] u_y_shifted = u_y_product >>> 13;
-
-assign u_y = (u_y_product > 32'sh10000000) ? 16'sh7FFF :
-             (u_y_product < 32'shf0000000) ? 16'sh8000 :
-             u_y_shifted;
+wire signed [31:0] rho_x2_product = rho * x2;
+wire signed [15:0] rho_x2 = rho_x2_product >> 13;
+wire signed [31:0] x3_product = x2 * (two - rho_x2);
+wire signed [15:0] x3 = x3_product >>> 13;
+assign u_x = multiply(rho_ux, x3);
+assign u_y = multiply(rho_uy, x3);
 
 
 // ----------------------------------------------------------------------------------
@@ -161,11 +123,7 @@ wire signed [15:0] polynomial_sw = one + three_neg_x_plus_y + nine_half_x_plus_y
 wire signed [15:0] polynomial_nw = one + three_neg_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 wire signed [15:0] polynomial_se = one + three_x_minus_y + nine_half_x_minus_y_squared - three_halves_u_squared;
 
-wire signed [31:0] f_eq_n_intermediate_product = (w_side * polynomial_n) + round;
-wire signed [15:0] f_eq_n_intermediate_shifted = f_eq_n_intermediate_product >>> 13;
-wire signed [15:0] f_eq_n_intermediate = (f_eq_n_intermediate_product > 32'sh10000000) ? 16'sh7FFF :
-                                         (f_eq_n_intermediate_product < 32'shf0000000) ? 16'sh8000 :
-                                         f_eq_n_intermediate_shifted;
+wire signed [15:0] f_eq_n_intermediate = multiply(w_side, polynomial_n);
 wire signed [15:0] f_eq_s_intermediate = multiply(w_side, polynomial_s);
 wire signed [15:0] f_eq_e_intermediate = multiply(w_side, polynomial_e);
 wire signed [15:0] f_eq_w_intermediate = multiply(w_side, polynomial_w);
@@ -174,11 +132,7 @@ wire signed [15:0] f_eq_sw_intermediate = multiply(w_diag, polynomial_sw);
 wire signed [15:0] f_eq_nw_intermediate = multiply(w_diag, polynomial_nw);
 wire signed [15:0] f_eq_se_intermediate = multiply(w_diag, polynomial_se);
 
-wire signed [31:0] f_eq_n_product   = (rho * f_eq_n_intermediate) + round;
-wire signed [15:0] f_eq_n_shifted   = f_eq_n_product >>> 13;
-wire signed [15:0] f_eq_n           = (f_eq_n_product > 32'sh10000000) ? 16'sh7FFF :
-                                      (f_eq_n_product < 32'shf0000000) ? 16'sh8000 :
-                                      f_eq_n_shifted;
+wire signed [15:0] f_eq_n = multiply(rho, f_eq_n_intermediate);
 wire signed [15:0] f_eq_s = multiply(rho, f_eq_s_intermediate);
 wire signed [15:0] f_eq_e = multiply(rho, f_eq_e_intermediate);
 wire signed [15:0] f_eq_w = multiply(rho, f_eq_w_intermediate);
@@ -193,7 +147,6 @@ wire signed [15:0] f_eq_se = multiply(rho, f_eq_se_intermediate);
 // ----------------------------------------------------------------------------------
 
 // Intermediate deltas
-// wire signed [31:0] delta_f_null = omega * (f_eq_null - f_null);
 wire signed [15:0] delta_f_n    = multiply(omega, f_eq_n - f_n);
 wire signed [15:0] delta_f_ne   = multiply(omega, f_eq_ne - f_ne);
 wire signed [15:0] delta_f_e    = multiply(omega, f_eq_e - f_e);
