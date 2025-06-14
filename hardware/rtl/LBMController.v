@@ -819,7 +819,7 @@ module LBMController (
             begin
                 if(ram_wait_count > 0) begin
                     next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = BOUNCE_READ;
+                    next_sim_state = STREAM_READ;
                     next_index = index;
                     next_width_count = width_count;
                 end
