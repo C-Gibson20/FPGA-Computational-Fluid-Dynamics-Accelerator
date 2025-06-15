@@ -36,9 +36,9 @@ protected:
 
 };
 
-TEST_F(DDRPixelOutTop, TestDataLoad) {
-    runSimulation(1);
-    runSimulation(100);
+TEST_F(DMATB, TestDataLoad) {
+    runSimulation(10);
+    
 }
 
 int main(int argc, char **argv) {

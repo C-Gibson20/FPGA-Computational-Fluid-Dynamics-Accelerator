@@ -30,7 +30,7 @@ module DDR_pixel_out #(
     parameter ADDRESS_WIDTH = 12
     // parameter C_m00_axis_tdata_WIDTH = 144
 )(
-    // Pixel direction outputs (9 total)
+    //take data of all 9 directions for each pixel at a time
     output reg [15:0] n1,
     output reg [15:0] null1,
     output reg [15:0] ne1,
@@ -40,9 +40,8 @@ module DDR_pixel_out #(
     output reg [15:0] sw1,
     output reg [15:0] w1,
     output reg [15:0] nw1,
-
-    // BRAM read address output
-    output reg [ADDRESS_WIDTH-1:0] read_addr,
+    
+    output reg [11:0] read_addr,
 
     // AXI-Stream interface (M00_AXIS)
     input  wire                  m00_axis_aclk,

@@ -1,0 +1,46 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Sat Jun 14 11:01:13 2025
+[*]
+[dumpfile] "/home/unixshant/Y2Code/EE2Project/verilog/DreamTeam-Math-Accelerator/hardware/tb/waveform.vcd"
+[dumpfile_mtime] "Fri Jun 13 19:55:58 2025"
+[dumpfile_size] 136764
+[savefile] "/home/unixshant/Y2Code/EE2Project/verilog/DreamTeam-Math-Accelerator/hardware/tb/wavecfg/dma test 2.gtkw"
+[timestart] 0
+[size] 1908 1047
+[pos] 1919 110
+*-2.000000 4 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.Solver_DMA_Top.
+[sst_width] 214
+[signals_width] 216
+[sst_expanded] 1
+[sst_vpaned_height] 309
+@28
+TOP.Solver_DMA_Top.solver_dma_master_inst.m00_axis_aclk
+TOP.Solver_DMA_Top.solver_dma_master_inst.in_collision_state
+@22
+TOP.Solver_DMA_Top.solver_dma_master_inst.rho[15:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.u_squared[15:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.u_x[15:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.u_y[15:0]
+@28
+TOP.Solver_DMA_Top.solver_dma_master_inst.m00_axis_tready
+TOP.Solver_DMA_Top.solver_dma_master_inst.m00_axis_tvalid
+@22
+TOP.Solver_DMA_Top.solver_dma_master_inst.m00_axis_tdata[63:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.ram_dout[63:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.ram_din[63:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.ram_addr[11:0]
+@28
+TOP.Solver_DMA_Top.solver_dma_master_inst.ram_wen
+TOP.Solver_DMA_Top.solver_dma_master_inst.current_state[1:0]
+@22
+TOP.Solver_DMA_Top.solver_dma_master_inst.write_count[12:0]
+TOP.Solver_DMA_Top.solver_dma_master_inst.read_count[11:0]
+@28
+TOP.Solver_DMA_Top.solver_dma_master_inst.tlast
+@29
+TOP.Solver_DMA_Top.solver_dma_master_inst.transfer_in_progress
+[pattern_trace] 1
+[pattern_trace] 0
