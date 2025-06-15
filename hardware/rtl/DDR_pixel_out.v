@@ -24,11 +24,11 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module DDR_pixel_out #(
-    parameter DATA_WIDTH    = 16,
-    parameter DEPTH         = 2500,
-    parameter ADDRESS_WIDTH = 12
-    // parameter C_m00_axis_tdata_WIDTH = 144
+module DDR_pixel_out#(
+    parameter  DATA_WIDTH                = 16,
+    parameter  DEPTH                     = 2500,
+    parameter  ADDRESS_WIDTH             = 12
+    //parameter  C_m00_axis_tdata_WIDTH    = 144
 )(
     //take data of all 9 directions for each pixel at a time
     output reg [15:0] n1,
@@ -41,78 +41,38 @@ module DDR_pixel_out #(
     output reg [15:0] w1,
     output reg [15:0] nw1,
     
-    output reg [11:0] read_addr,
+    output reg [11:0] write_addr,
 
-    // AXI-Stream interface (M00_AXIS)
-    input  wire                  m00_axis_aclk,
-    input  wire                  m00_axis_aresetn,
-    input  wire                  m00_axis_tvalid,
-    input  wire [143:0]          m00_axis_tdata,
-    input  wire                  m00_axis_tlast,
-    output wire                  m00_axis_tready,
-    output reg  [(144/8)-1:0]    m00_axis_tstrb
+    // Ports of Axi Master Bus Interface M00_AXIS
+    input wire  m00_axis_aclk,
+    input wire  m00_axis_aresetn,
+    input wire  m00_axis_tvalid,
+    input wire [144-1 : 0] m00_axis_tdata,
+    input wire [(144/8)-1 : 0] m00_axis_tstrb,
+    input wire  m00_axis_tlast,
+    output reg  m00_axis_tready
 );
-
     
     //iterate through all 2500 pixels
     reg [143:0] input_data;
     reg [1:0] current_state;
     reg [1:0] next_state;
-    reg [11:0] read_addr_count;
 
     //states
-    localparam FILL_DATA    = 2'd0;
-    localparam IDLE         = 2'd1;
+    localparam IDLE     = 2'd0;
+    localparam FILL_DATA        = 2'd1;
     localparam SEND         = 2'd2;
 
-    assign m00_axis_tstrb = {18{1'b1}};
-
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
-        if (m00_axis_aresetn) begin
-            current_state <= FILL_DATA;
-            read_addr_count <= 0;
-        end
-        else begin
-            current_state <= next_state;
-        end
-
-        case(current_state)
-        FILL_DATA: begin
-            input_data <= m00_axis_tdata;
-        end
-        
-        SEND: begin
-            n1      <= input_data[15:0];
-            null1   <= input_data[31:16];
-            ne1     <= input_data[47:32];
-            e1      <= input_data[63:48];
-            se1     <= input_data[79:64];
-            s1      <= input_data[95:80];
-            sw1     <= input_data[111:96];
-            w1      <= input_data[127:112];
-            nw1     <= input_data[143:128];
-            read_addr <= read_addr_count;
-            read_addr_count <= read_addr_count + 1;
-        end
-        
-        default: ;
-    endcase
+        if (!m00_axis_aresetn) current_state <= IDLE;
+        else current_state <= next_state;
     end
+
 ////////////////////////////////////////////////////////////////////////////
 
     //set flags etc here
     always @* begin
-       case(current_state)
-        FILL_DATA: begin
-            m00_axis_tready = 1;
-        end
-        
-        SEND: begin
-            m00_axis_tready = 0;
-        end
-
-        default: ;
-       endcase
+        m00_axis_tready = (current_state == FILL_DATA);
     end
 
 
@@ -120,19 +80,48 @@ module DDR_pixel_out #(
 
     //states
     always @* begin
+        next_state = current_state;
         case(current_state)
-        FILL_DATA: begin
-            // tready is high
-            // tvalid is high
-            next_state = SEND;
-        end
+            IDLE: if (m00_axis_tvalid) next_state = FILL_DATA;
+            
+            FILL_DATA: if (m00_axis_tvalid && m00_axis_tready) next_state = SEND;
         
-        SEND: begin
-            //tready is low
-            next_state = FILL_DATA;
-        end
+            SEND: begin
+                next_state = (m00_axis_tlast) ? IDLE : FILL_DATA;
+            end
         
-        default: ;
-    endcase
+            default: ;
+        endcase
+    end
+
+/////////////////////////////////////////////////////////////////
+
+    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
+        if (!m00_axis_aresetn) begin
+            write_addr <= 0;
+        end   
+        else begin 
+            case(current_state) 
+                IDLE: write_addr <= 0;
+
+                FILL_DATA: if (m00_axis_tvalid) input_data <= m00_axis_tdata;
+
+                SEND: begin
+                    n1      <= input_data[15:0];
+                    null1   <= input_data[31:16];
+                    ne1     <= input_data[47:32];
+                    e1      <= input_data[63:48];
+                    se1     <= input_data[79:64];
+                    s1      <= input_data[95:80];
+                    sw1     <= input_data[111:96];
+                    w1      <= input_data[127:112];
+                    nw1     <= input_data[143:128];
+
+                    write_addr <= write_addr + 1;
+                end
+
+                default: ;
+            endcase
+        end
     end
 endmodule

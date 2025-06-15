@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module BRAM_ctrl#(
+module BRAM_ctrl_nishant#(
     parameter  DATA_WIDTH                = 16,
     parameter  DEPTH                     = 2500,
     parameter  ADDRESS_WIDTH             = 12
@@ -47,106 +47,100 @@ module BRAM_ctrl#(
     // Ports of Axi Master Bus Interface M00_AXIS
     input wire  m00_axis_aclk,
     input wire  m00_axis_aresetn,
+    input wire  m00_axis_tready,
     output reg  m00_axis_tvalid,
-    output reg [144-1 : 0] m00_axis_tdata,
+    output wire [144-1 : 0] m00_axis_tdata,
     output wire [(144/8)-1 : 0] m00_axis_tstrb,
-    output wire  m00_axis_tlast,
-    input wire  m00_axis_tready
+    output reg  m00_axis_tlast
+    
 );
     
     //iterate through all 2500 pixels
     reg [143:0] output_data;
-    reg [1:0] current_state;
-    reg [1:0] next_state;
-    reg [5:0] count;
-    reg was_reset;
+    reg current_state, next_state;
+    reg [ADDRESS_WIDTH-1:0] count;
 
     //states
-    localparam IDLE    = 2'd0;
-    localparam FILL_DATA         = 2'd1;
-    localparam SEND         = 2'd2;
+    localparam IDLE         = 1'd0;
+    localparam READ_WAIT    = 1'd1;
 
     assign m00_axis_tstrb = {18{1'b1}};
 
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (!m00_axis_aresetn) begin
             current_state <= IDLE;
-            was_reset <= 1;
-            read_addr <= 0;
         end
         else begin
             current_state <= next_state;
-            was_reset <= 0;
         end
-
     end
 ////////////////////////////////////////////////////////////////////////////
 
     //set flags etc here
     always @* begin
-       case(current_state)
-        IDLE: begin
-            // // read_addr = (was_reset) ? 0 : read_addr;
-            m00_axis_tlast = (was_reset) ? 0 : read_addr;
-            m00_axis_tvalid = (was_reset) ? 0 : read_addr;
-        end
-       
-        FILL_DATA: begin
-            m00_axis_tvalid = 0;
-        end
-        
-        SEND: begin
-            m00_axis_tlast = (read_addr == DEPTH - 1);
-        end
+        m00_axis_tvalid = 1'b0;
+        m00_axis_tlast = 1'b0;
 
-        default: begin
-        end
-       endcase
     end
-
 
 //////////////////////////////////////////////////////////////////////////////
 
     //states
     always @* begin
-        case(current_state)
-        IDLE: begin
-            if (m00_axis_tready && read_addr > 0) next_state = SEND;
-            else if (frame_ready && read_addr == 0) next_state = FILL_DATA;
-            else next_state = IDLE;
+        next_state = current_state;
+        if(current_state == IDLE) begin
+            if(frame_ready) next_state = READ_WAIT;
         end
 
-        FILL_DATA: begin
-            next_state = IDLE;
+        if(current_state == READ_WAIT) begin
+            // send only if tready is high
+            if(count == DEPTH+1) next_state = IDLE;
+            else next_state = READ_WAIT;
         end
-        
-        SEND: begin
-            next_state = (m00_axis_tlast) ? IDLE : FILL_DATA;
-        end
-        
-        default: begin
-            next_state = IDLE;
-        end
-    endcase
     end
 
 /////////////////////////////////////////////////////////////////
 
-    // state logic
-    always @(posedge m00_axis_aclk) begin
-        case(current_state)
-        FILL_DATA: begin
-            read_addr <= read_addr + 1;
-            output_data <= {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
+    // switching logic
+    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
+
+        if(current_state == IDLE && frame_ready) begin
+            count <= 1; // set count 1 higher to give correct value on state transition
         end
-        
-        SEND: begin
-            // read_addr += 1;
-            m00_axis_tdata <= output_data;
+
+        if(current_state == READ_WAIT) begin
+            // the output data is hardwired to be RAM out
+            // 
+            if(m00_axis_tready) count <= count + 1;
+            if(count == DEPTH+1) count <= 0;
         end
-        
-        default: ;
-    endcase
     end
+
+//////////// output logic ////////////
+
+
+always @* begin
+    read_addr = 0;
+    m00_axis_tvalid = 0;
+    m00_axis_tlast = 0;
+    if (!m00_axis_aresetn) read_addr = 0;
+    else begin
+        if(current_state == IDLE) begin
+            if (frame_ready) begin
+                read_addr =0; // 
+            end
+        end
+        if(current_state == READ_WAIT) begin
+            m00_axis_tvalid = 1;
+            // set tvalid to high. use count as read addr. 
+            // if(m00_ax?is_tready)
+            read_addr = count;
+            if(count == DEPTH+1) begin
+                m00_axis_tlast = 1;
+            end      
+        end
+    end 
+end
+assign m00_axis_tdata = {null1, n1, ne1, e1, se1, s1, sw1, w1, nw1};
 
 endmodule
