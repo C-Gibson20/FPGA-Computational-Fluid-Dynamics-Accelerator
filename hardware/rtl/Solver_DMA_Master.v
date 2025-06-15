@@ -23,7 +23,7 @@
         input wire [DATA_WIDTH-1:0] u_squared,
         input wire                  in_collision_state,
         input wire                  collider_ready,
-        input reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
+        input wire [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
         output reg [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_din,
         output reg                                  ram_wen,
         output reg [ADDRESS_WIDTH-1:0]              ram_addr, // because 2 times
@@ -45,9 +45,10 @@
     // RAM format: rho u2 ux uy from MSB to LSB
     reg [ADDRESS_WIDTH-1:0] read_count;
 
+    reg transfer_in_progress;
+
     localparam FILL_DATA    = 2'd0;
     localparam WAIT_READY   = 2'd1;
-    localparam SEND         = 2'd2;
     
     reg [1:0] current_state,next_state;
     reg [ADDRESS_WIDTH-1 + 1: 0] write_count; // extra bit bc times 2
@@ -73,6 +74,7 @@
             current_state <= next_state;
 
             if(current_state == FILL_DATA) begin
+                transfer_in_progress <= 0;
                 if(in_collision_state && collider_ready) begin
                     // ram_addr <= read_count;
                     // clocked_ram_din <= {rho, u_squared, u_x, u_y};
@@ -92,13 +94,15 @@
             if(current_state == WAIT_READY) begin
                 if(write_count <= DEPTH && m00_axis_tready) begin
                     write_count <= write_count + 1;
+                    transfer_in_progress <= 1;
                 end
                 else if(write_count <= DEPTH && !m00_axis_tready) begin
                     write_count <= write_count;
                 end
-                else if(write_count == 0 && in_collision_state) begin
+                else if(!m00_axis_tready && in_collision_state && !transfer_in_progress) begin
                     read_count <= 1;
                     write_count <= 0;
+
                 end
                 else begin
                     write_count <= 0;
@@ -119,7 +123,7 @@
            end 
 
             WAIT_READY : begin
-                if(write_count == DEPTH + 1|| (write_count==0 && in_collision_state)) begin
+                if(write_count == DEPTH + 1 || (in_collision_state && !m00_axis_tready && !transfer_in_progress)) begin
                 // allow transition back if a transmission hasn't been started 
                     next_state = FILL_DATA;
                 end
