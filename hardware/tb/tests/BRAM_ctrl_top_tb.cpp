@@ -37,11 +37,19 @@ protected:
 };
 
 TEST_F(BRAMCtrlTop, TestDataLoad) {
+    s->frame_ready = 0;
+    runSimulation(1);
     s->frame_ready = 1;
     runSimulation(1);
     s->frame_ready = 0;
     s->m00_axis_tready = 1;
-    runSimulation(100);
+    runSimulation(5);
+    s->m00_axis_tready = 0;
+    runSimulation(5);
+    s->m00_axis_tready = 1;
+    runSimulation(10);
+    runSimulation(2500);
+
 }
 
 int main(int argc, char **argv) {
