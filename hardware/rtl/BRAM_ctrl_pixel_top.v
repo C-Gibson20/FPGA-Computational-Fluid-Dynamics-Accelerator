@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module BRAM_ctrl_top #(
+module BRAM_ctrl_pixel_top #(
     parameter DATA_WIDTH    = 16,
     parameter DEPTH         = 2500,
     parameter ADDRESS_WIDTH = 12
@@ -18,7 +18,7 @@ module BRAM_ctrl_top #(
 wire [15:0]       n1, null1, ne1, e1, se1, s1, sw1, w1, nw1;
 wire [ADDRESS_WIDTH-1:0] read_addr;
 
-    BRAM_ctrl_nishant #(
+    BRAM_ctrl #(
         .DATA_WIDTH(DATA_WIDTH),
         .DEPTH(DEPTH),
         .ADDRESS_WIDTH(ADDRESS_WIDTH)
@@ -35,6 +35,10 @@ wire [ADDRESS_WIDTH-1:0] read_addr;
         .m00_axis_tready(m00_axis_tready),
         .read_addr(read_addr)
     );
+
+    
+
+
 
     // Instantiate RAMs
     RAM_2500 #(.INIT_FILE("ram.mem")) c0  (.clk(m00_axis_aclk), .addr(read_addr), .data_in(16'd0), .write_en(1'b0), .data_out(null1));

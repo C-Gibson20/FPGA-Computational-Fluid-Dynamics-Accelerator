@@ -15,11 +15,11 @@ protected:
         topParallel->en  = 1;
         topParallel->step = 1000;
         topParallel->omega = 0x4000; // 2.0 in Q3.13, tau=0.5
-        topParallel->init_c0 = 0x0E38; // 4/9
+        topParallel->init_c0 = 0x0E39; // 4/9
         topParallel->init_cn = 0x038E; // 1/9
         topParallel->init_cs    = 0x038E;
-        topParallel->init_ce    = 0x038E;
-        topParallel->init_cw    = 0x038E;
+        topParallel->init_ce    = 0x0558;
+        topParallel->init_cw    = 0x01cb;
         topParallel->init_cne   = 0x00E4; // 1/36
         topParallel->init_cse  = 0x00E4;
         topParallel->init_csw   = 0x00E4;
