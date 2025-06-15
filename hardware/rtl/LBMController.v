@@ -804,15 +804,15 @@ module LBMController (
                 end  
                 else if(index+`RAMS_TO_ACCESS >= `DEPTH-1) 
                 begin
-                    next_sim_state = BOUNDARY;
-                    next_index = `WIDTH+1;
-                    next_width_count = 1;
+                    next_sim_state = BOUNCE;
+                    next_index = 0;
+                    next_width_count = 0;
                 end
                 else
                 begin
                     next_sim_state = STREAM;
                     next_index = index + `RAMS_TO_ACCESS;
-                    next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                    next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                 end  
             end
             STREAM_READ:
@@ -857,23 +857,23 @@ module LBMController (
                     next_index = index;
                     next_width_count = width_count;
 
-                    c0_n_next_stored_data = c0_n_data_out;
+                    c0_n_next_stored_data = c0_n_stored_data;
 
-                    cn_n_next_stored_data = cn_n_data_out;
+                    cn_n_next_stored_data = cn_n_stored_data;
 
-                    cne_n_next_stored_data = cne_n_data_out;
+                    cne_n_next_stored_data = cne_n_stored_data;
 
-                    ce_n_next_stored_data = ce_n_data_out;
+                    ce_n_next_stored_data = ce_n_stored_data;
 
-                    cse_n_next_stored_data = cse_n_data_out;
+                    cse_n_next_stored_data = cse_n_stored_data;
 
-                    cs_n_next_stored_data = cs_n_data_out;
+                    cs_n_next_stored_data = cs_n_stored_data;
 
-                    csw_n_next_stored_data = csw_n_data_out;
+                    csw_n_next_stored_data = csw_n_stored_data;
 
-                    cw_n_next_stored_data = cw_n_data_out;
+                    cw_n_next_stored_data = cw_n_stored_data;
 
-                    cnw_n_next_stored_data = cnw_n_data_out;
+                    cnw_n_next_stored_data = cnw_n_stored_data;
                 end 
                 else begin
                     
@@ -904,155 +904,155 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1-`WIDTH-1) 
+                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1) 
                     begin
-                        next_index = `WIDTH + 1;
-                        next_width_count = 1;
-                        next_sim_state = BOUNDARY;
+                        next_index = 0;
+                        next_width_count = 0;
+                        next_sim_state = BOUNCE;
                         
                     end
                     else
                     begin
                         next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                         next_sim_state = STREAM;
                     end
                 end
             end
-            BOUNDARY:
-            begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = BOUNDARY;
-                    next_index = index;
-                    next_width_count = width_count;
+            // BOUNDARY:
+            // begin
+            //     if(ram_wait_count > 0) begin
+            //         next_ram_wait_count = ram_wait_count - 1;
+            //         next_sim_state = BOUNDARY;
+            //         next_index = index;
+            //         next_width_count = width_count;
 
-                    c0_n_next_stored_data = c0_n_data_out;
+            //         c0_n_next_stored_data = c0_n_data_out;
 
-                    cn_n_next_stored_data = cn_n_data_out;
+            //         cn_n_next_stored_data = cn_n_data_out;
 
-                    cne_n_next_stored_data = cne_n_data_out;
+            //         cne_n_next_stored_data = cne_n_data_out;
 
-                    ce_n_next_stored_data = ce_n_data_out;
+            //         ce_n_next_stored_data = ce_n_data_out;
 
-                    cse_n_next_stored_data = cse_n_data_out;
+            //         cse_n_next_stored_data = cse_n_data_out;
 
-                    cs_n_next_stored_data = cs_n_data_out;
+            //         cs_n_next_stored_data = cs_n_data_out;
 
-                    csw_n_next_stored_data = csw_n_data_out;
+            //         csw_n_next_stored_data = csw_n_data_out;
 
-                    cw_n_next_stored_data = cw_n_data_out;
+            //         cw_n_next_stored_data = cw_n_data_out;
 
-                    cnw_n_next_stored_data = cnw_n_data_out;
-                end
-                else 
-                begin
-                    if((index <= 2*`WIDTH - 2) && (index + `RAM_READ_WAIT >= 2*`WIDTH -2)) begin // NE corner
-                        csw_next_write_addr = `WIDTH - 1; 
-                        // csw_n_next_write_en = 1;
-                        cs_next_write_addr = `WIDTH - 2;
-                        // cs_n_next_write_en = 1;
-                        cw_next_write_addr = 2*`WIDTH - 1;
-                        // cw_n_next_write_en = 1;
+            //         cnw_n_next_stored_data = cnw_n_data_out;
+            //     end
+            //     else 
+            //     begin
+            //         if((index <= 2*`WIDTH - 2) && (index + `RAM_READ_WAIT >= 2*`WIDTH -2)) begin // NE corner
+            //             csw_next_write_addr = `WIDTH - 1; 
+            //             // csw_n_next_write_en = 1;
+            //             cs_next_write_addr = `WIDTH - 2;
+            //             // cs_n_next_write_en = 1;
+            //             cw_next_write_addr = 2*`WIDTH - 1;
+            //             // cw_n_next_write_en = 1;
 
-                        csw_n_read_from_write_address = 1'b1;
-                        cs_n_read_from_write_address = 1'b1;
-                        cw_n_read_from_write_address = 1'b1;
-                        // csw_next_data_in = csw_data_out;
-                        // cs_next_data_in = cs_data_out;
-                        // cw_next_data_in = cw_data_out;
-                    end
-                    if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
-                        cs_next_write_addr = index - `WIDTH;
-                        cs_n_read_from_write_address = 1'b1;
-                        // cs_n_next_write_en = 1;
-                        // cs_next_data_in = cs_data_out;
-                    end
-                    if((index <= `WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `WIDTH + 1)) begin // NW corner
-                        cse_next_write_addr = 0;
-                        // cse_n_next_write_en = 1;
-                        cs_next_write_addr = 1;
-                        // cs_n_next_write_en = 1;
-                        ce_next_write_addr = `WIDTH;
-                        // ce_n_next_write_en = 1;
-                        cse_n_read_from_write_address = 1'b1;
-                        cs_n_read_from_write_address = 1'b1;
-                        ce_n_read_from_write_address = 1'b1;
-                        // cse_next_data_in = cse_data_out;
-                        // cs_next_data_in = cs_data_out;
-                        // ce_next_data_in = ce_data_out;
+            //             csw_n_read_from_write_address = 1'b1;
+            //             cs_n_read_from_write_address = 1'b1;
+            //             cw_n_read_from_write_address = 1'b1;
+            //             // csw_next_data_in = csw_data_out;
+            //             // cs_next_data_in = cs_data_out;
+            //             // cw_next_data_in = cw_data_out;
+            //         end
+            //         if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
+            //             cs_next_write_addr = index - `WIDTH;
+            //             cs_n_read_from_write_address = 1'b1;
+            //             // cs_n_next_write_en = 1;
+            //             // cs_next_data_in = cs_data_out;
+            //         end
+            //         if((index <= `WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `WIDTH + 1)) begin // NW corner
+            //             cse_next_write_addr = 0;
+            //             // cse_n_next_write_en = 1;
+            //             cs_next_write_addr = 1;
+            //             // cs_n_next_write_en = 1;
+            //             ce_next_write_addr = `WIDTH;
+            //             // ce_n_next_write_en = 1;
+            //             cse_n_read_from_write_address = 1'b1;
+            //             cs_n_read_from_write_address = 1'b1;
+            //             ce_n_read_from_write_address = 1'b1;
+            //             // cse_next_data_in = cse_data_out;
+            //             // cs_next_data_in = cs_data_out;
+            //             // ce_next_data_in = ce_data_out;
                         
-                    end
-                    if ((index <= `DEPTH - `WIDTH - 2) && (index + `RAM_READ_WAIT >= `DEPTH - `WIDTH - 2)) begin // SE corner
-                        cnw_next_write_addr = `DEPTH - 1; 
-                        // cnw_n_next_write_en = 1;
-                        cn_next_write_addr = `DEPTH - 2; 
-                        // cn_n_next_write_en = 1;
-                        cw_next_write_addr = `DEPTH - `WIDTH - 1; 
-                        // cw_n_next_write_en = 1;
+            //         end
+            //         if ((index <= `DEPTH - `WIDTH - 2) && (index + `RAM_READ_WAIT >= `DEPTH - `WIDTH - 2)) begin // SE corner
+            //             cnw_next_write_addr = `DEPTH - 1; 
+            //             // cnw_n_next_write_en = 1;
+            //             cn_next_write_addr = `DEPTH - 2; 
+            //             // cn_n_next_write_en = 1;
+            //             cw_next_write_addr = `DEPTH - `WIDTH - 1; 
+            //             // cw_n_next_write_en = 1;
 
-                        cnw_n_read_from_write_address = 1'b1;
-                        cn_n_read_from_write_address = 1'b1;
-                        cw_n_read_from_write_address = 1'b1;
-                        // cnw_next_data_in = cnw_data_out;
-                        // cn_next_data_in = cn_data_out;
-                        // cw_next_data_in = cw_data_out;
+            //             cnw_n_read_from_write_address = 1'b1;
+            //             cn_n_read_from_write_address = 1'b1;
+            //             cw_n_read_from_write_address = 1'b1;
+            //             // cnw_next_data_in = cnw_data_out;
+            //             // cn_next_data_in = cn_data_out;
+            //             // cw_next_data_in = cw_data_out;
                         
-                    end
-                    if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
-                        cn_next_write_addr = index - `WIDTH;
-                        cn_n_read_from_write_address = 1'b1;
-                        // cn_n_next_write_en = 1;
-                        // cn_next_data_in = cn_data_out;
-                    end
-                    if ((index <= `DEPTH - 2*`WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `DEPTH - 2*`WIDTH + 1)) begin // SW corner
-                        cne_next_write_addr = `DEPTH - `WIDTH; 
-                        // cne_n_next_write_en = 1;
-                        cn_next_write_addr = `DEPTH - `WIDTH+1; 
-                        // cn_n_next_write_en = 1;
-                        ce_next_write_addr = `DEPTH - 2*`WIDTH; 
-                        // ce_n_next_write_en = 1;
-                        cne_n_read_from_write_address = 1'b1;
-                        cn_n_read_from_write_address = 1'b1;
-                        ce_n_read_from_write_address = 1'b1;
-                        // cne_next_data_in = cne_data_out;
-                        // cn_next_data_in = cn_data_out;
-                        // ce_next_data_in = ce_data_out;
+            //         end
+            //         if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
+            //             cn_next_write_addr = index - `WIDTH;
+            //             cn_n_read_from_write_address = 1'b1;
+            //             // cn_n_next_write_en = 1;
+            //             // cn_next_data_in = cn_data_out;
+            //         end
+            //         if ((index <= `DEPTH - 2*`WIDTH + 1) && (index + `RAMS_TO_ACCESS >= `DEPTH - 2*`WIDTH + 1)) begin // SW corner
+            //             cne_next_write_addr = `DEPTH - `WIDTH; 
+            //             // cne_n_next_write_en = 1;
+            //             cn_next_write_addr = `DEPTH - `WIDTH+1; 
+            //             // cn_n_next_write_en = 1;
+            //             ce_next_write_addr = `DEPTH - 2*`WIDTH; 
+            //             // ce_n_next_write_en = 1;
+            //             cne_n_read_from_write_address = 1'b1;
+            //             cn_n_read_from_write_address = 1'b1;
+            //             ce_n_read_from_write_address = 1'b1;
+            //             // cne_next_data_in = cne_data_out;
+            //             // cn_next_data_in = cn_data_out;
+            //             // ce_next_data_in = ce_data_out;
 
-                    end
-                    if(width_count == 1) begin // left edge
-                        ce_next_write_addr = index - 1;
-                        ce_n_read_from_write_address = 1'b1;
-                        // ce_n_next_write_en = 1;
-                        // ce_next_data_in = ce_data_out;
-                    end
-                    if(width_count == `WIDTH - 2) begin // right edge 
-                        cw_next_write_addr = index + 1;
-                        cw_n_read_from_write_address = 1'b1;
-                        // cw_n_next_write_en = 1;
-                        // cw_next_data_in = cw_data_out;
-                    end
+            //         end
+            //         if(width_count == 1) begin // left edge
+            //             ce_next_write_addr = index - 1;
+            //             ce_n_read_from_write_address = 1'b1;
+            //             // ce_n_next_write_en = 1;
+            //             // ce_next_data_in = ce_data_out;
+            //         end
+            //         if(width_count == `WIDTH - 2) begin // right edge 
+            //             cw_next_write_addr = index + 1;
+            //             cw_n_read_from_write_address = 1'b1;
+            //             // cw_n_next_write_en = 1;
+            //             // cw_next_data_in = cw_data_out;
+            //         end
                     
-                    if(`WIDTH + 1 <= index && index <= 2*`WIDTH - 2) begin // top edge
-                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + 3 + (`WIDTH - 2 - width_count): index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : width_count + `RAMS_TO_ACCESS;
-                        next_sim_state = BOUNDARY;
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                    end
-                    else if(`DEPTH - 2*`WIDTH + 1 <= index && index <= `DEPTH - `WIDTH - 2) begin // bottom edge 
-                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 0 : index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 2 : width_count + `RAMS_TO_ACCESS;
-                        next_sim_state = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? BOUNCE : BOUNDARY;
-                        next_ram_wait_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? `RAM_READ_WAIT : 0;
-                    end
-                    else begin // everything else
-                        next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + 3: index + `WIDTH -3;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : `WIDTH - 2;
-                        next_sim_state = BOUNDARY;
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                    end
-                end
-            end
+            //         if(`WIDTH + 1 <= index && index <= 2*`WIDTH - 2) begin // top edge
+            //             next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + : index + `RAMS_TO_ACCESS;
+            //             next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : width_count + `RAMS_TO_ACCESS;
+            //             next_sim_state = BOUNDARY;
+            //             next_ram_wait_count = `RAM_READ_WAIT;
+            //         end
+            //         else if(`DEPTH - 2*`WIDTH + 1 <= index && index <= `DEPTH - `WIDTH - 2) begin // bottom edge 
+            //             next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 0 : index + `RAMS_TO_ACCESS;
+            //             next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 2 : width_count + `RAMS_TO_ACCESS;
+            //             next_sim_state = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? BOUNCE : BOUNDARY;
+            //             next_ram_wait_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? `RAM_READ_WAIT : 0;
+            //         end
+            //         else begin // everything else
+            //             next_index = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? index + 3: index + `WIDTH -3;
+            //             next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH - 2) ? 1 : `WIDTH - 2;
+            //             next_sim_state = BOUNDARY;
+            //             next_ram_wait_count = `RAM_READ_WAIT;
+            //         end
+            //     end
+            // end
             BOUNCE:
             begin
                 if(all_bounce_wait) 
@@ -1092,7 +1092,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
                 end
-                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1-2*`WIDTH-2) 
+                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1) 
                 begin
                     next_sim_state = ZERO_BOUNCE;
                     next_index = 0;
@@ -1206,7 +1206,7 @@ module LBMController (
                     begin
                         next_sim_state = BOUNCE;
                         next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                     end
                 end
             end
@@ -1228,7 +1228,7 @@ module LBMController (
                 begin
                     next_sim_state = ZERO_BOUNCE;
                     next_index = index + `RAMS_TO_ACCESS;
-                    next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                    next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                 end
  
             end
@@ -1239,6 +1239,7 @@ module LBMController (
                     next_sim_state = ZERO_BOUNCE_WAIT;
                     next_index = index;
                     next_width_count = width_count;
+
                     c0_n_next_stored_data = c0_n_data_out;
 
                     cn_n_next_stored_data = cn_n_data_out;
@@ -1256,7 +1257,6 @@ module LBMController (
                     cw_n_next_stored_data = cw_n_data_out;
 
                     cnw_n_next_stored_data = cnw_n_data_out;
-                    
                     
                 end
                 else
@@ -1299,7 +1299,7 @@ module LBMController (
                     begin
                         next_sim_state = ZERO_BOUNCE;
                         next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                     end
                 end
             end
@@ -1325,7 +1325,7 @@ module LBMController (
                     begin
                         next_sim_state = COLLIDE;
                         next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                         next_ram_wait_count = `RAM_READ_WAIT;
                     end 
 
@@ -1354,7 +1354,7 @@ module LBMController (
             end
 
             MEM_RESET : begin
-                if(index + `RAMS_TO_ACCESS > `DEPTH) 
+                if(index + `RAMS_TO_ACCESS >= `DEPTH - 1) 
                 begin
                     next_index = 0;
                     next_width_count = 0;
@@ -1364,7 +1364,7 @@ module LBMController (
                 else
                 begin
                     next_index = index + `RAMS_TO_ACCESS;
-                    next_width_count = (width_count+`RAMS_TO_ACCESS > `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                    next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                     next_sim_state = MEM_RESET;
                 end
                 
