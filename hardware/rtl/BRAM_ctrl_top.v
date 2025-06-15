@@ -18,7 +18,7 @@ module BRAM_ctrl_top #(
 wire [15:0]       n1, null1, ne1, e1, se1, s1, sw1, w1, nw1;
 wire [ADDRESS_WIDTH-1:0] read_addr;
 
-    BRAM_ctrl #(
+    BRAM_ctrl_test #(
         .DATA_WIDTH(DATA_WIDTH),
         .DEPTH(DEPTH),
         .ADDRESS_WIDTH(ADDRESS_WIDTH)
