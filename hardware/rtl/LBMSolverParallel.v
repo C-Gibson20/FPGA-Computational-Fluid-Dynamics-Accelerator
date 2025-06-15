@@ -31,10 +31,10 @@ module LBMSolverParallel (
     input wire en,
     input wire [31:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
-    input reg [3:0] sim_state,
-    input reg [`ADDRESS_WIDTH-1:0] index,
-    input reg [`ADDRESS_WIDTH-1:0] width_count,
-    input reg [2:0] ram_wait_count,
+    input wire [3:0] sim_state,
+    input wire [`ADDRESS_WIDTH-1:0] index,
+    input wire [`ADDRESS_WIDTH-1:0] width_count,
+    input wire [2:0] ram_wait_count,
     // BRAM c0
     // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
@@ -161,10 +161,10 @@ module LBMSolverParallel (
     output wire collider_ready,
     output wire in_collision_state,
     // output wire next_index,
-    output wire [3:0] next_sim_state,
-    output wire zero_barrier,
-    output wire nv_ready,
-    output wire read_wait
+    output reg [3:0] next_sim_state,
+    output reg zero_barrier,
+    output reg nv_ready,
+    output reg read_wait
 
 );
 
