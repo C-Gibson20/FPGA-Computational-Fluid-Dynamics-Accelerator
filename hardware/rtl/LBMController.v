@@ -292,37 +292,37 @@ module LBMController (
     reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cne_next_data_in, cne_n_stored_data, cne_n_next_stored_data;
-    wire cne_next_write_en, cne_n_next_write_en
+    wire cne_next_write_en, cne_n_next_write_en;
     reg cne_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cne_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] ce_next_data_in, ce_n_stored_data, ce_n_next_stored_data;
-    wire ce_next_write_en, ce_n_next_write_en
+    wire ce_next_write_en, ce_n_next_write_en;
     reg ce_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] ce_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cse_next_data_in, cse_n_stored_data, cse_n_next_stored_data;
-    wire cse_next_write_en, cse_n_next_write_en
+    wire cse_next_write_en, cse_n_next_write_en;
     reg cse_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cse_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cs_next_data_in, cs_n_stored_data, cs_n_next_stored_data;
-    wire cs_next_write_en, cs_n_next_write_en
+    wire cs_next_write_en, cs_n_next_write_en;
     reg cs_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cs_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] csw_next_data_in, csw_n_stored_data, csw_n_next_stored_data;
-    wire csw_next_write_en, csw_n_next_write_en
+    wire csw_next_write_en, csw_n_next_write_en;
     reg csw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] csw_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cw_next_data_in, cw_n_stored_data, cw_n_next_stored_data;
-    wire cw_next_write_en, cw_n_next_write_en
+    wire cw_next_write_en, cw_n_next_write_en;
     reg cw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cw_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cnw_next_data_in, cnw_n_stored_data, cnw_n_next_stored_data;
-    wire cnw_next_write_en, cnw_n_next_write_en
+    wire cnw_next_write_en, cnw_n_next_write_en;
     reg cnw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
 
@@ -712,50 +712,34 @@ module LBMController (
         c0_n_read_from_write_address = 0;
 
         cn_next_write_addr = 0;
-        cn_next_write_en = 0;
-        cn_n_next_write_en = 0;
         cn_n_next_stored_data = 0;
         cn_n_read_from_write_address = 0;
 
         cne_next_write_addr = 0;
-        cne_next_write_en = 0;
-        cne_n_next_write_en = 0;
         cne_n_next_stored_data = 0;
         cne_n_read_from_write_address = 0;
 
         ce_next_write_addr = 0;
-        ce_next_write_en = 0;
-        ce_n_next_write_en = 0;
         ce_n_next_stored_data = 0;
         ce_n_read_from_write_address = 0;
 
         cse_next_write_addr = 0;
-        cse_next_write_en = 0;
-        cse_n_next_write_en = 0;
         cse_n_next_stored_data = 0;
         cse_n_read_from_write_address = 0;
 
         cs_next_write_addr = 0;
-        cs_next_write_en = 0;
-        cs_n_next_write_en = 0;
         cs_n_next_stored_data = 0;
         cs_n_read_from_write_address = 0;
 
         csw_next_write_addr = 0;
-        csw_next_write_en = 0;
-        csw_n_next_write_en = 0;
         csw_n_next_stored_data = 0;
         csw_n_read_from_write_address = 0;
 
         cw_next_write_addr = 0;
-        cw_next_write_en = 0;
-        cw_n_next_write_en = 0;
         cw_n_next_stored_data = 0;
         cw_n_read_from_write_address = 0;
 
         cnw_next_write_addr = 0;
-        cnw_next_write_en = 0;
-        cnw_n_next_write_en = 0;
         cnw_n_next_stored_data = 0;
         cnw_n_read_from_write_address = 0;
 
