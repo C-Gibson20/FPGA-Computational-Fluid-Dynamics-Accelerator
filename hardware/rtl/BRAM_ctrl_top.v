@@ -12,7 +12,7 @@ module BRAM_ctrl_top #(
     output wire              m00_axis_tvalid,
     output wire [(144/8)-1:0] m00_axis_tstrb,
     output wire              m00_axis_tlast,
-    output wire [143:0]      m00_axis_tdata,
+    output wire [143:0]      m00_axis_tdata
 );
 
 wire [15:0]       n1, null1, ne1, e1, se1, s1, sw1, w1, nw1;

@@ -801,6 +801,9 @@ module LBMSolverParallel (
                         next_sim_state = ZERO_BOUNCE;
                     end
                 end
+                else begin
+                    next_sim_state = ZERO_BOUNCE_WAIT;
+                end
             end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read

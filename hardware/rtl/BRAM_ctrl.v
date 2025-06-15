@@ -42,7 +42,6 @@ module BRAM_ctrl#(
     input wire [15:0] w1,
     input wire [15:0] nw1,
     
-    // AXI flags
     output reg [11:0] read_addr,
 
     // Ports of Axi Master Bus Interface M00_AXIS
@@ -51,7 +50,7 @@ module BRAM_ctrl#(
     output reg  m00_axis_tvalid,
     output reg [144-1 : 0] m00_axis_tdata,
     output wire [(144/8)-1 : 0] m00_axis_tstrb,
-    output reg  m00_axis_tlast,
+    output wire  m00_axis_tlast,
     input wire  m00_axis_tready
 );
     
@@ -63,8 +62,8 @@ module BRAM_ctrl#(
     reg was_reset;
 
     //states
-    localparam FILL_DATA    = 2'd0;
-    localparam IDLE         = 2'd1;
+    localparam IDLE    = 2'd0;
+    localparam FILL_DATA         = 2'd1;
     localparam SEND         = 2'd2;
 
     assign m00_axis_tstrb = {18{1'b1}};
@@ -87,7 +86,7 @@ module BRAM_ctrl#(
     always @* begin
        case(current_state)
         IDLE: begin
-            // read_addr = (was_reset) ? 0 : read_addr;
+            // // read_addr = (was_reset) ? 0 : read_addr;
             m00_axis_tlast = (was_reset) ? 0 : read_addr;
             m00_axis_tvalid = (was_reset) ? 0 : read_addr;
         end
