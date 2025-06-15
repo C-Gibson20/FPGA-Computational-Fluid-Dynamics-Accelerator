@@ -9,6 +9,8 @@ protected:
     
     void initializeInputs() override {
         s = top.get();
+        s->m00_axis_aresetn = 1;
+        s->m00_axis_aclk = 1;
     }
 
     void runSimulation(int cycles = 1)
@@ -35,8 +37,11 @@ protected:
 };
 
 TEST_F(BRAMCtrlTop, TestDataLoad) {
-
-
+    s->frame_ready = 1;
+    runSimulation(1);
+    s->frame_ready = 0;
+    s->m00_axis_tready = 1;
+    runSimulation(100);
 }
 
 int main(int argc, char **argv) {

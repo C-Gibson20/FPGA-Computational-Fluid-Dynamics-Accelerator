@@ -42,17 +42,16 @@ module BRAM_ctrl#(
     input wire [15:0] w1,
     input wire [15:0] nw1,
     
-    // AXI flags
     output reg [11:0] read_addr,
 
     // Ports of Axi Master Bus Interface M00_AXIS
     input wire  m00_axis_aclk,
     input wire  m00_axis_aresetn,
+    input wire  m00_axis_tready,
     output wire  m00_axis_tvalid,
     output reg [144-1 : 0] m00_axis_tdata,
     output wire [(144/8)-1 : 0] m00_axis_tstrb,
-    output wire  m00_axis_tlast,
-    input wire  m00_axis_tready
+    output wire  m00_axis_tlast
 );
     
     //iterate through all 2500 pixels
@@ -63,16 +62,17 @@ module BRAM_ctrl#(
     reg was_reset;
 
     //states
-    localparam FILL_DATA    = 2'd0;
-    localparam IDLE         = 2'd1;
+    localparam IDLE    = 2'd0;
+    localparam FILL_DATA         = 2'd1;
     localparam SEND         = 2'd2;
 
     assign m00_axis_tstrb = {18{1'b1}};
 
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
-        if (m00_axis_aresetn) begin
+        if (!m00_axis_aresetn) begin
             current_state <= IDLE;
             was_reset <= 1;
+            read_addr <= 0;
         end
         else begin
             current_state <= next_state;
@@ -86,7 +86,7 @@ module BRAM_ctrl#(
     always @* begin
        case(current_state)
         IDLE: begin
-            read_addr = (was_reset) ? 0 : read_addr;
+            // read_addr = (was_reset) ? 0 : read_addr;
             m00_axis_tlast = (was_reset) ? 0 : read_addr;
             m00_axis_tvalid = (was_reset) ? 0 : read_addr;
         end
@@ -133,15 +133,15 @@ module BRAM_ctrl#(
 /////////////////////////////////////////////////////////////////
 
     // state logic
-    always @* begin
+    always @(posedge m00_axis_aclk) begin
         case(current_state)
         FILL_DATA: begin
-            output_data = {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
+            read_addr <= read_addr + 1;
+            output_data <= {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
         end
         
         SEND: begin
-            read_addr += 1;
-            m00_axis_tdata = output_data;
+            m00_axis_tdata <= output_data;
         end
         
         default: ;
