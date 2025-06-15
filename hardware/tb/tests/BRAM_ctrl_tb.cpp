@@ -39,7 +39,7 @@ protected:
 };
 
 TEST_F(DMATB, TestDataLoad) {
-
+    runSimulation(10);
     
 }
 
