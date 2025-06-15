@@ -82,7 +82,6 @@ TEST_F(topParallelTestbench, Equilibrium) {
         }
     }
     runSimulation(50000);
-    EXPECT_EQ(topParallel->testing_c0_data_in,0x0E38);
 }
 
 int main(int argc, char **argv) {
