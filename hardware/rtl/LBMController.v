@@ -159,10 +159,10 @@ module LBMController (
     input wire [`DATA_WIDTH-1:0]        init_cnw,
 
     // collider results
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_squared, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_squared, 
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
     output wire collider_ready,
     output wire in_collision_state
