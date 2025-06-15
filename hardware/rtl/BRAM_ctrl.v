@@ -136,7 +136,7 @@ module BRAM_ctrl#(
     always @(posedge m00_axis_aclk) begin
         case(current_state)
         FILL_DATA: begin
-            read_addr <= read_addr 1;
+            read_addr <= read_addr + 1;
             output_data <= {n1, null1, ne1, e1, se1, s1, sw1, w1, nw1};
         end
         
@@ -148,7 +148,5 @@ module BRAM_ctrl#(
         default: ;
     endcase
     end
-
-
 
 endmodule

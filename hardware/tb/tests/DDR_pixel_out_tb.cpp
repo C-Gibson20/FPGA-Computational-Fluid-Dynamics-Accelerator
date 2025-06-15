@@ -3,15 +3,13 @@
 
 unsigned int ticks = 0;
 
-class DMATB : public BaseTestbench {
+class DDRPixelOutTop : public BaseTestbench {
 protected:
     Vdut* s;
     
     void initializeInputs() override {
         s = top.get();
-        s->m00_axis_aclk = 0;
         s->m00_axis_aresetn = 1;
-        s->m00_axis_tready = 0;
         s->m00_axis_aclk = 1;
     }
 
@@ -38,9 +36,9 @@ protected:
 
 };
 
-TEST_F(DMATB, TestDataLoad) {
-
-    
+TEST_F(DDRPixelOutTop, TestDataLoad) {
+    runSimulation(1);
+    runSimulation(100);
 }
 
 int main(int argc, char **argv) {

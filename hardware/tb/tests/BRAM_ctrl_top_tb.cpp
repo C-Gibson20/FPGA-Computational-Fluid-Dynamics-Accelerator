@@ -44,6 +44,10 @@ TEST_F(BRAMCtrlTop, TestDataLoad) {
     runSimulation(100);
 }
 
+TEST_F(BRAMCtrlTop, name) {
+
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
