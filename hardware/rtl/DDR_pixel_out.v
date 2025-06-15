@@ -58,7 +58,7 @@ module DDR_pixel_out #(
     reg [143:0] input_data;
     reg [1:0] current_state;
     reg [1:0] next_state;
-    reg [5:0] count;
+    reg [11:0] read_addr_count;
 
     //states
     localparam FILL_DATA    = 2'd0;
@@ -70,10 +70,33 @@ module DDR_pixel_out #(
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (m00_axis_aresetn) begin
             current_state <= FILL_DATA;
+            read_addr_count <= 0;
         end
         else begin
             current_state <= next_state;
         end
+
+        case(current_state)
+        FILL_DATA: begin
+            input_data <= m00_axis_tdata;
+        end
+        
+        SEND: begin
+            n1      <= input_data[15:0];
+            null1   <= input_data[31:16];
+            ne1     <= input_data[47:32];
+            e1      <= input_data[63:48];
+            se1     <= input_data[79:64];
+            s1      <= input_data[95:80];
+            sw1     <= input_data[111:96];
+            w1      <= input_data[127:112];
+            nw1     <= input_data[143:128];
+            read_addr <= read_addr_count;
+            read_addr_count <= read_addr_count + 1;
+        end
+        
+        default: ;
+    endcase
     end
 ////////////////////////////////////////////////////////////////////////////
 
@@ -107,31 +130,6 @@ module DDR_pixel_out #(
         SEND: begin
             //tready is low
             next_state = FILL_DATA;
-        end
-        
-        default: ;
-    endcase
-    end
-
-/////////////////////////////////////////////////////////////////
-
-    // state logic
-    always @* begin
-        case(current_state)
-        FILL_DATA: begin
-            input_data = m00_axis_tdata;
-        end
-        
-        SEND: begin
-            n1      = input_data[15:0];
-            null1   = input_data[31:16];
-            ne1     = input_data[47:32];
-            e1      = input_data[63:48];
-            se1     = input_data[79:64];
-            s1      = input_data[95:80];
-            sw1     = input_data[111:96];
-            w1      = input_data[127:112];
-            nw1     = input_data[143:128];
         end
         
         default: ;
