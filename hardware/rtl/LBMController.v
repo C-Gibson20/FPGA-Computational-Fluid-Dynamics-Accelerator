@@ -175,14 +175,13 @@ module LBMController (
     localparam STREAM_READ      = 4'd2;
     localparam STREAM_WAIT      = 4'd3;      
     localparam BOUNDARY         = 4'd4;
-    localparam BOUNDARY_WAIT    = 4'd5;
-    localparam BOUNCE           = 4'd6;
-    localparam BOUNCE_READ      = 4'd7;
-    localparam BOUNCE_WAIT      = 4'd8;
-    localparam ZERO_BOUNCE      = 4'd9;
-    localparam ZERO_BOUNCE_WAIT = 4'd10;
-    localparam COLLIDE          = 4'd11;
-    localparam MEM_RESET        = 4'd12;
+    localparam BOUNCE           = 4'd5;
+    localparam BOUNCE_READ      = 4'd6;
+    localparam BOUNCE_WAIT      = 4'd7;
+    localparam ZERO_BOUNCE      = 4'd8;
+    localparam ZERO_BOUNCE_WAIT = 4'd9;
+    localparam COLLIDE          = 4'd10;
+    localparam MEM_RESET        = 4'd11;
 
 
 
