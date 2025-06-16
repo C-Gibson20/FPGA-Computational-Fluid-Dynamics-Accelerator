@@ -31,10 +31,10 @@ module LBMSolverParallel (
     input wire en,
     input wire [31:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
-    input reg [3:0] sim_state,
-    input reg [`ADDRESS_WIDTH-1:0] index,
-    input reg [`ADDRESS_WIDTH-1:0] width_count,
-    input reg [2:0] ram_wait_count,
+    input wire [3:0] sim_state,
+    input wire [`ADDRESS_WIDTH-1:0] index,
+    input wire [`ADDRESS_WIDTH-1:0] width_count,
+    input wire [2:0] ram_wait_count,
     // BRAM c0
     // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
@@ -161,10 +161,10 @@ module LBMSolverParallel (
     output wire collider_ready,
     output wire in_collision_state,
     // output wire next_index,
-    output wire [3:0] next_sim_state,
-    output wire zero_barrier,
-    output wire nv_ready,
-    output wire read_wait
+    output reg [3:0] next_sim_state,
+    output reg zero_barrier,
+    output reg nv_ready,
+    output reg read_wait
 
 );
 
@@ -174,14 +174,13 @@ module LBMSolverParallel (
     localparam STREAM_READ      = 4'd2;
     localparam STREAM_WAIT      = 4'd3;      
     localparam BOUNDARY         = 4'd4;
-    localparam BOUNDARY_WAIT    = 4'd5;
-    localparam BOUNCE           = 4'd6;
-    localparam BOUNCE_READ      = 4'd7;
-    localparam BOUNCE_WAIT      = 4'd8;
-    localparam ZERO_BOUNCE      = 4'd9;
-    localparam ZERO_BOUNCE_WAIT = 4'd10;
-    localparam COLLIDE          = 4'd11;
-    localparam MEM_RESET        = 4'd12;
+    localparam BOUNCE           = 4'd5;
+    localparam BOUNCE_READ      = 4'd6;
+    localparam BOUNCE_WAIT      = 4'd7;
+    localparam ZERO_BOUNCE      = 4'd8;
+    localparam ZERO_BOUNCE_WAIT = 4'd9;
+    localparam COLLIDE          = 4'd10;
+    localparam MEM_RESET        = 4'd11;
 
     // reg [15:0] width_count, next_width_count;
     // reg [2:0] sim_state, next_sim_state;

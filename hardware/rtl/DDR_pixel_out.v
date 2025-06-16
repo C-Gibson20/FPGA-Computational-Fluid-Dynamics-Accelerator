@@ -40,7 +40,8 @@ module DDR_pixel_out#(
     output reg [15:0] sw1,
     output reg [15:0] w1,
     output reg [15:0] nw1,
-    
+    output reg wen, 
+
     output reg [11:0] write_addr,
 
     // Ports of Axi Master Bus Interface M00_AXIS

@@ -159,10 +159,10 @@ module LBMController (
     input wire [`DATA_WIDTH-1:0]        init_cnw,
 
     // collider results
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_squared, 
-    output wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_x, 
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_y,
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] u_squared, 
+    output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
     output wire collider_ready,
     output wire in_collision_state
@@ -175,14 +175,13 @@ module LBMController (
     localparam STREAM_READ      = 4'd2;
     localparam STREAM_WAIT      = 4'd3;      
     localparam BOUNDARY         = 4'd4;
-    localparam BOUNDARY_WAIT    = 4'd5;
-    localparam BOUNCE           = 4'd6;
-    localparam BOUNCE_READ      = 4'd7;
-    localparam BOUNCE_WAIT      = 4'd8;
-    localparam ZERO_BOUNCE      = 4'd9;
-    localparam ZERO_BOUNCE_WAIT = 4'd10;
-    localparam COLLIDE          = 4'd11;
-    localparam MEM_RESET        = 4'd12;
+    localparam BOUNCE           = 4'd5;
+    localparam BOUNCE_READ      = 4'd6;
+    localparam BOUNCE_WAIT      = 4'd7;
+    localparam ZERO_BOUNCE      = 4'd8;
+    localparam ZERO_BOUNCE_WAIT = 4'd9;
+    localparam COLLIDE          = 4'd10;
+    localparam MEM_RESET        = 4'd11;
 
 
 
@@ -283,39 +282,48 @@ module LBMController (
     // wire v_d_ready;
         
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c0_next_data_in, c0_n_stored_data, c0_n_next_stored_data;
-    reg c0_next_write_en, c0_n_next_write_en, c0_n_read_from_write_address;
+    wire c0_next_write_en, c0_n_next_write_en;
+    reg c0_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] c0_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cn_next_data_in, cn_n_stored_data, cn_n_next_stored_data;
-    reg cn_next_write_en, cn_n_next_write_en, cn_n_read_from_write_address;
+    wire cn_next_write_en, cn_n_next_write_en;
+    reg cn_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cn_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cne_next_data_in, cne_n_stored_data, cne_n_next_stored_data;
-    reg cne_next_write_en, cne_n_next_write_en, cne_n_read_from_write_address;
+    wire cne_next_write_en, cne_n_next_write_en;
+    reg cne_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cne_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] ce_next_data_in, ce_n_stored_data, ce_n_next_stored_data;
-    reg ce_next_write_en, ce_n_next_write_en, ce_n_read_from_write_address;
+    wire ce_next_write_en, ce_n_next_write_en;
+    reg ce_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] ce_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cse_next_data_in, cse_n_stored_data, cse_n_next_stored_data;
-    reg cse_next_write_en, cse_n_next_write_en, cse_n_read_from_write_address;
+    wire cse_next_write_en, cse_n_next_write_en;
+    reg cse_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cse_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cs_next_data_in, cs_n_stored_data, cs_n_next_stored_data;
-    reg cs_next_write_en, cs_n_next_write_en, cs_n_read_from_write_address;
+    wire cs_next_write_en, cs_n_next_write_en;
+    reg cs_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cs_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] csw_next_data_in, csw_n_stored_data, csw_n_next_stored_data;
-    reg csw_next_write_en, csw_n_next_write_en, csw_n_read_from_write_address;
+    wire csw_next_write_en, csw_n_next_write_en;
+    reg csw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] csw_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cw_next_data_in, cw_n_stored_data, cw_n_next_stored_data;
-    reg cw_next_write_en, cw_n_next_write_en, cw_n_read_from_write_address;
+    wire cw_next_write_en, cw_n_next_write_en;
+    reg cw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cw_next_write_addr;
 
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] cnw_next_data_in, cnw_n_stored_data, cnw_n_next_stored_data;
-    reg cnw_next_write_en, cnw_n_next_write_en, cnw_n_read_from_write_address;
+    wire cnw_next_write_en, cnw_n_next_write_en;
+    reg cnw_n_read_from_write_address;
     reg [`ADDRESS_WIDTH-1:0] cnw_next_write_addr;
 
 
@@ -704,50 +712,34 @@ module LBMController (
         c0_n_read_from_write_address = 0;
 
         cn_next_write_addr = 0;
-        cn_next_write_en = 0;
-        cn_n_next_write_en = 0;
         cn_n_next_stored_data = 0;
         cn_n_read_from_write_address = 0;
 
         cne_next_write_addr = 0;
-        cne_next_write_en = 0;
-        cne_n_next_write_en = 0;
         cne_n_next_stored_data = 0;
         cne_n_read_from_write_address = 0;
 
         ce_next_write_addr = 0;
-        ce_next_write_en = 0;
-        ce_n_next_write_en = 0;
         ce_n_next_stored_data = 0;
         ce_n_read_from_write_address = 0;
 
         cse_next_write_addr = 0;
-        cse_next_write_en = 0;
-        cse_n_next_write_en = 0;
         cse_n_next_stored_data = 0;
         cse_n_read_from_write_address = 0;
 
         cs_next_write_addr = 0;
-        cs_next_write_en = 0;
-        cs_n_next_write_en = 0;
         cs_n_next_stored_data = 0;
         cs_n_read_from_write_address = 0;
 
         csw_next_write_addr = 0;
-        csw_next_write_en = 0;
-        csw_n_next_write_en = 0;
         csw_n_next_stored_data = 0;
         csw_n_read_from_write_address = 0;
 
         cw_next_write_addr = 0;
-        cw_next_write_en = 0;
-        cw_n_next_write_en = 0;
         cw_n_next_stored_data = 0;
         cw_n_read_from_write_address = 0;
 
         cnw_next_write_addr = 0;
-        cnw_next_write_en = 0;
-        cnw_n_next_write_en = 0;
         cnw_n_next_stored_data = 0;
         cnw_n_read_from_write_address = 0;
 
