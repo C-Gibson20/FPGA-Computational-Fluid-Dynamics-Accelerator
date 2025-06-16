@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+
+    <engine:VisualElement class="root">
+
+        <engine:Style src="SimulationUI.uss" />
+
+        <engine:VisualElement class="fluid-interaction-element" name="fluid-interaction-overlay" />
+        <engine:Label class="fluid-interaction-label" name="fluid-interaction-data" />
+
+        <engine:Label class="render-title-label" name="render-title" text="Density Field" />
+        
+        <engine:VisualElement class="render-legends">
+            <engine:Label class="render-legend-label render-legend-label-max" name="render-legend-label-max" text="Maximum" />    
+            <engine:Label class="render-legend-label render-legend-label-min" name="render-legend-label-min" text="Minimum" />    
+
+            <engine:VisualElement class="render-legend" name="density-legend" />
+            <engine:VisualElement class="render-legend" name="velocity-legend" />
+            <engine:VisualElement class="render-legend" name="vorticity-legend" />
+        </engine:VisualElement>
+
+        <engine:Button class="control-panel-button" name="control-panel-toggle" text="Open Control&#10;Panel" />
+        
+        <engine:VisualElement class="control-panel-element" name="control-panel">
+            <engine:ScrollView class="control-panel-scrollview" name="control-panel-scroll">
+                <engine:VisualElement class="section">
+                    <engine:Label class="section-label" name="simulation-title" text="Display Settings"/>
+                    <engine:Button class="section-button" name="reset-button" text="Reset Settings"/>
+                </engine:VisualElement>
+                <engine:VisualElement class="section">
+                    <engine:Label class="section-label" name="density-label" text="Density Field"/>
+                    <engine:Label class="sub-section-label" name="density-label" text="Default Field"/>
+
+                    <engine:Label class="section-label" name="density-normalisation-label" text="Density Normalisation"/>
+                    <engine:Label class="sub-section-label" name="density-minimum-label" text="Density Minimum:"/>
+                    <engine:Slider class="section-slider" name="density-minimum" low-value="0" high-value="2.0"/>
+                    <engine:Label class="sub-section-label" name="density-maximum-label" text="Density Maximum:"/>
+                    <engine:Slider class="section-slider" name="density-maximum" low-value="0" high-value="2.0"/>
+                </engine:VisualElement>
+
+                <engine:VisualElement class="section">
+                    <engine:Label class="section-label" name="velocity-toggle-label" text="Velocity Field"/>
+                    <engine:Toggle class="section-toggle" name="velocity-toggle"/>
+
+                    <engine:Label class="section-label" name="velocity-normalisation-label" text="Velocity Normalisation"/>
+                    <engine:Label class="sub-section-label" name="velocity-minimum-label" text="Velocity Minimum:"/>
+                    <engine:Slider class="section-slider" name="velocity-minimum" low-value="0" high-value="0.2"/>
+                    <engine:Label class="sub-section-label" name="velocity-maximum-label" text="Velocity Maximum:"/>
+                    <engine:Slider class="section-slider" name="velocity-maximum" low-value="0" high-value="0.2"/>
+                </engine:VisualElement>
+        
+                <engine:VisualElement class="section">
+                    <engine:Label class="section-label" name="streamline-toggle-label" text="Streamlines"/>
+                    <engine:Toggle class="section-toggle" name="streamline-toggle"/>
+            
+                    <engine:Label class="section-label" name="streamline-length-label" text="Streamline Length"/>
+                    <engine:RadioButtonGroup class="section-options" name="streamline-length" choices="128,512" value="128"/>
+            
+                    <engine:Label class="section-label" name="streamline-count-label" text="Number of Streamlines"/>
+                    <engine:IntegerField class="section-input" name="streamline-count" value="100" min = "10" max = "2000"/>
+                </engine:VisualElement>
+
+                <engine:VisualElement class="section">
+                    <engine:Label class="section-label" name="vorticity-toggle-label" text="Vorticity Field"/>
+                    <engine:Toggle class="section-toggle" name="vorticity-toggle"/>
+
+                    <engine:Label class="section-label" name="vorticity-normalisation-label" text="Vorticity Normalisation"/>
+                    <engine:Label class="sub-section-label" name="vorticity-minimum-label" text="Vorticity Minimum:"/>
+                    <engine:Slider class="section-slider" name="vorticity-minimum" low-value="-0.2" high-value="0.2"/>
+                    <engine:Label class="sub-section-label" name="vorticity-maximum-label" text="Vorticity Maximum:"/>
+                    <engine:Slider class="section-slider" name="vorticity-maximum" low-value="-0.2" high-value="0.2"/>
+            
+                    <engine:Label class="section-label" name="vorticity-contour-label" text="Vorticity Iso-Contour"/>
+                    <engine:Label class="subsection-label" name="vorticity-value" text="Contour Value:"/>
+                    <engine:Slider class="section-slider" name="vorticity-slider" low-value="-0.02" high-value="0.1"/>
+                </engine:VisualElement>
+
+            </engine:ScrollView>
+
+        </engine:VisualElement>
+
+    </engine:VisualElement>
+    
+</engine:UXML>

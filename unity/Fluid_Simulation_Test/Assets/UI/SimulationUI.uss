@@ -1,0 +1,173 @@
+VisualElement {}
+
+.root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.control-panel-element {
+    position: absolute;
+    top: 68px;
+    right: 16px;
+    display: none;
+    flex-direction: column;
+    padding: 16px;
+    background-color: #1E1E1E;
+    color: #EEEEEE;
+    border-radius: 4px;
+    max-height: 35%;
+}
+
+.control-panel-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 6px 12px;
+    background-color: #1E1E1E;
+    color: #FFFFFF;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #1E1E1E;
+    font-size: 14px;
+    -unity-font-style: bold;
+    /* white-space:pre; */
+}
+
+.control-panel-scrollview {
+    flex-grow: 1;
+}
+
+/* Section styling */
+.section {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    margin-right: 16px;
+    margin-bottom: 16px;
+    background-color: #2A2A2A;
+    border-width: 1px;
+    border-color: #444444;
+    border-radius: 8px;
+}
+
+.section-label {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.sub-section-label {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.section-toggle,
+.section-input,
+.section-slider,
+.section-options,
+.section-button
+.section-label-row {
+    width: 95%;
+}
+
+.section-button {
+    background-color: #3A3A3A;
+    color: #FFFFFF;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #444444;
+    font-size: 12px;
+}
+
+.section-input {
+    color: black;
+}
+
+.section-label-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Interaction overlay */
+.fluid-interaction-element {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+}
+
+/* Hover label */
+.fluid-interaction-label {
+    display: none;
+    position: absolute;
+    background-color: rgba(0,0,0,0.7);
+    padding: 4px;
+    border-radius: 4px;
+    color: #FFFFFF;
+    -unity-text-align: middle-left;
+    font-size: 12px;
+    border-width: 1px;
+    border-color: #444444;
+}
+
+/* Render display */
+.render-title-label {
+    position: absolute;
+    top: 8px;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    color: #FFFFFF;
+
+    -unity-font-style: bold;
+    font-size: 20px;
+    -unity-text-align: middle-center;
+}
+
+.render-legends {
+    position: absolute;
+    left: -102px;
+    top: 50%;      
+
+    display: flex;
+    flex-direction: column;
+}
+
+.render-legend {
+    width: 256px;             /* thickness of the bar */
+    height: 5px;          /* whatever your texture height is */
+
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: none;  
+}
+
+.render-legend-label {
+    position: absolute;
+    top: 50%;
+    color: #FFFFFF;
+    font-size: 12px;
+    display:none;
+}
+
+.render-legend-label-max {
+    left: 142px;
+    margin-top: -146px;
+}
+
+.render-legend-label-min {
+    left: 142px;
+    margin-top: 106px;
+}
+
+/* Hide all labels and legends by default */
+.render-display-label,
+.render-display-legend, {
+    display: none;
+} 
+
