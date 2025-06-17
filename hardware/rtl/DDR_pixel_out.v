@@ -67,7 +67,7 @@ module DDR_pixel_out#(
     reg [1:0] next_state;
 
     always @* begin // combinational
-        m00_axis_tready = (write_addr < read_addr) ? m00_axis_tvalid : 0;
+        m00_axis_tready = ((write_addr < read_addr) && chunk_transfer_ready) ? m00_axis_tvalid : 0;
 
         n1    = m00_axis_tdata[15:0];
         null1 = m00_axis_tdata[31:16];
@@ -87,15 +87,16 @@ module DDR_pixel_out#(
         if(!m00_axis_aresetn) begin
             write_addr <= 0;
         end
-        else if (chunk_transfer_ready) begin
-            chunk_compute_ready <= 0;
+        // // else if (chunk_transfer_ready) begin
+        // //     chunk_compute_ready <= 0;
+        // end
         else begin
-            chunk_compute_ready <= 1;
             if(m00_axis_tready && write_addr < read_addr) begin
                 write_addr <= write_addr + 1;
             end
             if(m00_axis_tlast) begin
                 write_addr <= 0;
+                chunk_compute_ready <= 1;
             end
         end
     end
