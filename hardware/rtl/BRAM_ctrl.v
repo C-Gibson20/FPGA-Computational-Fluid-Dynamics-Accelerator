@@ -30,7 +30,8 @@ module BRAM_ctrl#(
     parameter  ADDRESS_WIDTH             = 12
     //parameter  C_m00_axis_tdata_WIDTH    = 144
 )(
-    input wire frame_ready,
+    //received from LBMsolver when its inputting data into BRAMs
+    input wire chunk_transfer_ready,
     //take data of all 9 directions for each pixel at a time
     input wire [15:0] n1,
     input wire [15:0] null1,
@@ -89,7 +90,7 @@ module BRAM_ctrl#(
     always @* begin
         next_state = current_state;
         if(current_state == IDLE) begin
-            if(frame_ready) next_state = READ_WAIT;
+            if(frame_ready && !chunk_transfer_ready) next_state = READ_WAIT;
         end
 
         if(current_state == READ_WAIT) begin
