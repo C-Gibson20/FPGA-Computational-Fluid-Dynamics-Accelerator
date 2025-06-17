@@ -7,20 +7,23 @@
         parameter  DATA_WIDTH                = 16,
         parameter  DEPTH                     = 2500,
         parameter  ADDRESS_WIDTH             = 12,
+        parameter  N_PARALLEL_SOLVERS        = 8,
+        parameter  N_SEND_BITS               = 2 //log2 N_PARALLEL_SOLVERS
 		// User parameters ends
 		// Do not modify the parameters beyond this line
 
 
 		// Parameters of Axi Master Bus Interface M00_AXIS
-		parameter integer C_M00_AXIS_TDATA_WIDTH	= 64,
+		// parameter integer C_M00_AXIS_TDATA_WIDTH	= 64,
+        parameter integer C_M00_AXIS_TDATA_WIDTH	= N_PARALLEL_SOLVERS * 4 * DATA_WIDTH
 		parameter integer C_M00_AXIS_START_COUNT	= 32
 	)
 	(
 		// Users to add ports here
-        input wire [DATA_WIDTH-1:0] u_x,
-        input wire [DATA_WIDTH-1:0] u_y,
-        input wire [DATA_WIDTH-1:0] rho, 
-        input wire [DATA_WIDTH-1:0] u_squared,
+        input wire [(N_PARALLEL_SOLVERS * DATA_WIDTH)-1:0] u_x,
+        input wire [(N_PARALLEL_SOLVERS * DATA_WIDTH)-1:0] u_y,
+        input wire [(N_PARALLEL_SOLVERS * DATA_WIDTH)-1:0] rho, 
+        input wire [(N_PARALLEL_SOLVERS * DATA_WIDTH)-1:0] u_squared,
         input wire                  in_collision_state,
         input wire                  collider_ready,
         input wire [C_M00_AXIS_TDATA_WIDTH-1:0]     ram_dout,
@@ -50,6 +53,8 @@
 
     localparam FILL_DATA    = 2'd0;
     localparam WAIT_READY   = 2'd1;
+
+    reg [N_SEND_BITS:0] send_count; 
     
     reg [1:0] current_state,next_state;
     reg [ADDRESS_WIDTH-1 + 1: 0] write_count; // extra bit bc times 2
@@ -70,6 +75,7 @@
             current_state <= FILL_DATA;
             read_count <= 0;
             write_count <= 0;
+            send_count <= N_PARALLEL_SOLVERS;
         end
         else begin
             current_state <= next_state;
@@ -111,7 +117,13 @@
                 // ram_addr <= read_count;
                 // clocked_ram_din <= {rho, u_squared, u_x, u_y};
                 // ram_wen <= 1;
-                read_count <= read_count + 1; // we write 64 bits to ram
+                // read_count <= read_count + 1; // we write 64 bits to ram
+
+
+                if (send_count == 0){
+                    read_count <= read_count + 1; // increment once all parallel blocks have been sent 
+                }
+                
             end 
 
         end
@@ -144,7 +156,15 @@
 
     // output logic
     always @* begin
-        dout = ram_dout;
+        // dout = ram_dout;
+        dout = ram_dout[(N_PARALLEL_SOLVERS - send_count) * 4 * DATA_WIDTH - 1: (N_PARALLEL_SOLVERS - send_count) * 4 * DATA_WIDTH];
+
+        if (send_count == 0) begin
+            send_count = N_PARALLEL_SOLVERS;
+        end else begin
+            send_count -= send_count;
+        end
+
         tvalid = 0;
         tlast = 0;
         ram_wen = 0;
@@ -156,7 +176,13 @@
             ram_wen = 0;
         end
         if(current_state == FILL_DATA && in_collision_state && collider_ready) begin
-            ram_din = {rho,u_squared,u_x,u_y};
+            // ram_din = {rho,u_squared,u_x,u_y};
+            for (i = 0; i < N_PARALLEL_SOLVERS; i = i + 1) begin
+                ram_din[ (i*4+0)*DATA_WIDTH +: DATA_WIDTH ] = u_y[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+1)*DATA_WIDTH +: DATA_WIDTH ] = u_x[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+2)*DATA_WIDTH +: DATA_WIDTH ] = u_squared[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+3)*DATA_WIDTH +: DATA_WIDTH ] = rho[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+            end
             ram_addr = read_count;
             ram_wen = 1;
         end
@@ -175,7 +201,13 @@
             tvalid = 0;
             ram_wen = 1;
             ram_addr = 0;
-            ram_din = {rho,u_squared,u_x,u_y};
+            // ram_din = {rho,u_squared,u_x,u_y};
+            for (i = 0; i < N_PARALLEL_SOLVERS; i = i + 1) begin
+                ram_din[ (i*4+0)*DATA_WIDTH +: DATA_WIDTH ] = rho[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+1)*DATA_WIDTH +: DATA_WIDTH ] = u_squared[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+2)*DATA_WIDTH +: DATA_WIDTH ] = u_x[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+3)*DATA_WIDTH +: DATA_WIDTH ] = u_y[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+            end
         end
 
         if(current_state == WAIT_READY && write_count == DEPTH+1)
