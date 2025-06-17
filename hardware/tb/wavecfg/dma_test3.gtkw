@@ -1,0 +1,41 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Tue Jun 17 11:37:20 2025
+[*]
+[dumpfile] "/home/unixshant/Y2Code/EE2Project/verilog/DreamTeam-Math-Accelerator/hardware/tb/waveform.vcd"
+[dumpfile_mtime] "Tue Jun 17 11:35:36 2025"
+[dumpfile_size] 57617563
+[savefile] "/home/unixshant/Y2Code/EE2Project/verilog/DreamTeam-Math-Accelerator/hardware/tb/wavecfg/dma_test3.gtkw"
+[timestart] 0
+[size] 1908 1047
+[pos] -1 -1
+*-15.000000 125000 60004 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.top_dma.
+[sst_width] 214
+[signals_width] 282
+[sst_expanded] 1
+[sst_vpaned_height] 309
+@28
+TOP.top_dma.lbm.in_collision_state
+@22
+TOP.top_dma.lbm.sim_state[3:0]
+@28
+TOP.top_dma.dma.ram_wen
+TOP.top_dma.lbm.collider_ready
+@22
+TOP.top_dma.lbm.u_x[15:0]
+TOP.top_dma.dma.ram_din[63:0]
+@24
+TOP.top_dma.dma.ram_addr[12:0]
+@28
+TOP.top_dma.dma.current_state[1:0]
+TOP.top_dma.dma.m00_axis_tvalid
+@29
+TOP.top_dma.dma.m00_axis_tready
+@28
+TOP.top_dma.dma.m00_axis_tlast
+@22
+TOP.top_dma.dma.m00_axis_tdata[63:0]
+[pattern_trace] 1
+[pattern_trace] 0

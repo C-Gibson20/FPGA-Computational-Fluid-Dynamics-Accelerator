@@ -46,6 +46,7 @@
     reg [ADDRESS_WIDTH-1:0] read_count;
 
     reg transfer_in_progress;
+    reg transfer_complete;
 
     localparam FILL_DATA    = 2'd0;
     localparam WAIT_READY   = 2'd1;
@@ -75,14 +76,10 @@
 
             if(current_state == FILL_DATA) begin
                 transfer_in_progress <= 0;
-                if(in_collision_state && collider_ready) begin
-                    // ram_addr <= read_count;
-                    // clocked_ram_din <= {rho, u_squared, u_x, u_y};
-                    // ram_wen <= 1;
-                    read_count <= read_count + 1; // we write 64 bits to ram
-                end
-                else if(in_collision_state) begin
+                
+                if(in_collision_state) begin
                     read_count <= read_count;
+                    transfer_complete <= 0;
                     // ram_wen <= 0;
                 end
                 else begin 
@@ -104,15 +101,24 @@
                     write_count <= 0;
 
                 end
-                else begin
+                else begin // reached end
                     write_count <= 0;
+                    transfer_complete <= 1;
                 end
             end
+
+            if(in_collision_state && collider_ready) begin
+                // ram_addr <= read_count;
+                // clocked_ram_din <= {rho, u_squared, u_x, u_y};
+                // ram_wen <= 1;
+                read_count <= read_count + 1; // we write 64 bits to ram
+            end 
 
         end
 
     end
     // next state
+    // try set tvalid low after transfer over
     always @* begin
         case (current_state)
            FILL_DATA : begin
@@ -149,14 +155,14 @@
             ram_addr = read_count;
             ram_wen = 0;
         end
-        if(current_state == FILL_DATA && in_collision_state) begin
+        if(current_state == FILL_DATA && in_collision_state && collider_ready) begin
             ram_din = {rho,u_squared,u_x,u_y};
             ram_addr = read_count;
             ram_wen = 1;
         end
 
         if(current_state == WAIT_READY) begin // by now the value will be available from RAM
-            tvalid = 1;
+            tvalid = transfer_complete ? 0 : 1;
             ram_addr = write_count;
         end
 

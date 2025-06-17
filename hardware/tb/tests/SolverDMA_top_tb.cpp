@@ -89,8 +89,6 @@ TEST_F(DMATB, TestDataLoad) {
     runSimulation(10);
     runSimulation(2500);
     
-    
-
 }
 
 int main(int argc, char **argv) {
