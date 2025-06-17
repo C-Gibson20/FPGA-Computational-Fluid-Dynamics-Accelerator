@@ -61,8 +61,7 @@ module DDR_pixel_out#(
 
     //states
     localparam IDLE     = 2'd0;
-    localparam FILL_DATA        = 2'd1;
-    localparam SEND         = 2'd2;
+    localparam SEND       = 2'd1;
 
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (!m00_axis_aresetn) current_state <= IDLE;
@@ -73,7 +72,7 @@ module DDR_pixel_out#(
 
     //set flags etc here
     always @* begin
-        m00_axis_tready = (current_state == FILL_DATA);
+        m00_axis_tready = (current_state == SEND);
     end
 
 
@@ -83,12 +82,12 @@ module DDR_pixel_out#(
     always @* begin
         next_state = current_state;
         case(current_state)
-            IDLE: if (m00_axis_tvalid) next_state = FILL_DATA;
+            IDLE: if (m00_axis_tvalid) next_state = SEND;
             
-            FILL_DATA: if (m00_axis_tvalid && m00_axis_tready) next_state = SEND;
+            //FILL_DATA: if (m00_axis_tvalid && m00_axis_tready) next_state = SEND;
         
             SEND: begin
-                next_state = (m00_axis_tlast) ? IDLE : FILL_DATA;
+                next_state = (m00_axis_tlast) ? IDLE : SEND;
             end
         
             default: ;
@@ -105,20 +104,20 @@ module DDR_pixel_out#(
             case(current_state) 
                 IDLE: write_addr <= 0;
 
-                FILL_DATA: if (m00_axis_tvalid) input_data <= m00_axis_tdata;
-
                 SEND: begin
-                    n1      <= input_data[15:0];
-                    null1   <= input_data[31:16];
-                    ne1     <= input_data[47:32];
-                    e1      <= input_data[63:48];
-                    se1     <= input_data[79:64];
-                    s1      <= input_data[95:80];
-                    sw1     <= input_data[111:96];
-                    w1      <= input_data[127:112];
-                    nw1     <= input_data[143:128];
+                    if (m00_axis_tvalid && m00_axis_tready) begin
+                        n1      <= m00_axis_tdata[15:0];
+                        null1   <= m00_axis_tdata[31:16];
+                        ne1     <= m00_axis_tdata[47:32];
+                        e1      <= m00_axis_tdata[63:48];
+                        se1     <= m00_axis_tdata[79:64];
+                        s1      <= m00_axis_tdata[95:80];
+                        sw1     <= m00_axis_tdata[111:96];
+                        w1      <= m00_axis_tdata[127:112];
+                        nw1     <= m00_axis_tdata[143:128];
 
-                    write_addr <= write_addr + 1;
+                        write_addr <= write_addr + 1;
+                    end
                 end
 
                 default: ;
@@ -126,3 +125,4 @@ module DDR_pixel_out#(
         end
     end
 endmodule
+

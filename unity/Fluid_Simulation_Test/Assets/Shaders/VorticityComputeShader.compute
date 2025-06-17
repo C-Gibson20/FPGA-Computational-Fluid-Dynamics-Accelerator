@@ -1,0 +1,26 @@
+#pragma kernel VorticityCompute
+
+Texture2D<float2> _VelocityTexture;
+RWTexture2D<float> _VorticityTexture;
+
+uint2 _TextureDimensions;
+float2 _InverseTextureDimensions;
+
+[numthreads(8, 8, 1)]
+void VorticityCompute(uint3 gridID : SV_DispatchThreadID)
+{
+    if (gridID.x >= _TextureDimensions.x || gridID.y >= _TextureDimensions.y) return;
+    
+    int2 texelCoord = gridID.xy;
+    
+    float2 velocityWest = _VelocityTexture[clamp(texelCoord + int2(-1, 0), int2(0, 0), int2(_TextureDimensions.x - 1, _TextureDimensions.y - 1))];
+    float2 velocityEast = _VelocityTexture[clamp(texelCoord + int2(1, 0), int2(0, 0), int2(_TextureDimensions.x - 1, _TextureDimensions.y - 1))];
+    float2 velocityNorth = _VelocityTexture[clamp(texelCoord + int2(0, -1), int2(0, 0), int2(_TextureDimensions.x - 1, _TextureDimensions.y - 1))];
+    float2 velocitySouth = _VelocityTexture[clamp(texelCoord + int2(0, 1), int2(0, 0), int2(_TextureDimensions.x - 1, _TextureDimensions.y - 1))];
+    
+    float dVy_dx = (velocityEast.y - velocityWest.y);
+    float dVx_dy = (velocitySouth.x - velocityNorth.x); 
+    float vorticity = dVy_dx - dVx_dy;
+    
+    _VorticityTexture[texelCoord] = vorticity;
+}

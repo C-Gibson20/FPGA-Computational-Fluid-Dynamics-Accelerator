@@ -8,13 +8,14 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: FluidMaterial
-  m_Shader: {fileID: 4800000, guid: 9a517b6dbdd1af74ebf90a776ddc05d7, type: 3}
+  m_Shader: {fileID: 4800000, guid: d58f356ee2c201f47a3a14efa4243e22, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - RENDER_DENSITY
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
@@ -24,6 +25,14 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DensityColorTexture:
+        m_Texture: {fileID: 2800000, guid: a83b5d04a5a06e248ab34a98487aa620, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DensityTexture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -59,16 +68,43 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _VelocityMagnitudeColorTexture:
+        m_Texture: {fileID: 2800000, guid: edde75ce1a9c37b49b2037deb00756ca, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VelocityMagnitudeTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VorticityColorTexture:
+        m_Texture: {fileID: 2800000, guid: ad8c6dd04729acd4fb9bbc45d68f1055, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _VorticityTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
+    - _DensityOffset: 0.8918
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _InvDensityRange: 4.545455
+    - _InvVelocityRange: 5.6602964
+    - _InvVorticityRange: 4.901961
+    - _InverseDensityRange: 4.545455
+    - _InverseVelocityRange: 5.6602964
+    - _InverseVorticityRange: 4.901961
+    - _MaxVorticity: 0.102
     - _Metallic: 0
+    - _MinDensity: 0.97
+    - _MinVelocity: 0
+    - _MinVorticity: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -76,8 +112,13 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
+    - _VelocityOffset: 0
+    - _VorticityContourHalfWidth: 1
+    - _VorticityContourLevel: 0.05
+    - _VorticityOffset: 0.102
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _VorticityContourColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

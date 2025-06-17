@@ -1,0 +1,29 @@
+﻿#pragma kernel FluidCompute
+
+StructuredBuffer<float4> _FluidData;
+
+RWTexture2D<float2> _VelocityTexture;  
+RWTexture2D<float> _VelocityMagnitudeTexture;
+RWTexture2D<float4> _DensityTexture;
+
+uint2 _TextureDimensions;
+
+[numthreads(16, 16, 1)]
+void FluidCompute(uint3 gridID : SV_DispatchThreadID)
+{
+    // -- Initialise IDs --
+    if (gridID.x >= _TextureDimensions.x || gridID.y >= _TextureDimensions.y) return;
+    uint fluidCellIdx = gridID.y * _TextureDimensions.x + gridID.x;
+    uint2 texelCoord = gridID.xy;
+
+    // -- Read fluid data --
+    float4 fluidCellData = _FluidData[fluidCellIdx];
+    float2 velocity = fluidCellData.xy;
+    float velocitySquared = fluidCellData.z;
+    float density = fluidCellData.w;
+    
+    // -- Write fluid data to textures --
+    _VelocityTexture[texelCoord] = velocity;
+    _DensityTexture[texelCoord] = float4(density, 0, 0, 1);
+    _VelocityMagnitudeTexture[texelCoord] = sqrt(velocitySquared);
+}

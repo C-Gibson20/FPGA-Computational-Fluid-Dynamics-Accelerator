@@ -1,0 +1,95 @@
+﻿#pragma kernel StreamlineCompute
+
+RWStructuredBuffer<float2> _StreamlineParticlePositions;
+RWStructuredBuffer<float2> _StreamlineTails;
+RWStructuredBuffer<uint> _StreamlineHeadIndices;
+RWStructuredBuffer<float2> _StreamlineSpawnPositions;
+RWStructuredBuffer<float> _StreamlineLifetimes;
+RWStructuredBuffer<uint> _StreamlineTailIndices;
+
+Texture2D<float2> _VelocityTexture;
+Texture2D<float> _DensityTexture;
+
+SamplerState sampler_linear_repeat;
+
+cbuffer StreamlineComputeParameters
+{
+    float2 _InverseTextureDimensions;
+    float2 _TextureDimensions;
+    float _StreamlineTimestep;
+    uint _StreamlineParticleCount;
+    uint _StreamlineTailLength;
+    float _StreamlineMaximumLifetime;
+}
+
+bool ValidateFluidDensity(float2 particlePosition)
+{
+    return _DensityTexture.SampleLevel(sampler_linear_repeat, particlePosition * _InverseTextureDimensions, 0).r > 0;
+}
+
+void AdvanceTailHeadIndex(uint streamlineHeadIdx, uint particleIdx)
+{
+    streamlineHeadIdx = streamlineHeadIdx + 1;
+    if (streamlineHeadIdx >= _StreamlineTailLength)
+        streamlineHeadIdx = 0;
+    _StreamlineHeadIndices[particleIdx] = streamlineHeadIdx;
+}
+
+[numthreads(64, 1, 1)]
+void StreamlineCompute(uint3 threadparticleIdx : SV_DispatchThreadID)
+{
+    // -- Verify thread particleIdx --
+    uint particleIdx = threadparticleIdx.x;
+    if (particleIdx >= _StreamlineParticleCount)
+        return;
+    
+    _StreamlineLifetimes[particleIdx] += _StreamlineTimestep;
+    
+    // -- Initialize update variables --
+    uint streamlineHeadIdx = _StreamlineHeadIndices[particleIdx];
+    uint tailStartIdx = particleIdx * _StreamlineTailLength;
+    
+    if (_StreamlineLifetimes[particleIdx] > _StreamlineMaximumLifetime)
+    {
+        _StreamlineLifetimes[particleIdx] = 0.0f;
+        
+        float2 respawnPosition = _StreamlineSpawnPositions[particleIdx];
+        _StreamlineParticlePositions[particleIdx] = respawnPosition;
+        _StreamlineTails[tailStartIdx + streamlineHeadIdx] = respawnPosition;
+        
+        AdvanceTailHeadIndex(streamlineHeadIdx, particleIdx);
+        
+        _StreamlineTailIndices[particleIdx] = streamlineHeadIdx;
+        
+        return;
+    }
+    
+    // -- Current state sampling --
+    float2 currentPosition = _StreamlineParticlePositions[particleIdx];
+    float2 currentVelocity = _VelocityTexture.SampleLevel(sampler_linear_repeat, currentPosition * _InverseTextureDimensions, 0).xy;
+    if (!ValidateFluidDensity(currentPosition)) return; 
+    
+    // -- Midpoint state sampling --
+    float2 midpointPosition = currentPosition + 0.5 * currentVelocity * _StreamlineTimestep;
+    float2 midpointVelocity = _VelocityTexture.SampleLevel(sampler_linear_repeat, midpointPosition * _InverseTextureDimensions, 0).xy;
+    if (!ValidateFluidDensity(currentPosition)) return; 
+    
+    // -- Endpoint state sampling --
+    float2 endpointPosition = currentPosition + midpointVelocity * _StreamlineTimestep;
+    endpointPosition = (endpointPosition < 0) ? endpointPosition + _TextureDimensions : endpointPosition;
+    endpointPosition = (endpointPosition >= _TextureDimensions) ? endpointPosition - _TextureDimensions : endpointPosition;
+    if (!ValidateFluidDensity(currentPosition)) return;
+    
+    // -- Update particle particlePosition and tail --
+    _StreamlineParticlePositions[particleIdx] = endpointPosition;
+    _StreamlineTails[tailStartIdx + streamlineHeadIdx] = endpointPosition;
+    
+    if (_StreamlineLifetimes[particleIdx] > (_StreamlineTimestep * _StreamlineTailLength))
+    {
+        uint tailIdx = _StreamlineTailIndices[particleIdx];
+        tailIdx = (tailIdx + 1) % _StreamlineTailLength;
+        _StreamlineTailIndices[particleIdx] = tailIdx;
+    }
+
+    AdvanceTailHeadIndex(streamlineHeadIdx, particleIdx);
+}
