@@ -172,7 +172,7 @@ module LBMSolver (
     output wire collider_ready,
     output wire in_collision_state,
     output wire [15:0] step_countn,
-    output reg frame_ready
+    output reg chunk_transfer_ready
 
 );
 
@@ -299,6 +299,11 @@ module LBMSolver (
             width_count <= next_width_count;
             step_count <= incr_step ? step_count + 1 : step_count;
             ram_wait_count <= next_ram_wait_count;
+
+            row_count <= next_row_count;
+            block_index <= next_block_index;
+            block_count_x <= next_block_count_x;
+            block_count_y <= next_block_count_y;
             
             c0_addr <= c0_next_write_en ? c0_next_write_addr : index;
             c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
@@ -419,7 +424,10 @@ module LBMSolver (
         next_row_count = row_count;
         next_block_index = block_index;
         next_block_count_x = block_count_x;
+        next_block_count_y = block_count_y;
 
+        chunk_transfer_ready = 0;
+        
         incr_step = 0;
         next_ram_wait_count = ram_wait_count;
 
@@ -436,7 +444,7 @@ module LBMSolver (
             end
             STREAM:
             begin
-                if(chunk_finished == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(barriers[index] == 1'b0) //stream if not barrier
                     begin
@@ -455,7 +463,7 @@ module LBMSolver (
                         next_row_count = 0;
                         next_block_count_x = 0;
                         next_block_count_y = 0;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end 
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -466,7 +474,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = STREAM;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else // don't stream
                     begin
@@ -485,7 +493,7 @@ module LBMSolver (
 
             STREAM_WAIT : // do the outside too
             begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(ram_wait_count > 0) begin
                         next_ram_wait_count = ram_wait_count - 1; 
@@ -536,8 +544,8 @@ module LBMSolver (
                             next_index = `WIDTH + 1;
                             next_block_index = `BLOCK_WIDTH + 1;
                             next_width_count = 1;
-                            next_sim_state = BOUNDARY;
-                            
+                            next_sim_state = BOUNCE;
+                            chunk_transfer_ready = 1;
                         end
                         else if(block_index == `BLOCK_DEPTH-1)
                         begin
@@ -548,7 +556,7 @@ module LBMSolver (
                             next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                             next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = STREAM;
-                            next_
+                            chunk_transfer_ready = 1;
                         end
                         else
                         begin
@@ -676,7 +684,7 @@ module LBMSolver (
                 // note to self: this stage reads from cx_n and writes to cx_n
                 // NOTE: we only bounce the interior cells, ie: x: [2,...,WIDTH-3], y: [2,...,HEIGHT-3]
                 // basically we leave a margin of 2 layers on teh outside that we don't bounce
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                     begin
                     if(barriers[index] == 1'b1) // RAM read, so need to wait for RAM...
                     begin
@@ -692,6 +700,7 @@ module LBMSolver (
                         next_row_count = 0;
                         next_block_count_x = 0;
                         next_block_count_y = 0;
+                        chunk_transfer_ready = 1;
                     end
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -702,6 +711,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = BOUNCE;
+                        chunk_transfer_ready = 1;
                     end
                     else // not a barrier, skip over
                     begin
@@ -720,7 +730,7 @@ module LBMSolver (
 
             BOUNCE_WAIT:
             begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(ram_wait_count > 0) begin
                         next_ram_wait_count = ram_wait_count - 1; 
@@ -730,51 +740,66 @@ module LBMSolver (
     
                     end 
                     else begin
-                        cn_next_write_addr = index-`WIDTH;
+                        cn_next_write_addr = block_index-`BLOCK_WIDTH;
                         cn_n_next_write_en = 1;
                         cn_next_data_in = cs_n_data_out;
     
-                        cne_next_write_addr = index-`WIDTH+1;
+                        cne_next_write_addr = block_index-`BLOCK_WIDTH+1;
                         cne_n_next_write_en = 1;
                         cne_next_data_in = csw_n_data_out;
     
-                        ce_next_write_addr = index+1;
+                        ce_next_write_addr = block_index+1;
                         ce_n_next_write_en = (width_count != `WIDTH - 1);
                         ce_next_data_in = cw_n_data_out; 
     
-                        cse_next_write_addr = index+`WIDTH+1;
-                        cse_n_next_write_en = (index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                        cse_next_write_addr = block_index+`BLOCK_WIDTH+1;
+                        cse_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
                         cse_next_data_in = cnw_n_data_out; 
     
-                        cs_next_write_addr = index+`WIDTH;
-                        cs_n_next_write_en = (index <= `DEPTH-`WIDTH-1);
+                        cs_next_write_addr = block_index+`BLOCK_WIDTH;
+                        cs_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1);
                         cs_next_data_in = cn_n_data_out; 
     
-                        csw_next_write_addr = index+`WIDTH-1;
-                        csw_n_next_write_en = (index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                        csw_next_write_addr = block_index+`BLOCK_WIDTH-1;
+                        csw_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1 && (width_count != 0));
                         csw_next_data_in = cne_n_data_out; 
     
-                        cw_next_write_addr = index - 1;
+                        cw_next_write_addr = block_index - 1;
                         cw_n_next_write_en = (width_count != 0);
                         cw_next_data_in = ce_n_data_out; 
     
-                        cnw_next_write_addr = index - `WIDTH - 1;
-                        cnw_n_next_write_en = (index >= `WIDTH && (width_count != 0));
+                        cnw_next_write_addr = block_index - `BLOCK_WIDTH - 1;
+                        cnw_n_next_write_en = (block_index >= `WIDTH && (width_count != 0));
                         cnw_next_data_in = cse_n_data_out;
     
     
                         // go back to bounce state
-                        if(index != `DEPTH-1-2*`WIDTH-2) 
+                        if(index == `DEPTH-1) 
                         begin
-                            next_index = (width_count==`WIDTH-3) ? index + 5 : index + 1;
-                            next_width_count = (width_count == `WIDTH-3) ? 2 : (width_count + 1);
+                            next_index = `WIDTH + 1;
+                            next_block_index = `BLOCK_WIDTH + 1;
+                            next_width_count = 1;
+                            next_sim_state = ZERO_BOUNCE;
+                            chunk_transfer_ready = 1;
+                        end
+                        else if(block_index == `BLOCK_DEPTH-1)
+                        begin
+                            next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
+                            next_block_index = 0;
+                            next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
+                            next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                            next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
+                            next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = BOUNCE;
-                        end 
+                            chunk_transfer_ready = 1;
+                        end
                         else
                         begin
-                            next_index = 0; // don't really care about zeroing only the inner cells, so just treat it as normal
-                            next_width_count = 0;
-                            next_sim_state = ZERO_BOUNCE; 
+                            next_index = (width_count == `BLOCK_WIDTH-1) ? (block_count_y*`BLOCK_HEIGHT+row_count+1)*`WIDTH : index + 1;
+                            next_width_count = (width_count == `BLOCK_WIDTH-1) ? (block_count_x*`BLOCK_WIDTH-1) : width_count + 1;
+                            next_row_count = (width_count == `BLOCK_WIDTH-1) ? row_count + 1 : row_count;
+                            next_block_index = block_index + 1;
+                            next_sim_state = BOUNCE;
                         end
                     end
                 end
@@ -786,196 +811,251 @@ module LBMSolver (
 
             ZERO_BOUNCE: // don't really care about zeroing only the inner cells, so 
             begin
-                if(index == `DEPTH-1) 
+                if(chunk_compute_ready = 1'b1)
                 begin
-                    next_index = 0; // collide with a margin of 1 layer on the outside
-                    next_width_count = 0;
-                    next_sim_state = COLLIDE;
-                    
+                    if(index == `DEPTH-1) 
+                    begin
+                        next_index = 0;
+                        next_block_index = 0;
+                        next_width_count = 0;
+                        next_sim_state = COLLIDE;
+                        chunk_transfer_ready = 1;
+                    end
+                    else if(block_index == `BLOCK_DEPTH-1)
+                    begin
+                        next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
+                        next_block_index = 0;
+                        next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
+                        next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
+                        next_sim_state = ZERO_BOUNCE;
+                        chunk_transfer_ready = 1;
+                    end
+                    else
+                    begin
+                        next_index = (width_count == `BLOCK_WIDTH-1) ? (block_count_y*`BLOCK_HEIGHT+row_count+1)*`WIDTH : index + 1;
+                        next_width_count = (width_count == `BLOCK_WIDTH-1) ? (block_count_x*`BLOCK_WIDTH-1) : width_count + 1;
+                        next_row_count = (width_count == `BLOCK_WIDTH-1) ? row_count + 1 : row_count;
+                        next_block_index = block_index + 1;
+                        next_sim_state = ZERO_BOUNCE;
+                    end
+    
+                    if(barriers[index] == 1'b1) //this is where you left off 
+                    begin
+                        // write zeroes to all barrier cells in cx_n
+                        c0_next_write_addr = block_index;
+                        c0_n_next_write_en = 1'b1;
+                        c0_next_data_in = 16'b0;
+    
+                        cn_next_write_addr = block_index;
+                        cn_n_next_write_en = 1'b1;
+                        cn_next_data_in = 16'b0;
+    
+                        cne_next_write_addr = block_index;
+                        cne_n_next_write_en = 1'b1;
+                        cne_next_data_in = 16'b0;
+    
+                        ce_next_write_addr = block_index;
+                        ce_n_next_write_en = 1'b1;
+                        ce_next_data_in = 16'b0;
+    
+                        cse_next_write_addr = block_index;
+                        cse_n_next_write_en = 1'b1;
+                        cse_next_data_in = 16'b0;
+    
+                        cs_next_write_addr = block_index;
+                        cs_n_next_write_en = 1'b1;
+                        cs_next_data_in = 16'b0;
+    
+                        csw_next_write_addr = block_index;
+                        csw_n_next_write_en = 1'b1;
+                        csw_next_data_in = 16'b0;
+    
+                        cw_next_write_addr = block_index;
+                        cw_n_next_write_en = 1'b1;
+                        cw_next_data_in = 16'b0;
+    
+                        cnw_next_write_addr = block_index;
+                        cnw_n_next_write_en = 1'b1;
+                        cnw_next_data_in = 16'b0;
+                    end
                 end
                 else
-                begin
-                    next_index = index + 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                     next_sim_state = ZERO_BOUNCE;
-                end
-
-                if(barriers[index] == 1'b1) //this is where you left off 
-                begin
-                    // write zeroes to all barrier cells in cx_n
-                    c0_next_write_addr = index;
-                    c0_n_next_write_en = 1'b1;
-                    c0_next_data_in = 16'b0;
-
-                    cn_next_write_addr = index;
-                    cn_n_next_write_en = 1'b1;
-                    cn_next_data_in = 16'b0;
-
-                    cne_next_write_addr = index;
-                    cne_n_next_write_en = 1'b1;
-                    cne_next_data_in = 16'b0;
-
-                    ce_next_write_addr = index;
-                    ce_n_next_write_en = 1'b1;
-                    ce_next_data_in = 16'b0;
-
-                    cse_next_write_addr = index;
-                    cse_n_next_write_en = 1'b1;
-                    cse_next_data_in = 16'b0;
-
-                    cs_next_write_addr = index;
-                    cs_n_next_write_en = 1'b1;
-                    cs_next_data_in = 16'b0;
-
-                    csw_next_write_addr = index;
-                    csw_n_next_write_en = 1'b1;
-                    csw_next_data_in = 16'b0;
-
-                    cw_next_write_addr = index;
-                    cw_n_next_write_en = 1'b1;
-                    cw_next_data_in = 16'b0;
-
-                    cnw_next_write_addr = index;
-                    cnw_n_next_write_en = 1'b1;
-                    cnw_next_data_in = 16'b0;
-                end
             end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
             begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-
-                end
-                else if(nv_ready) 
+                if(chunk_compute_ready == 1'b1)
                     begin
-                        if(index == `DEPTH-1) 
-                        begin
-                            next_index = 0;
-                            next_width_count = 0;
-                            next_sim_state = IDLE;
-                            incr_step = 1;
-                            // next_ram_wait_count = 2;
-                            // next_step_count = step_count + 1;
-                        end
-                        else
-                        begin
-                            next_index = index + 1;
-                            next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                            next_sim_state = COLLIDE;
-                            next_ram_wait_count = `RAM_READ_WAIT;
-                        end
-
-                        if(index >= `WIDTH && index <= `DEPTH-`WIDTH-1 && width_count != 0 && width_count != `WIDTH-1) begin // only do for inside the margin
-                            c0_next_write_addr = index;
-                            c0_next_write_en = 1'b1;
-                            c0_next_data_in = (barriers[index] == 1) ? 0 : c_c0;
-
-                            cn_next_write_addr = index;
-                            cn_next_write_en = 1'b1;
-                            cn_next_data_in = (barriers[index] == 1) ? 0 : c_cn;
-
-                            cne_next_write_addr = index;
-                            cne_next_write_en = 1'b1;
-                            cne_next_data_in = (barriers[index] == 1) ? 0 : c_cne;
-
-                            ce_next_write_addr = index;
-                            ce_next_write_en = 1'b1;
-                            ce_next_data_in = (barriers[index] == 1) ? 0 : c_ce;
-
-                            cse_next_write_addr = index;
-                            cse_next_write_en = 1'b1;
-                            cse_next_data_in = (barriers[index] == 1) ? 0 : c_cse;
-
-                            cs_next_write_addr = index;
-                            cs_next_write_en = 1'b1;
-                            cs_next_data_in = (barriers[index] == 1) ? 0 : c_cs;
-
-                            csw_next_write_addr = index;
-                            csw_next_write_en = 1'b1;
-                            csw_next_data_in = (barriers[index] == 1) ? 0 : c_csw;
-
-                            cw_next_write_addr = index;
-                            cw_next_write_en = 1'b1;
-                            cw_next_data_in = (barriers[index] == 1) ? 0 : c_cw;
-
-                            cnw_next_write_addr = index;
-                            cnw_next_write_en = 1'b1;
-                            cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
-                        end
+                    if(ram_wait_count > 0) begin
+                        next_ram_wait_count = ram_wait_count - 1; 
+                        next_sim_state = COLLIDE;
+                        next_index = index;
+                        next_width_count = width_count;
+    
                     end
-                else begin
+                    else if(nv_ready) 
+                        begin
+                            if(index == `DEPTH-1) 
+                            begin
+                                next_index = 0;
+                                next_block_index = 0;
+                                next_width_count = 0;
+                                next_sim_state = IDLE;
+                                chunk_transfer_ready = 1;
+                            end
+                            else if(block_index == `BLOCK_DEPTH-1)
+                            begin
+                                next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
+                                next_block_index = 0;
+                                next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
+                                next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                                next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
+                                next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
+                                next_sim_state = COLLIDE;
+                                chunk_transfer_ready = 1;
+                            end
+                            else
+                            begin
+                                next_index = (width_count == `BLOCK_WIDTH-1) ? (block_count_y*`BLOCK_HEIGHT+row_count+1)*`WIDTH : index + 1;
+                                next_width_count = (width_count == `BLOCK_WIDTH-1) ? (block_count_x*`BLOCK_WIDTH-1) : width_count + 1;
+                                next_row_count = (width_count == `BLOCK_WIDTH-1) ? row_count + 1 : row_count;
+                                next_block_index = block_index + 1;
+                                next_sim_state = COLLIDE;
+                            end
+                            if(index >= `WIDTH && index <= `DEPTH-`WIDTH-1 && width_count != 0 && width_count != `WIDTH-1) begin // only do for inside the margin
+                                c0_next_write_addr = block_index;
+                                c0_next_write_en = 1'b1;
+                                c0_next_data_in = (barriers[index] == 1) ? 0 : c_c0;
+    
+                                cn_next_write_addr = block_index;
+                                cn_next_write_en = 1'b1;
+                                cn_next_data_in = (barriers[index] == 1) ? 0 : c_cn;
+    
+                                cne_next_write_addr = block_index;
+                                cne_next_write_en = 1'b1;
+                                cne_next_data_in = (barriers[index] == 1) ? 0 : c_cne;
+    
+                                ce_next_write_addr = block_index;
+                                ce_next_write_en = 1'b1;
+                                ce_next_data_in = (barriers[index] == 1) ? 0 : c_ce;
+    
+                                cse_next_write_addr = block_index;
+                                cse_next_write_en = 1'b1;
+                                cse_next_data_in = (barriers[index] == 1) ? 0 : c_cse;
+    
+                                cs_next_write_addr = block_index;
+                                cs_next_write_en = 1'b1;
+                                cs_next_data_in = (barriers[index] == 1) ? 0 : c_cs;
+    
+                                csw_next_write_addr = block_index;
+                                csw_next_write_en = 1'b1;
+                                csw_next_data_in = (barriers[index] == 1) ? 0 : c_csw;
+    
+                                cw_next_write_addr = block_index;
+                                cw_next_write_en = 1'b1;
+                                cw_next_data_in = (barriers[index] == 1) ? 0 : c_cw;
+    
+                                cnw_next_write_addr = block_index;
+                                cnw_next_write_en = 1'b1;
+                                cnw_next_data_in = (barriers[index] == 1) ? 0 : c_cnw;
+                            end
+                        end
+                    else begin
+                        next_sim_state = COLLIDE;
+                        next_index = index;
+                        next_width_count = width_count;
+                    end
+                end
+                else
+                begin
                     next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
                 end
             end
 
             MEM_RESET : begin
-                if(index == (`DEPTH-1)) 
-                begin
-                    next_index = 0;
-                    next_width_count = 0;
-                    next_sim_state = IDLE;
-                    // next_step_count = step_count + 1;
+                if(chunk_compute_ready == 1'b1)
+                    begin
+                    if(index == `DEPTH-1) 
+                    begin
+                        next_index = 0;
+                        next_block_index = 0;
+                        next_width_count = 0;
+                        next_sim_state = IDLE;
+                        chunk_transfer_ready = 1;
+                    end
+                    else if(block_index == `BLOCK_DEPTH-1)
+                    begin
+                        next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
+                        next_block_index = 0;
+                        next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
+                        next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
+                        next_sim_state = MEM_RESET;
+                        chunk_transfer_ready = 1;
+                    end
+                    else
+                    begin
+                        next_index = (width_count == `BLOCK_WIDTH-1) ? (block_count_y*`BLOCK_HEIGHT+row_count+1)*`WIDTH : index + 1;
+                        next_width_count = (width_count == `BLOCK_WIDTH-1) ? (block_count_x*`BLOCK_WIDTH-1) : width_count + 1;
+                        next_row_count = (width_count == `BLOCK_WIDTH-1) ? row_count + 1 : row_count;
+                        next_block_index = block_index + 1;
+                        next_sim_state = MEM_RESET;
+                    end
+                    //initial eastward direction             
+                    c0_next_write_en = 1;
+                    c0_n_next_write_en = 1;
+                    c0_next_write_addr = index;
+                    c0_next_data_in = (barriers[index] == 0) ? init_c0 : 0;
+    
+                    cn_next_write_en = 1;
+                    cn_n_next_write_en = 1;
+                    cn_next_write_addr = index;
+                    cn_next_data_in = (barriers[index] == 0) ? init_cn : 0;
+    
+                    cne_next_write_en = 1;
+                    cne_n_next_write_en = 1;
+                    cne_next_write_addr = index;
+                    cne_next_data_in = (barriers[index] == 0) ? init_cne : 0;
+    
+                    ce_next_write_en = 1;
+                    ce_n_next_write_en = 1;
+                    ce_next_write_addr = index;
+                    ce_next_data_in = (barriers[index] == 0) ? init_ce : 0;
+    
+                    cse_next_write_en = 1;
+                    cse_n_next_write_en = 1;
+                    cse_next_write_addr = index;
+                    cse_next_data_in = (barriers[index] == 0) ? init_cse : 0;
+    
+                    cs_next_write_en = 1;
+                    cs_n_next_write_en = 1;
+                    cs_next_write_addr = index;
+                    cs_next_data_in = (barriers[index] == 0) ? init_cs : 0;
+    
+                    csw_next_write_en = 1;
+                    csw_n_next_write_en = 1;
+                    csw_next_write_addr = index;
+                    csw_next_data_in = (barriers[index] == 0) ? init_csw : 0;
+    
+                    cw_next_write_en = 1;
+                    cw_n_next_write_en = 1;
+                    cw_next_write_addr = index;
+                    cw_next_data_in = (barriers[index] == 0) ? init_cw : 0;
+    
+                    cnw_next_write_en = 1;
+                    cnw_n_next_write_en = 1;
+                    cnw_next_write_addr = index;
+                    cnw_next_data_in = (barriers[index] == 0) ? init_cnw : 0;
                 end
                 else
                 begin
-                    next_index = index + 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
                     next_sim_state = MEM_RESET;
                 end
-                
-                //initial eastward direction             
-                c0_next_write_en = 1;
-                c0_n_next_write_en = 1;
-                c0_next_write_addr = index;
-                c0_next_data_in = (barriers[index] == 0) ? init_c0 : 0;
-
-                cn_next_write_en = 1;
-                cn_n_next_write_en = 1;
-                cn_next_write_addr = index;
-                cn_next_data_in = (barriers[index] == 0) ? init_cn : 0;
-
-                cne_next_write_en = 1;
-                cne_n_next_write_en = 1;
-                cne_next_write_addr = index;
-                cne_next_data_in = (barriers[index] == 0) ? init_cne : 0;
-
-                ce_next_write_en = 1;
-                ce_n_next_write_en = 1;
-                ce_next_write_addr = index;
-                ce_next_data_in = (barriers[index] == 0) ? init_ce : 0;
-
-                cse_next_write_en = 1;
-                cse_n_next_write_en = 1;
-                cse_next_write_addr = index;
-                cse_next_data_in = (barriers[index] == 0) ? init_cse : 0;
-
-                cs_next_write_en = 1;
-                cs_n_next_write_en = 1;
-                cs_next_write_addr = index;
-                cs_next_data_in = (barriers[index] == 0) ? init_cs : 0;
-
-                csw_next_write_en = 1;
-                csw_n_next_write_en = 1;
-                csw_next_write_addr = index;
-                csw_next_data_in = (barriers[index] == 0) ? init_csw : 0;
-
-                cw_next_write_en = 1;
-                cw_n_next_write_en = 1;
-                cw_next_write_addr = index;
-                cw_next_data_in = (barriers[index] == 0) ? init_cw : 0;
-
-                cnw_next_write_en = 1;
-                cnw_n_next_write_en = 1;
-                cnw_next_write_addr = index;
-                cnw_next_data_in = (barriers[index] == 0) ? init_cnw : 0;
-
             end
 
             default: 
