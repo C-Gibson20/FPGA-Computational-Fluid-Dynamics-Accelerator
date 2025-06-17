@@ -2,6 +2,8 @@
 `define DEF
 
 `define DATA_WIDTH 16
+`define BLOCK_HEIGHT 25
+`define BLOCK_WIDTH 25
 `define HEIGHT 50
 `define WIDTH 50
 `define DEPTH `HEIGHT * `WIDTH
