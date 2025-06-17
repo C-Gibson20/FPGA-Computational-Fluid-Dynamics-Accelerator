@@ -12,7 +12,7 @@ protected:
         s = top.get();
         s->m00_axis_aresetn = 1;
         s->m00_axis_aclk = 1;
-        s->m00_axis_tvalid = 0;
+        s->m00_axis_tvalid = 1;
     }
 
     void runSimulation(int cycles = 1)
@@ -50,34 +50,58 @@ protected:
 //     runSimulation(10);
 // }
 
+// TEST_F(DDRPixelOutTop, TestDataLoad) {
+//     s->read_addr = 100;
+//     int16_t data[9] = {0x00,0x11,0x22,0x33,0xAA,0xBB,0xCC,0xDD,0xEE};
+//     int16_t data2[9] = {0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00,0x11,0x22};
+//     runSimulation(2);
+//     s->m00_axis_tvalid = 1;
+//     for (int i = 0; i < 5; ++i) {
+//         s->m00_axis_tdata[i] = data[i];
+//     }
+//     runSimulation(1);
+//     s->m00_axis_tvalid = 0;
+
+//     runSimulation(9);
+//     s->m00_axis_tvalid = 1;
+//     for (int i = 0; i < 5; ++i) {
+//         s->m00_axis_tdata[i] = data2[i];
+//     }
+//     runSimulation(1);
+//     for (int i = 0; i < 5; ++i) {
+//         s->m00_axis_tdata[i] = data[i];
+//     }
+//     runSimulation(1);
+//     s->m00_axis_tvalid = 0;
+//     s->read_addr = 10;
+//     runSimulation(3);
+//     s->m00_axis_tvalid = 1;
+//     runSimulation(2500);
+// }
+
 TEST_F(DDRPixelOutTop, TestDataLoad) {
-    s->read_addr = 100;
-    int16_t data[9] = {0x00,0x11,0x22,0x33,0xAA,0xBB,0xCC,0xDD,0xEE};
-    int16_t data2[9] = {0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00,0x11,0x22};
-    runSimulation(2);
-    s->m00_axis_tvalid = 1;
+    VlWide<5> data = {0x55667788, 0x11223344, 0, 0, 0}; // 64-bit LSB packed, rest zero
+    VlWide<5> data2 = {0x43257893, 0x43231278, 0, 0, 0}; // 64-bit LSB packed, rest zero
+    for (int i = 0; i < 20; ++i) {
+        s->read_addr = i;
+        runSimulation(1);
+    }
+    
     for (int i = 0; i < 5; ++i) {
         s->m00_axis_tdata[i] = data[i];
     }
-    runSimulation(1);
-    s->m00_axis_tvalid = 0;
-
-    runSimulation(9);
-    s->m00_axis_tvalid = 1;
+    runSimulation(4);
+    s->chunk_transfer_ready = 1;
     for (int i = 0; i < 5; ++i) {
         s->m00_axis_tdata[i] = data2[i];
     }
-    runSimulation(1);
-    for (int i = 0; i < 5; ++i) {
-        s->m00_axis_tdata[i] = data[i];
-    }
-    runSimulation(1);
-    s->m00_axis_tvalid = 0;
-    s->read_addr = 10;
-    runSimulation(3);
-    s->m00_axis_tvalid = 1;
-    runSimulation(2500);
+    runSimulation(10);
+    s->chunk_transfer_ready = 0;
+    runSimulation(5);
+    s->m00_axis_tlast = 1;
+    runSimulation(10);
 }
+
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

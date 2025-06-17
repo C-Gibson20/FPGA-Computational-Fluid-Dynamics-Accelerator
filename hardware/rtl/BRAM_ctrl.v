@@ -70,6 +70,7 @@ module BRAM_ctrl#(
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (!m00_axis_aresetn) begin
             current_state <= IDLE;
+            read_addr <= 0;
         end
         else begin
             current_state <= next_state;
@@ -90,12 +91,12 @@ module BRAM_ctrl#(
     always @* begin
         next_state = current_state;
         if(current_state == IDLE) begin
-            if(frame_ready && !chunk_transfer_ready) next_state = READ_WAIT;
+            if(chunk_transfer_ready) next_state = READ_WAIT;
         end
 
         if(current_state == READ_WAIT) begin
             // send only if tready is high
-            if(count == DEPTH+1) next_state = IDLE;
+            if(count == DEPTH+1 ) next_state = IDLE;
             else next_state = READ_WAIT;
         end
     end
@@ -105,14 +106,14 @@ module BRAM_ctrl#(
     // switching logic
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
 
-        if(current_state == IDLE && frame_ready) begin
+        if(current_state == IDLE) begin
             count <= 1; // set count 1 higher to give correct value on state transition
         end
 
         if(current_state == READ_WAIT) begin
             // the output data is hardwired to be RAM out
             // 
-            if(m00_axis_tready) count <= count + 1;
+            if(m00_axis_tready && chunk_transfer_ready) count <= count + 1;
             if(count == DEPTH+1) count <= 0;
         end
     end
@@ -124,10 +125,11 @@ always @* begin
     read_addr = 0;
     m00_axis_tvalid = 0;
     m00_axis_tlast = 0;
+
     if (!m00_axis_aresetn) read_addr = 0;
     else begin
         if(current_state == IDLE) begin
-            if (frame_ready) begin
+            if (m00_axis_tlast) begin
                 read_addr =0; // 
             end
         end
@@ -139,6 +141,9 @@ always @* begin
             if(count == DEPTH+1) begin
                 m00_axis_tlast = 1;
             end      
+            if(!chunk_transfer_ready) begin
+                m00_axis_tvalid = 0;
+            end
         end
     end 
 end

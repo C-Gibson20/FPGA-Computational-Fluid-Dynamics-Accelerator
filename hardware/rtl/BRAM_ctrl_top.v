@@ -5,7 +5,7 @@ module BRAM_ctrl_top #(
     parameter DEPTH         = 2500,
     parameter ADDRESS_WIDTH = 12
 )(
-    input  wire              frame_ready,
+    input  wire              chunk_transfer_ready,
     input  wire              m00_axis_aclk,
     input  wire              m00_axis_aresetn,
     input  wire              m00_axis_tready,
@@ -23,7 +23,7 @@ wire [ADDRESS_WIDTH-1:0] read_addr;
         .DEPTH(DEPTH),
         .ADDRESS_WIDTH(ADDRESS_WIDTH)
     ) inst_bram_ctrl (
-        .frame_ready(frame_ready),
+        .chunk_transfer_ready(chunk_transfer_ready),
         .n1(n1), .null1(null1), .ne1(ne1), .e1(e1),
         .se1(se1), .s1(s1), .sw1(sw1), .w1(w1), .nw1(nw1),
         .m00_axis_aclk(m00_axis_aclk),
