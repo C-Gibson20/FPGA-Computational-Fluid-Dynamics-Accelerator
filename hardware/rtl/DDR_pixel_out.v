@@ -31,18 +31,19 @@ module DDR_pixel_out#(
     parameter  C_M00_AXIS_TDATA_WIDTH    = 144
 )(
     //take data of all 9 directions for each pixel at a time
-    output reg [15:0] n1,
-    output reg [15:0] null1,
-    output reg [15:0] ne1,
-    output reg [15:0] e1,
-    output reg [15:0] se1,
-    output reg [15:0] s1,
-    output reg [15:0] sw1,
-    output reg [15:0] w1,
-    output reg [15:0] nw1,
+    output reg [DATA_WIDTH-1:0] n1,
+    output reg [DATA_WIDTH-1:0] null1,
+    output reg [DATA_WIDTH-1:0] ne1,
+    output reg [DATA_WIDTH-1:0] e1,
+    output reg [DATA_WIDTH-1:0] se1,
+    output reg [DATA_WIDTH-1:0] s1,
+    output reg [DATA_WIDTH-1:0] sw1,
+    output reg [DATA_WIDTH-1:0] w1,
+    output reg [DATA_WIDTH-1:0] nw1,
     output reg wen, 
 
-    output reg [11:0] write_addr,
+    output reg [ADDRESS_WIDTH-1:0] write_addr,
+    input reg [ADDRESS_WIDTH-1:0] read_addr,
 
     // Ports of Axi Master Bus Interface M00_AXIS
     input wire  m00_axis_aclk,
@@ -60,7 +61,7 @@ module DDR_pixel_out#(
     reg [1:0] next_state;
 
     always @* begin // combinational
-        m00_axis_tready = m00_axis_tvalid;
+        m00_axis_tready = (write_addr < read_addr) ? m00_axis_tvalid : 0;
 
         n1    = m00_axis_tdata[15:0];
         null1 = m00_axis_tdata[31:16];
@@ -81,7 +82,7 @@ module DDR_pixel_out#(
             write_addr <= 0;
         end
         else begin
-            if(m00_axis_tready) begin
+            if(m00_axis_tready && write_addr < read_addr) begin
                 write_addr <= write_addr + 1;
             end
             if(m00_axis_tlast) begin

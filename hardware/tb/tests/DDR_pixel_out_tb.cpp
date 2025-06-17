@@ -51,6 +51,7 @@ protected:
 // }
 
 TEST_F(DDRPixelOutTop, TestDataLoad) {
+    s->read_addr = 100;
     int16_t data[9] = {0x00,0x11,0x22,0x33,0xAA,0xBB,0xCC,0xDD,0xEE};
     int16_t data2[9] = {0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00,0x11,0x22};
     runSimulation(2);
@@ -72,6 +73,7 @@ TEST_F(DDRPixelOutTop, TestDataLoad) {
     }
     runSimulation(1);
     s->m00_axis_tvalid = 0;
+    s->read_addr = 10;
     runSimulation(3);
     s->m00_axis_tvalid = 1;
     runSimulation(2500);
