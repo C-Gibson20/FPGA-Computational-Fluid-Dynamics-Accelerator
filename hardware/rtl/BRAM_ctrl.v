@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module BRAM_ctrl_nishant#(
+module BRAM_ctrl#(
     parameter  DATA_WIDTH                = 16,
     parameter  DEPTH                     = 2500,
     parameter  ADDRESS_WIDTH             = 12
