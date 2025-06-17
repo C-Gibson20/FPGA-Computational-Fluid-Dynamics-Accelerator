@@ -42,6 +42,12 @@ module DDR_pixel_out#(
     output reg [DATA_WIDTH-1:0] nw1,
     output reg wen, 
 
+    //received from LBMsolver
+    input wire chunk_transfer_ready,
+    //goes high when all data has been written in, LBMsolver now inputs data into BRAMs
+    // must stay high until chunk transfer ready is high
+    output reg chunk_compute_ready,
+
     output reg [ADDRESS_WIDTH-1:0] write_addr,
     input reg [ADDRESS_WIDTH-1:0] read_addr,
 
@@ -81,7 +87,10 @@ module DDR_pixel_out#(
         if(!m00_axis_aresetn) begin
             write_addr <= 0;
         end
+        else if (chunk_transfer_ready) begin
+            chunk_compute_ready <= 0;
         else begin
+            chunk_compute_ready <= 1;
             if(m00_axis_tready && write_addr < read_addr) begin
                 write_addr <= write_addr + 1;
             end
