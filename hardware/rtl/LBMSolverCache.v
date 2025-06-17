@@ -172,7 +172,7 @@ module LBMSolver (
     output wire collider_ready,
     output wire in_collision_state,
     output wire [15:0] step_countn,
-    output reg frame_ready
+    output reg chunk_transfer_ready
 
 );
 
@@ -299,6 +299,11 @@ module LBMSolver (
             width_count <= next_width_count;
             step_count <= incr_step ? step_count + 1 : step_count;
             ram_wait_count <= next_ram_wait_count;
+
+            row_count <= next_row_count;
+            block_index <= next_block_index;
+            block_count_x <= next_block_count_x;
+            block_count_y <= next_block_count_y;
             
             c0_addr <= c0_next_write_en ? c0_next_write_addr : index;
             c0_n_addr <= c0_n_next_write_en ? c0_next_write_addr : index;
@@ -419,7 +424,10 @@ module LBMSolver (
         next_row_count = row_count;
         next_block_index = block_index;
         next_block_count_x = block_count_x;
+        next_block_count_y = block_count_y;
 
+        chunk_transfer_ready = 0;
+        
         incr_step = 0;
         next_ram_wait_count = ram_wait_count;
 
@@ -436,7 +444,7 @@ module LBMSolver (
             end
             STREAM:
             begin
-                if(chunk_finished == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(barriers[index] == 1'b0) //stream if not barrier
                     begin
@@ -455,7 +463,7 @@ module LBMSolver (
                         next_row_count = 0;
                         next_block_count_x = 0;
                         next_block_count_y = 0;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end 
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -466,7 +474,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = STREAM;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else // don't stream
                     begin
@@ -485,7 +493,7 @@ module LBMSolver (
 
             STREAM_WAIT : // do the outside too
             begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(ram_wait_count > 0) begin
                         next_ram_wait_count = ram_wait_count - 1; 
@@ -537,7 +545,7 @@ module LBMSolver (
                             next_block_index = `BLOCK_WIDTH + 1;
                             next_width_count = 1;
                             next_sim_state = BOUNCE;
-                            frame_ready = 1;
+                            chunk_transfer_ready = 1;
                         end
                         else if(block_index == `BLOCK_DEPTH-1)
                         begin
@@ -548,7 +556,7 @@ module LBMSolver (
                             next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                             next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = STREAM;
-                            frame_ready = 1;
+                            chunk_transfer_ready = 1;
                         end
                         else
                         begin
@@ -676,7 +684,7 @@ module LBMSolver (
                 // note to self: this stage reads from cx_n and writes to cx_n
                 // NOTE: we only bounce the interior cells, ie: x: [2,...,WIDTH-3], y: [2,...,HEIGHT-3]
                 // basically we leave a margin of 2 layers on teh outside that we don't bounce
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                     begin
                     if(barriers[index] == 1'b1) // RAM read, so need to wait for RAM...
                     begin
@@ -692,7 +700,7 @@ module LBMSolver (
                         next_row_count = 0;
                         next_block_count_x = 0;
                         next_block_count_y = 0;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -703,7 +711,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = BOUNCE;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else // not a barrier, skip over
                     begin
@@ -722,7 +730,7 @@ module LBMSolver (
 
             BOUNCE_WAIT:
             begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(ram_wait_count > 0) begin
                         next_ram_wait_count = ram_wait_count - 1; 
@@ -772,7 +780,7 @@ module LBMSolver (
                             next_block_index = `BLOCK_WIDTH + 1;
                             next_width_count = 1;
                             next_sim_state = ZERO_BOUNCE;
-                            frame_ready = 1;
+                            chunk_transfer_ready = 1;
                         end
                         else if(block_index == `BLOCK_DEPTH-1)
                         begin
@@ -783,7 +791,7 @@ module LBMSolver (
                             next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                             next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = BOUNCE;
-                            frame_ready = 1;
+                            chunk_transfer_ready = 1;
                         end
                         else
                         begin
@@ -803,7 +811,7 @@ module LBMSolver (
 
             ZERO_BOUNCE: // don't really care about zeroing only the inner cells, so 
             begin
-                if(chunk_ready = 1'b1)
+                if(chunk_compute_ready = 1'b1)
                 begin
                     if(index == `DEPTH-1) 
                     begin
@@ -811,7 +819,7 @@ module LBMSolver (
                         next_block_index = 0;
                         next_width_count = 0;
                         next_sim_state = COLLIDE;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -822,7 +830,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = ZERO_BOUNCE;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else
                     begin
@@ -880,7 +888,7 @@ module LBMSolver (
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
             begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                     begin
                     if(ram_wait_count > 0) begin
                         next_ram_wait_count = ram_wait_count - 1; 
@@ -897,7 +905,7 @@ module LBMSolver (
                                 next_block_index = 0;
                                 next_width_count = 0;
                                 next_sim_state = IDLE;
-                                frame_ready = 1;
+                                chunk_transfer_ready = 1;
                             end
                             else if(block_index == `BLOCK_DEPTH-1)
                             begin
@@ -908,7 +916,7 @@ module LBMSolver (
                                 next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                                 next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                                 next_sim_state = COLLIDE;
-                                frame_ready = 1;
+                                chunk_transfer_ready = 1;
                             end
                             else
                             begin
@@ -969,7 +977,7 @@ module LBMSolver (
             end
 
             MEM_RESET : begin
-                if(chunk_ready == 1'b1)
+                if(chunk_compute_ready == 1'b1)
                     begin
                     if(index == `DEPTH-1) 
                     begin
@@ -977,7 +985,7 @@ module LBMSolver (
                         next_block_index = 0;
                         next_width_count = 0;
                         next_sim_state = IDLE;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else if(block_index == `BLOCK_DEPTH-1)
                     begin
@@ -988,7 +996,7 @@ module LBMSolver (
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = MEM_RESET;
-                        frame_ready = 1;
+                        chunk_transfer_ready = 1;
                     end
                     else
                     begin
