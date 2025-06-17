@@ -28,7 +28,7 @@ protected:
 
 TEST_F(ColliderPipelinedTestbench, AtEquilibrium_NoChange) {
     loadEquilibriumValues();
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
 
     // Confirm outputs remain unchanged
@@ -54,7 +54,7 @@ TEST_F(ColliderPipelinedTestbench, SmallEastwardSpeed) {
     collider->f_se   = 0x00E4;
     collider->f_sw   = 0x00E4;
     collider->f_nw   = 0x00E4;
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
     EXPECT_NEAR(collider->f_new_null, 3514, 1);
     EXPECT_NEAR(collider->f_new_n,     878, 1);
@@ -78,7 +78,7 @@ TEST_F(ColliderPipelinedTestbench, StrongNorthwardSpeed) {
     collider->f_se   = 0x0090;
     collider->f_sw   = 0x0090;
     collider->f_nw   = 0x0120;
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
     tfp->dump(ticks++);
     EXPECT_NEAR(collider->f_new_null, 3322, 2);
@@ -103,7 +103,7 @@ TEST_F(ColliderPipelinedTestbench, DiagonalNorthEastFlow) {
     collider->f_sw   = 0x0090; // Less SW
     collider->f_nw   = 0x00E4;
 
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
     tfp->dump(ticks++);
     EXPECT_NEAR(collider->f_new_null, 3651, 3);
@@ -119,7 +119,7 @@ TEST_F(ColliderPipelinedTestbench, DiagonalNorthEastFlow) {
 
 TEST_F(ColliderPipelinedTestbench, ConservesMass) {
     loadEquilibriumValues();
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
 
     uint16_t total_before = collider->f_null + collider->f_n + collider->f_s +
@@ -145,7 +145,7 @@ TEST_F(ColliderPipelinedTestbench, inputZero) {
     collider->f_se   = 0x0000;
     collider->f_sw   = 0x0000;
     collider->f_nw   = 0x0000;
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
     tfp->dump(ticks++);
     EXPECT_EQ(collider->f_new_null, 0);
@@ -169,7 +169,7 @@ TEST_F(ColliderPipelinedTestbench, the1daytest) {
     collider->f_se   = 0x012F;
     collider->f_sw   = 0x00A6;
     collider->f_nw   = 0x00A6;
-    runSimulation(36);
+    runSimulation(21);
     collider->eval();
     tfp->dump(ticks++);
     EXPECT_NEAR(collider->f_new_null, 3588, 3);

@@ -1,37 +1,50 @@
 from .widgets import Button, InputBox, Slider
-import pygame
 from .canvas import clear_canvas
+from drawing.networking import send
+
+x = 25
+button_width = 160
+button_height = 35
+
+slider_y = 50
+circle_y = 100
+rectangle_y = 230
+polygon_y = 420
+save_y = 700
+
 
 def setup_ui(canvas, polygons, lines, images, circles, rectangles,
              draw_polygon, draw_circle, draw_rectangle,
-             send_fn, host, port, font):
+            host, port, font):
 
     labels = {}
     input_boxes = {}
 
+    # Brush Size Slider
+    slider = Slider((25, slider_y))
+
     # Polygon setup
-    Button(25, 25, 160, 35, 'Polygon', draw_polygon)
-    labels["polygon"] = (font.render("Insert no of sides", True, (255, 255, 255)), (25, 70))
-    input_boxes["polygon"] = [InputBox(25, 100, 50, 25)]
+    Button(x, polygon_y, button_width, button_height, 'Polygon', draw_polygon)
+    labels["polygon"] = (font.render("No. of sides", True, (255, 255, 255)), (x, polygon_y + 45))
+    input_boxes["polygon"] = [InputBox(x, polygon_y + 65, 50, 25, "4")]
 
     # Circle setup
-    Button(25, 140, 160, 35, 'Circle', draw_circle)
-    labels["circle"] = (font.render("Radius", True, (255, 255, 255)), (25, 190))
-    input_boxes["circle"] = [InputBox(25, 210, 50, 25)]
-
-    # Save & Clear
-    Button(25, 250, 160, 35, 'Save', lambda: send_fn(canvas, host, port))
-    Button(25, 310, 160, 35, 'Clear', lambda: clear_canvas(canvas, polygons, lines, images, circles, rectangles))
+    Button(x, circle_y, button_width, button_height, 'Circle', draw_circle)
+    labels["circle"] = (font.render("Radius", True, (255, 255, 255)), (x, circle_y + 45))
+    input_boxes["circle"] = [InputBox(x, circle_y + 65, 50, 25, "50")]
 
     # Rectangle setup
-    Button(25, 370, 160, 35, 'Rectangle', draw_rectangle)
-    labels["rect_w"] = (font.render("Width", True, (255, 255, 255)), (25, 420))
-    input_boxes["rect_w"] = [InputBox(25, 440, 50, 25)]
-    labels["rect_h"] = (font.render("Height", True, (255, 255, 255)), (25, 490))
-    input_boxes["rect_h"] = [InputBox(25, 510, 50, 25)]
+    Button(x, rectangle_y, button_width, button_height, 'Rectangle', draw_rectangle)
+    labels["rect_w"] = (font.render("Width", True, (255, 255, 255)), (x, rectangle_y + 45))
+    input_boxes["rect_w"] = [InputBox(x, rectangle_y + 65, 50, 25, "20")]
+    labels["rect_h"] = (font.render("Height", True, (255, 255, 255)), (x, rectangle_y + 105)) 
+    input_boxes["rect_h"] = [InputBox(x, rectangle_y + 125, 50, 25, "40")] 
 
-    # Brush Size Slider
-    slider = Slider((25, 580))
+
+
+    # Save & Clear
+    Button(x, save_y, button_width, button_height, 'Save', lambda: send(canvas, host, port))
+    Button(x, save_y + 50, button_width, button_height, 'Clear', lambda: clear_canvas(canvas, polygons, lines, images, circles, rectangles))
 
     return {
         "labels": labels,

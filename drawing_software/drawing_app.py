@@ -3,10 +3,11 @@ import pygame
 import ctypes
 import math
 
+pygame.init()
+
 from drawing.shapes import Polygon, Rectangle, Circle
-from drawing.widgets import Button, InputBox, Slider, Images, set_font, set_screen, objects
-from drawing.canvas import create_canvas, clear_canvas, draw_canvas
-from drawing.networking import send
+from drawing.widgets import Images, set_font, set_screen, objects
+from drawing.canvas import create_canvas, draw_canvas
 from drawing.layout import setup_ui
 from drawing.embed import embed_pygame_into_unity
 
@@ -20,7 +21,6 @@ python_win_title = "BarrierDrawingApplication"
 unity_win_title = "Fluid_Simulation_Test"
 
 ctypes.windll.shcore.SetProcessDpiAwareness(True)
-pygame.init()
 fps = 60
 fpsClock = pygame.time.Clock()
 
@@ -80,15 +80,15 @@ canvas = create_canvas(canvasSize)
 layout = setup_ui(
     canvas, polygons, lines, images, circles, rectangles,
     draw_polygon, draw_circle, draw_rectangle,
-    send, HOST, PORT, font
+    HOST, PORT, font
 )
 
+slider = layout["slider"]
 input_box1 = layout["input_boxes"]["polygon"]
 input_box2 = layout["input_boxes"]["circle"]
 input_box3 = layout["input_boxes"]["rect_w"]
 input_box4 = layout["input_boxes"]["rect_h"]
 labels = layout["labels"]
-slider = layout["slider"]
 
 
 while True:
@@ -163,7 +163,6 @@ while True:
     brushSize = slider.get_value()
 
     drawingEnabled = not any(rect.dragging for rect in rectangles) and not any(img.dragging for img in images) and not any(circle.dragging for circle in circles)
-
 
     if drawingEnabled and pygame.mouse.get_pressed()[0]:
         mx, my = pygame.mouse.get_pos()

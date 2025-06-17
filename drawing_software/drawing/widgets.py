@@ -60,6 +60,11 @@ class InputBox:
         self.txt_surface = font.render(text, True, self.color)
         self.active = False
 
+        # Blinking cursor
+        self.cursor_visible = True
+        self.last_cursor_switch = pygame.time.get_ticks()
+        self.cursor_interval = 500  # ms
+
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
@@ -72,14 +77,28 @@ class InputBox:
 
     def update(self):
         self.rect.w = self.width
+        # Blinking cursor logic
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_cursor_switch >= self.cursor_interval:
+            self.cursor_visible = not self.cursor_visible
+            self.last_cursor_switch = current_time
 
     def draw(self, screen):
+        # Draw text
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
+        # Draw blinking cursor
+        if self.active and self.cursor_visible:
+            cursor_x = self.rect.x + 5 + self.txt_surface.get_width()
+            cursor_y = self.rect.y + 5
+            cursor_height = self.txt_surface.get_height() * .95
+            pygame.draw.line(screen, self.color, (cursor_x, cursor_y), (cursor_x, cursor_y + cursor_height), 2)
+
     def get_value(self):
         return self.text
-    
+
+
 class Slider:
     def __init__(self, position, width=150, height=20, min_val=1, max_val=50, start_val=10, label="Brush Size"):
         self.x, self.y = position
