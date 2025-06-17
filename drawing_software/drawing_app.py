@@ -2,6 +2,7 @@ import sys
 import pygame
 import ctypes
 import math
+import networking
 
 pygame.init()
 
@@ -13,6 +14,7 @@ from drawing.embed import embed_pygame_into_unity
 
 HOST = '192.168.2.99'
 PORT = 9005
+networking.set_client_socket(HOST, PORT)
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -71,10 +73,6 @@ def draw_circle():
     circle = Circle((canvasSize[0] // 2, canvasSize[1] // 2), radius)
     circles.append(circle)
 
-
-MAX_RETRIES = 3
-RETRY_DELAY = 2  # seconds
-
 canvas = create_canvas(canvasSize)
 
 layout = setup_ui(
@@ -101,7 +99,9 @@ while True:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit(); sys.exit()
+            networking.close()
+            pygame.quit()
+            sys.exit()
         for box in input_box1: box.handle_event(event)
         for box in input_box2: box.handle_event(event)
         for box in input_box3: box.handle_event(event)
@@ -116,15 +116,17 @@ while True:
                     idx = poly.get_vertex_at_pos(pos)
                     if idx is not None:
                         selected_vertex, selected_polygon = idx, poly
+                    elif selected_vertex is None and poly.start_drag((pos)):
+                        selected_polygon = poly
                         break
                 for img in reversed(images):
-                    if img.start_drag((mx - buttonAreaWidth, my)):
+                    if img.start_drag((pos)):
                         break
                 for rect in rectangles:
-                    if rect.start_drag((mx - buttonAreaWidth, my)):
+                    if rect.start_drag((pos)):
                         break
                 for circle in circles:
-                    if circle.start_drag((mx - buttonAreaWidth, my)):
+                    if circle.start_drag((pos)):
                         break
 
         if event.type == pygame.MOUSEBUTTONUP:
@@ -134,6 +136,7 @@ while True:
             for img in images: img.stop_drag()
             for rect in rectangles: rect.stop_drag()
             for circle in circles: circle.stop_drag()
+            for poly in polygons: poly.stop_drag()
 
         if event.type == pygame.MOUSEMOTION:
             mx, my = pygame.mouse.get_pos()
@@ -144,7 +147,8 @@ while True:
                     rect.drag((mx - buttonAreaWidth, my))
                 for circle in circles:
                     circle.drag((mx - buttonAreaWidth, my))
-
+                for poly in polygons:
+                    poly.drag((mx - buttonAreaWidth, my))
         if event.type == pygame.DROPFILE:
             try:
                 img_surface = pygame.image.load(event.file).convert_alpha()
@@ -162,7 +166,7 @@ while True:
     slider.draw(screen)
     brushSize = slider.get_value()
 
-    drawingEnabled = not any(rect.dragging for rect in rectangles) and not any(img.dragging for img in images) and not any(circle.dragging for circle in circles)
+    drawingEnabled = not any(rect.dragging for rect in rectangles) and not any(img.dragging for img in images) and not any(circle.dragging for circle in circles) and not any(poly.dragging for poly in polygons)
 
     if drawingEnabled and pygame.mouse.get_pressed()[0]:
         mx, my = pygame.mouse.get_pos()

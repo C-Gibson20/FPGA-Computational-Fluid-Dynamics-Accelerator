@@ -209,6 +209,7 @@ class Polygon:
         return None
 
     def move_vertex(self, index, new_pos):
+        print(f"Moving vertex {index} to {new_pos}")
         self.points[index] = new_pos
 
 class Images:
@@ -461,6 +462,8 @@ while True:
                 for poly in polygons:
                     idx = poly.get_vertex_at_pos(pos)
                     if idx is not None:
+                        print(f"Selected vertex {idx} in polygon {poly}")
+                    
                         selected_vertex, selected_polygon = idx, poly
                         break
                 for img in reversed(images):
