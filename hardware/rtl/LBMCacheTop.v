@@ -63,6 +63,7 @@ module LBMCacheTop
     wire                   chunk_transfer_ready;
     wire                   chunk_compute_ready;
     wire                   wen;
+    wire                   DDR_wen;
 
     // AXI‑Stream wires
     wire                   axis_tvalid;
@@ -79,7 +80,25 @@ module LBMCacheTop
 
     // Nine direction buses (current step read by BRAM_ctrl; new data written
     // by DDR_pixel_out) – rest,  N, NE,  E, SE,  S, SW,  W, NW
-    wire [DATA_WIDTH-1:0] null1, n1, ne1, e1, se1, s1, sw1, w1, nw1;
+    wire [DATA_WIDTH-1:0] DDR_null1, DDR_n1, DDR_ne1, DDR_e1, DDR_se1, DDR_s1, DDR_sw1, DDR_w1, DDR_nw1;
+    wire [DATA_WIDTH-1:0] BRAM_ctrl_null1, BRAM_ctrl_n1, BRAM_ctrl_ne1, BRAM_ctrl_e1, BRAM_ctrl_se1, BRAM_ctrl_s1, BRAM_ctrl_sw1, BRAM_ctrl_w1, BRAM_ctrl_nw1;
+
+    wire [ADDRESS_WIDTH-1:0] BRAM_c0_addr, BRAM_cn_addr, BRAM_cne_addr, BRAM_ce_addr, BRAM_cse_addr, BRAM_cs_addr, BRAM_csw_addr, BRAM_cw_addr, BRAM_cnw_addr;
+    wire [`DATA_WIDTH-1:0]   BRAM_c0_data_in, BRAM_cn_data_in, BRAM_cne_data_in, BRAM_ce_data_in, BRAM_cse_data_in, BRAM_cs_data_in, BRAM_csw_data_in, BRAM_cw_data_in, BRAM_cnw_data_in;
+    wire                     BRAM_c0_write_en, BRAM_cn_write_en, BRAM_cne_write_en, BRAM_ce_write_en, BRAM_cse_write_en, BRAM_cs_write_en, BRAM_csw_write_en, BRAM_cw_write_en, BRAM_cnw_write_en;
+    wire [`DATA_WIDTH-1:0]   BRAM_c0_data_out, BRAM_cn_data_out, BRAM_cne_data_out, BRAM_ce_data_out, BRAM_cse_data_out, BRAM_cs_data_out, BRAM_csw_data_out, BRAM_cw_data_out, BRAM_cnw_data_out;
+
+    RAM_2500 #(.INIT_FILE("ram.mem")) c0     (.clk(clk), .addr(BRAM_c0_addr),  .data_in(BRAM_c0_data_in),   .write_en(BRAM_c0_write_en),   .data_out(BRAM_c0_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cn     (.clk(clk), .addr(BRAM_cn_addr),  .data_in(BRAM_cn_data_in),   .write_en(BRAM_cn_write_en),   .data_out(BRAM_cn_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cne    (.clk(clk), .addr(BRAM_cne_addr), .data_in(BRAM_cne_data_in),  .write_en(BRAM_cne_write_en),  .data_out(BRAM_cne_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) ce     (.clk(clk), .addr(BRAM_ce_addr),  .data_in(BRAM_ce_data_in),   .write_en(BRAM_ce_write_en),   .data_out(BRAM_ce_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cse    (.clk(clk), .addr(BRAM_cse_addr), .data_in(BRAM_cse_data_in),  .write_en(BRAM_cse_write_en),  .data_out(BRAM_cse_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cs     (.clk(clk), .addr(BRAM_cs_addr),  .data_in(BRAM_cs_data_in),   .write_en(BRAM_cs_write_en),   .data_out(BRAM_cs_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) csw    (.clk(clk), .addr(BRAM_csw_addr), .data_in(BRAM_csw_data_in),  .write_en(BRAM_csw_write_en),  .data_out(BRAM_csw_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cw     (.clk(clk), .addr(BRAM_cw_addr),  .data_in(BRAM_cw_data_in),   .write_en(BRAM_cw_write_en),   .data_out(BRAM_cw_data_out));
+    RAM_2500 #(.INIT_FILE("ram.mem")) cnw    (.clk(clk), .addr(BRAM_cnw_addr), .data_in(BRAM_cnw_data_in),  .write_en(BRAM_cnw_write_en),  .data_out(BRAM_cnw_data_out));
+
+
 
     //---------------------------------------------------------------------
     // 1.  Behavioural dual‑port RAMs per direction
@@ -125,15 +144,15 @@ module LBMCacheTop
         .ADDRESS_WIDTH (ADDRESS_WIDTH)
     ) u_bram_ctrl (
         .chunk_transfer_ready (chunk_transfer_ready),
-        .n1      (n1),
-        .null1   (null1),
-        .ne1     (ne1),
-        .e1      (e1),
-        .se1     (se1),
-        .s1      (s1),
-        .sw1     (sw1),
-        .w1      (w1),
-        .nw1     (nw1),
+        .null1   (BRAM_ctrl_null1),
+        .n1      (BRAM_ctrl_n1),
+        .ne1     (BRAM_ctrl_ne1),
+        .e1      (BRAM_ctrl_e1),
+        .se1     (BRAM_ctrl_se1),
+        .s1      (BRAM_ctrl_s1),
+        .sw1     (BRAM_ctrl_sw1),
+        .w1      (BRAM_ctrl_w1),
+        .nw1     (BRAM_ctrl_nw1),
         .read_addr          (bram_read_addr),
         .m00_axis_aclk      (clk),
         .m00_axis_aresetn   (rstn),
@@ -153,16 +172,16 @@ module LBMCacheTop
         .ADDRESS_WIDTH              (ADDRESS_WIDTH),
         .C_M00_AXIS_TDATA_WIDTH     (AXIS_DATA_WIDTH)
     ) u_ddr_pixel_out (
-        .n1                 (n1),
-        .null1              (null1),
-        .ne1                (ne1),
-        .e1                 (e1),
-        .se1                (se1),
-        .s1                 (s1),
-        .sw1                (sw1),
-        .w1                 (w1),
-        .nw1                (nw1),
-        .wen                (wen),
+        .null1              (DDR_null1),
+        .n1                 (DDR_n1),
+        .ne1                (DDR_ne1),
+        .e1                 (DDR_e1),
+        .se1                (DDR_se1),
+        .s1                 (DDR_s1),
+        .sw1                (DDR_sw1),
+        .w1                 (DDR_w1),
+        .nw1                (DDR_nw1),
+        .wen                (DDR_wen),
         .chunk_transfer_ready(chunk_transfer_ready),
         .chunk_compute_ready (chunk_compute_ready),
         .write_addr         (ddr_write_addr),
@@ -180,12 +199,44 @@ module LBMCacheTop
     // 4.  Optional address multiplexer – cache_top
     //---------------------------------------------------------------------
     BRAM_toggle u_BRAM_toggle (
+        .m00_axis_aclk        (clk),
+        .m00_axis_aresetn     (rstn),
         .chunk_transfer_ready (chunk_transfer_ready),
         .chunk_compute_ready  (chunk_compute_ready),
-        .wen                  (wen),
-        .LBM_addr             (lbm_addr),
-        .DDR_addr             (ddr_write_addr),
-        .addr                 (cache_addr)
+
+        .null1 (c0_addr), .n1 (cn_addr), .ne1 (cne_addr), .e1 (ce_addr),
+        .se1 (cse_addr), .s1 (cs_addr), .sw1 (csw_addr), .w1 (cw_addr), .nw1 (cnw_addr),
+
+        .LBM_null_w (c0_we), .LBM_n_w (cn_we), .LBM_ne_w (cne_we), .LBM_e_w (ce_we),
+        .LBM_se_w (cse_we), .LBM_s_w (cs_we), .LBM_sw_w (csw_we), .LBM_w_w (cw_we), .LBM_nw_w (cnw_we),
+
+        .LBM_null_in (c0_din), .LBM_n_in (cn_din), .LBM_ne_in (cne_din), .LBM_e_in (ce_din),
+        .LBM_se_in (cse_din), .LBM_s_in (cs_din), .LBM_sw_in (csw_din), .LBM_w_in (cw_din), .LBM_nw_in (cnw_din),
+
+        .LBM_null_out (c0_dout), .LBM_n_out (cn_dout), .LBM_ne_out (cne_dout), .LBM_e_out (ce_dout), .LBM_se_out (cse_dout),
+        .LBM_s_out (cs_dout), .LBM_sw_out (csw_dout), .LBM_w_out (cw_dout), .LBM_nw_out (cnw_dout),
+
+        .cache_null_in (DDR_null1), .cache_n_in (DDR_n1), .cache_ne_in (DDR_ne1), .cache_e_in (DDR_e1), 
+        .cache_se_in (DDR_se1), .cache_s_in (DDR_s1), .cache_sw_in (DDR_sw1), .cache_w_in (DDR_w1), .cache_nw_in (DDR_nw1),
+
+        .cache_null_out (BRAM_ctrl_null1), .cache_n_out (BRAM_ctrl_n1), .cache_ne_out (BRAM_ctrl_ne1), .cache_e_out (BRAM_ctrl_e1), .cache_se_out (BRAM_ctrl_se1),
+        .cache_s_out (BRAM_ctrl_s1), .cache_sw_out (BRAM_ctrl_sw1), .cache_w_out (BRAM_ctrl_w1), .cache_nw_out (BRAM_ctrl_nw1),
+
+        .DDR_addr (ddr_write_addr),
+        .cache_wen (DDR_wen),
+
+        .null1_data_in (BRAM_c0_data_in), .n1_data_in    (BRAM_cn_data_in),  .ne1_data_in (BRAM_cne_data_in), .e1_data_in  (BRAM_ce_data_in), 
+        .se1_data_in   (BRAM_cse_data_in), .s1_data_in   (BRAM_cs_data_in),  .sw1_data_in (BRAM_csw_data_in), .w1_data_in  (BRAM_cw_data_in), .nw1_data_in   (BRAM_cnw_data_in),
+
+        .null1_data_out (BRAM_c0_data_out), .n1_data_out  (BRAM_cn_data_out),  .ne1_data_out (BRAM_cne_data_out), .e1_data_out  (BRAM_ce_data_out), 
+        .se1_data_out   (BRAM_cse_data_out), .s1_data_out (BRAM_cs_data_out),  .sw1_data_out (BRAM_csw_data_out), .w1_data_out  (BRAM_cw_data_out), .nw1_data_out   (BRAM_cnw_data_out),
+
+        .null1_wen (BRAM_c0_write_en), .n1_wen  (BRAM_cn_write_en),  .ne1_wen (BRAM_cne_write_en), .e1_wen  (BRAM_ce_write_en), 
+        .se1_wen   (BRAM_cse_write_en), .s1_wen (BRAM_cs_write_en),  .sw1_wen (BRAM_csw_write_en), .w1_wen  (BRAM_cw_write_en), .nw1_wen   (BRAM_cnw_write_en),
+
+
+        .null1_out (BRAM_c0_addr), .n1_out  (BRAM_cn_addr),  .ne1_out (BRAM_cne_addr), .e1_out  (BRAM_ce_addr), 
+        .se1_out   (BRAM_cse_addr), .s1_out (BRAM_cs_addr),  .sw1_out (BRAM_csw_addr), .w1_out  (BRAM_cw_addr), .nw1_out   (BRAM_cnw_addr)
     );
 
     //---------------------------------------------------------------------
