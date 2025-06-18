@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cache_top(
+module BRAM_toggle(
     input wire chunk_transfer_ready,
     input wire chunk_compute_ready,
     
@@ -37,7 +37,7 @@ module cache_top(
             addr <= DDR_addr;
         end
         else if (chunk_compute_ready) begin 
-            addr <= LBM_addrl
+            addr <= LBM_addr;
         end
    end
     
