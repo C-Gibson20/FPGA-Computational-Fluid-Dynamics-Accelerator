@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolver (
+module LBMSolverCache (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -31,7 +31,7 @@ module LBMSolver (
     input wire en,
     input wire [15:0] step, // will step until sim value
     input wire signed [15:0] omega, // 1/tau
-    input wire chunk_finished,
+    input wire chunk_compute_ready,
     output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
     // BRAM c0
     output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
@@ -189,7 +189,7 @@ module LBMSolver (
     localparam COLLIDE          = 4'd8;
     localparam MEM_RESET        = 4'd9;
     
-    reg [15:0] width_count, next_width_count, next_row_count, row_count, block_index, next_block_index, block_count_x, next_block_count_x;
+    reg [15:0] width_count, next_width_count, next_row_count, row_count, block_index, next_block_index, block_count_x, next_block_count_x, block_count_y, next_block_count_y;
     reg [3:0] sim_state, next_sim_state;
     reg [`ADDRESS_WIDTH-1:0] index, next_index;
     
@@ -470,7 +470,7 @@ module LBMSolver (
                         next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                         next_block_index = 0;
                         next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = STREAM;
@@ -552,7 +552,7 @@ module LBMSolver (
                             next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                             next_block_index = 0;
                             next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                            next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                            next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                             next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                             next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = STREAM;
@@ -707,7 +707,7 @@ module LBMSolver (
                         next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                         next_block_index = 0;
                         next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = BOUNCE;
@@ -787,7 +787,7 @@ module LBMSolver (
                             next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                             next_block_index = 0;
                             next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                            next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                            next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                             next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                             next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                             next_sim_state = BOUNCE;
@@ -811,7 +811,7 @@ module LBMSolver (
 
             ZERO_BOUNCE: // don't really care about zeroing only the inner cells, so 
             begin
-                if(chunk_compute_ready = 1'b1)
+                if(chunk_compute_ready == 1'b1)
                 begin
                     if(index == `DEPTH-1) 
                     begin
@@ -826,7 +826,7 @@ module LBMSolver (
                         next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                         next_block_index = 0;
                         next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = ZERO_BOUNCE;
@@ -912,7 +912,7 @@ module LBMSolver (
                                 next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                                 next_block_index = 0;
                                 next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                                next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                                next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                                 next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                                 next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                                 next_sim_state = COLLIDE;
@@ -992,7 +992,7 @@ module LBMSolver (
                         next_index = (width_count == `WIDTH - 1) ? (`BLOCK_HEIGHT-1)*(block_count_y+1) : (`BLOCK_WIDTH-1)*(block_count_x + 1) + (`BLOCK_HEIGHT-1)*(block_count_y);
                         next_block_index = 0;
                         next_row_count = (width_count == `WIDTH - 1) ? (block_count_y+1)*`BLOCK_HEIGHT: block_count_y*`BLOCK_HEIGHT;
-                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (BLOCK_WIDTH - 1)*(block_count_x+1);
+                        next_width_count = (width_count == `WIDTH - 1) ? 0 : (`BLOCK_WIDTH - 1)*(block_count_x+1);
                         next_block_count_x = (width_count == `WIDTH - 1) ? 0 : block_count_x + 1;
                         next_block_count_y = (width_count == `WIDTH - 1) ? block_count_y + 1 : block_count_y;
                         next_sim_state = MEM_RESET;

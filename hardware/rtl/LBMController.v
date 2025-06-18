@@ -706,8 +706,6 @@ module LBMController (
     //Stream state
     always @* begin
         c0_next_write_addr = 0;
-        c0_next_write_en = 0;
-        c0_n_next_write_en = 0;
         c0_n_next_stored_data = 0;
         c0_n_read_from_write_address = 0;
 
