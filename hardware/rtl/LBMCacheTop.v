@@ -386,6 +386,6 @@ module LBMCacheTop
     );
 
     // Hook a representative address for cache mux demo
-    assign lbm_addr = c0_addr;
+    assign lbm_addr = LBM_c0_addr;
 
 endmodule
