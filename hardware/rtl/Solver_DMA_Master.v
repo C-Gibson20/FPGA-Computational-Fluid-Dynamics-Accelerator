@@ -9,7 +9,6 @@
         parameter  NUM_CHUNKS                = (DEPTH-1)/N_PARALLEL_SOLVERS + 1,
         parameter  ADDRESS_WIDTH             = 12,
         parameter  N_PARALLEL_SOLVERS        = 8,
-        parameter  N_SEND_BITS               = 2, //log2 N_PARALLEL_SOLVERS
         parameter integer RAM_DATA_WIDTH	= N_PARALLEL_SOLVERS * 4 * DATA_WIDTH,
 		// User parameters ends
 		// Do not modify the parameters beyond this line

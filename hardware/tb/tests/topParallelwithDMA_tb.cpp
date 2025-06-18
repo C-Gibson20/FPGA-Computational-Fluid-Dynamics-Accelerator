@@ -94,7 +94,15 @@ TEST_F(topParallelTestbench, Equilibrium) {
 
     topParallel->m00_axis_tready = 1;
 
-    runSimulation(30000);
+    runSimulation(10000);
+
+    topParallel->m00_axis_tready = 0;
+
+    runSimulation(1000);
+
+    topParallel->m00_axis_tready = 1;
+
+    runSimulation(50000);
 }
 
 int main(int argc, char **argv) {
