@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module BRAM_toggle(
     input  wire m00_axis_aclk,
     input  wire m00_axis_aresetn,

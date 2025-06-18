@@ -8,7 +8,7 @@
 `define HEIGHT 50
 `define WIDTH 50
 `define DEPTH `HEIGHT * `WIDTH
-`define ADDRESS_WIDTH 13 // ≈ 11.3 → rounded up to 12
+`define ADDRESS_WIDTH 12 // ≈ 11.3 → rounded up to 12
 `define FIXED_ONE 16'sh2000
 `define FIXED_ONE_9TH 16'sh038e
 `define FIXED_ONE_36TH 16'sh00e4
