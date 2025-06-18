@@ -40,7 +40,10 @@ def setup_ui(canvas, polygons, lines, images, circles, rectangles,
     labels["rect_h"] = (font.render("Height", True, (255, 255, 255)), (x, rectangle_y + 105)) 
     input_boxes["rect_h"] = [InputBox(x, rectangle_y + 125, 50, 25, "40")] 
 
-
+    # Labels to state functionality
+    labels["images1"] = (font.render("Drag and drop", True, (255, 255, 255)), (x, polygon_y + 115))
+    labels["images2"] = (font.render("images to add", True, (255, 255, 255)), (x, polygon_y + 140))
+    labels["images3"] = (font.render("as barriers.", True, (255, 255, 255)), (x, polygon_y + 165))
 
     # Save & Clear
     Button(x, save_y, button_width, button_height, 'Save', lambda: send(canvas, host, port))

@@ -48,8 +48,6 @@ class Polygon(Shape):
         self.rect = pygame.Rect(min_x, min_y, max_x - min_x, max_y - min_y)
 
     def draw(self, surface):
-        self.points = self.calculate_points()
-        self.update_rect()
         pygame.draw.polygon(surface, self.color, self.points)
 
     def drag(self, mouse_pos):
@@ -65,8 +63,7 @@ class Polygon(Shape):
         return None
 
     def move_vertex(self, index, new_pos):
-        if 0 <= index < len(self.points):
-            self.points[index] = new_pos
+        self.points[index] = new_pos
 
 
 class Rectangle(Shape):
