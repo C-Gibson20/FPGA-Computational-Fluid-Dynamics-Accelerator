@@ -60,10 +60,8 @@
     
     reg [1:0] current_state,next_state;
     reg [ADDRESS_WIDTH-1 + 1: 0] write_count; // extra bit bc times 2
-    reg     tvalid, next_tvalid, tlast;
-    reg     write_incr;
+    reg     tvalid, tlast;
     reg [C_M00_AXIS_TDATA_WIDTH-1:0] dout;
-    reg [RAM_DATA_WIDTH-1:0] clocked_ram_din;
 
     assign m00_axis_tvalid = tvalid;
     assign m00_axis_tdata  = dout;
@@ -98,7 +96,6 @@
 
             if(current_state == WAIT_READY) begin
                 if(write_count <= NUM_CHUNKS && m00_axis_tready) begin
-                    
                     send_count <= send_count + 1;
                     if(send_count == N_PARALLEL_SOLVERS-1) begin
                         write_count <= write_count + 1;
@@ -109,6 +106,7 @@
                 else if(write_count <= NUM_CHUNKS && !m00_axis_tready) begin
                     write_count <= write_count;
                     send_count <= send_count;
+
                 end
                 else if(!m00_axis_tready && in_collision_state && !transfer_in_progress) begin
                     read_count <= 1;
@@ -119,6 +117,7 @@
                 else begin // reached end
                     write_count <= 0;
                     send_count <= 0;
+                    transfer_in_progress <= 0;
                     transfer_complete <= 1;
                 end
             end
@@ -136,7 +135,7 @@
     always @* begin
         case (current_state)
            FILL_DATA : begin
-                if(!in_collision_state) 
+                if(!in_collision_state && !transfer_complete) 
                     next_state = WAIT_READY;                
                 else 
                     next_state = FILL_DATA;
@@ -150,8 +149,7 @@
                 else
                     next_state = WAIT_READY;
             end
-
-            default: 
+            default : 
                 next_state = FILL_DATA;
         endcase
     end
@@ -166,7 +164,7 @@
         tlast = 0;
         ram_wen = 0;
         ram_addr = 0;
-        ram_din = clocked_ram_din; // ram DIN from FF logic
+        ram_din = 0;
         if(current_state == FILL_DATA && !in_collision_state) begin
             tvalid = 0; // not ready until we transistion and the RAM data comes out
             ram_addr = read_count;
