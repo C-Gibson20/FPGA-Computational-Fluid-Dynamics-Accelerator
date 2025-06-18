@@ -70,7 +70,6 @@ module BRAM_ctrl#(
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (!m00_axis_aresetn) begin
             current_state <= IDLE;
-            read_addr <= 0;
         end
         else begin
             current_state <= next_state;
