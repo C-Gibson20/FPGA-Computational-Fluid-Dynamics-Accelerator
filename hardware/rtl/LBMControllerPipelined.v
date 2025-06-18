@@ -1280,6 +1280,19 @@ module LBMControllerPipelined (
                 end
             end
             COLLIDE: begin
+                if (ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1;
+                    next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;  
+                end
+                else begin
+                    next_sim_state = COLLIDE;
+                    next_index = index + `RAMS_TO_ACCESS;
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    next_width_count = width_count;  
+                end
+
                 if(all_newval_ready) begin
                     if(newval_index_array[0] + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
@@ -1298,18 +1311,6 @@ module LBMControllerPipelined (
                     cw_next_write_addr = newval_index_array[0];
                     cnw_next_write_addr = newval_index_array[0];   
                     next_width_count = (newval_width_count_array[0]+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);                  
-                end
-                else if (ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;  
-                end
-                else begin
-                    next_sim_state = COLLIDE;
-                    next_index = index + `RAMS_TO_ACCESS;
-                    next_ram_wait_count = `RAM_READ_WAIT;
-                    next_width_count = width_count;  
                 end
             end
 

@@ -645,6 +645,11 @@ module LBMSolverParallelPipelined (
             COLLIDE: begin
                 collider_en = 0;
                 next_sim_state = COLLIDE;
+
+                if(ram_wait_count == 0) begin
+                    collider_en = 1;
+                end
+
                 if(newval_ready) begin
                     if(newval_index >= `DEPTH-1) begin
                         next_sim_state = IDLE;
@@ -677,9 +682,6 @@ module LBMSolverParallelPipelined (
                         cnw_write_en = 1'b1;
                         cnw_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
                     end
-                end
-                else if(ram_wait_count == 0) begin
-                    collider_en = 1;
                 end
             end
 
