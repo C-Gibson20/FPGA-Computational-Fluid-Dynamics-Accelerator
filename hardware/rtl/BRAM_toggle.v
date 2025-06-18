@@ -99,7 +99,8 @@ module cache_toggle(
     //cache address
     input wire [11:0] DDR_addr,
     
-    
+    //cache write enable
+    input wire cache_wen,
     
     //input data into BRAM
     output reg null1_data_in,
@@ -147,10 +148,65 @@ module cache_toggle(
     output reg [11:0] nw1_out         
     );
 
+    always @* begin
+        if(chunk_transfer_ready) begin // give powwer to cache
+            output reg null1_wen,
+            output reg n1_wen,
+            output reg ne1_wen,
+            output reg e1_wen,
+            output reg se1_wen,
+            output reg s1_wen,
+            output reg sw1_wen,
+            output reg w1_wen,
+            output reg nw1_wen,
+
+            output reg [11:0] null1_out,
+            output reg [11:0] n1_out,
+            output reg [11:0] ne1_out,
+            output reg [11:0] e1_out,
+            output reg [11:0] se1_out,
+            output reg [11:0] s1_out,
+            output reg [11:0] sw1_out,
+            output reg [11:0] w1_out,
+            output reg [11:0] nw1_out 
+
+            output reg null1_data_in,
+            output reg n1_data_in,
+            output reg ne1_data_in,
+            output reg e1_data_in,
+            output reg se1_data_in,
+            output reg s1_data_in,  
+            output reg sw1_data_in,
+            output reg w1_data_in,
+            output reg nw1_data_in,  
+
+            
+
+        end
+
+    end
+
     always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
         if (!m00_axis_aresetn) begin
-            {null1_out, n1_out, ne1_out, e1_out, se1_out, s1_out, sw1_out, w1_out, nw1_out} <= 0;
-            wen  <= 0;
+            null1_out <= 0;
+            n1_out <= 0;
+            ne1_out <= 0;
+            e1_out <= 0;
+            se1_out <= 0;
+            s1_out <= 0;
+            sw1_out <= 0;
+            w1_out <= 0;
+            nw1_out <= 0;
+
+            null1_wen 
+            n1_wen 
+            ne1_wen 
+            e1_wen 
+            se1_wen 
+            s1_wen 
+            sw1_wen 
+            w1_wen 
+            nw1_wen 
         end 
         else begin
             if (chunk_transfer_ready) begin
@@ -177,26 +233,26 @@ module cache_toggle(
                 nw1_wen   <= 1;
                 
                 //cache data in
-                cache_null_in
-                cache_n_in
-                cache_ne_in
-                cache_e_in
-                cache_se_in
-                cache_s_in
-                cache_sw_in
-                cache_w_in
-                cache_nw_in
+                null1_data_in <= cache_null_in;
+                n1_data_in <= cache_n_in;
+                ne1_data_in <= cache_ne_in;
+                e1_data_in <= cache_e_in;
+                se1_data_in <= cache_se_in;
+                s1_data_in <= cache_s_in;
+                sw1_data_in <= cache_sw_in;
+                w1_data_in <= cache_w_in;
+                nw1_data_in <= cache_nw_in;
                 
                 //cache data_out
-               n1_out <= cache_null_out 
-               ne1_out <= cache_n_out
-               e1_out <= cache_ne_out
-               se1_out <= cache_e_out
-               s1_out <= cache_se_out
-               sw1_out <= cache_s_out
-               w1_out <= cache_sw_out
-               nw1_out <= cache_w_out
-               nw1_out <= cache_nw_out
+                cache_null_out <= null1_data_out;
+                cache_n_out <= n1_data_out;
+                cache_ne_out <= ne1_data_out;
+                cache_e_out <= e1_data_out;
+                cache_se_out <= se1_data_out;
+                cache_s_out <= s1_data_out;
+                cache_sw_out <= sw1_data_out;
+                cache_w_out <= w1_data_out;
+                cache_nw_out <= nw1_data_out;
             
             end 
             else if (chunk_compute_ready) begin
@@ -212,15 +268,15 @@ module cache_toggle(
                 nw1_out <= nw1;   
                 
                 //LBM solver data out       
-                 null1_data_out<= LBM_null_out;
-                 n1_data_out <= LBM_n_out;
-                 ne1_data_out <= LBM_ne_out;
-                e1_data_out <= LBM_e_out;
-                 se1_data_out, <= LBM_se_out;
-                <s1_data_out,  = LBM_s_out;
-                 sw1_data_out, <= LBM_sw_out;
-                <w1_data_out,  = LBM_w_out;
-                 nw1_data_out, <= LBM_nw_out;
+                LBM_null_out <= null1_data_out;
+                LBM_n_out <= n1_data_out;
+                LBM_ne_out <= ne1_data_out;
+                LBM_e_out <= e1_data_out;
+                LBM_se_out <= se1_data_out;
+                LBM_s_out <= s1_data_out;
+                LBM_sw_out <= sw1_data_out;
+                LBM_w_out <= w1_data_out;
+                LBM_nw_out <= nw1_data_out;
                 
                //LBM solver write enable
                 null1_wen <= LBM_null_w;
