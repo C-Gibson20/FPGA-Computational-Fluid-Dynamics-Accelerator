@@ -508,35 +508,35 @@ module LBMSolverCache (
                         c0_next_data_in = c0_data_out;
     
                         cn_next_write_addr = block_index-`BLOCK_WIDTH; // write to cell above
-                        cn_n_next_write_en = 1;
+                        cn_n_next_write_en = index > `WIDTH-1;
                         cn_next_data_in = cn_data_out;
     
                         cne_next_write_addr = block_index-`BLOCK_WIDTH+1;
-                        cne_n_next_write_en = 1;
+                        cne_n_next_write_en = (width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH);
                         cne_next_data_in = cne_data_out;
     
                         ce_next_write_addr = block_index+1;
-                        ce_n_next_write_en = 1;
+                        ce_n_next_write_en = (width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH);
                         ce_next_data_in = ce_data_out;
     
                         cse_next_write_addr = block_index+`BLOCK_WIDTH+1;
-                        cse_n_next_write_en = 1;
+                        cse_n_next_write_en = ((width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH) && (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT));
                         cse_next_data_in = cse_data_out;
     
                         cs_next_write_addr = block_index+`BLOCK_WIDTH;
-                        cs_n_next_write_en = 1;
+                        cs_n_next_write_en = (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT);
                         cs_next_data_in = cs_data_out;
     
                         csw_next_write_addr = block_index+`BLOCK_WIDTH-1;
-                        csw_n_next_write_en = 1;
+                        csw_n_next_write_en = (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT);
                         csw_next_data_in = csw_data_out;
     
                         cw_next_write_addr = block_index - 1;
-                        cw_n_next_write_en = 1;
+                        cw_n_next_write_en = (width_count != 0);
                         cw_next_data_in = cw_data_out;
     
                         cnw_next_write_addr = block_index - 1 - `BLOCK_WIDTH;
-                        cnw_n_next_write_en = 1;
+                        cnw_n_next_write_en = ((width_count != 0) && (index > `WIDTH-1));
                         cnw_next_data_in = cnw_data_out;
     
                         if(index == `DEPTH-1) 
@@ -741,27 +741,27 @@ module LBMSolverCache (
                     end 
                     else begin
                         cn_next_write_addr = block_index-`BLOCK_WIDTH;
-                        cn_n_next_write_en = 1;
+                        cn_n_next_write_en = (index > `WIDTH-1);
                         cn_next_data_in = cs_n_data_out;
     
                         cne_next_write_addr = block_index-`BLOCK_WIDTH+1;
-                        cne_n_next_write_en = 1;
+                        cne_n_next_write_en = (width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH);
                         cne_next_data_in = csw_n_data_out;
     
                         ce_next_write_addr = block_index+1;
-                        ce_n_next_write_en = (width_count != `WIDTH - 1);
+                        ce_n_next_write_en = (width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH);
                         ce_next_data_in = cw_n_data_out; 
     
                         cse_next_write_addr = block_index+`BLOCK_WIDTH+1;
-                        cse_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1  && (width_count != `WIDTH - 1));
+                        cse_n_next_write_en = ((width_count-block_count_x*`BLOCK_WIDTH != `BLOCK_WIDTH) && (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT));
                         cse_next_data_in = cnw_n_data_out; 
     
                         cs_next_write_addr = block_index+`BLOCK_WIDTH;
-                        cs_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1);
+                        cs_n_next_write_en = (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT);
                         cs_next_data_in = cn_n_data_out; 
     
                         csw_next_write_addr = block_index+`BLOCK_WIDTH-1;
-                        csw_n_next_write_en = (block_index <= `DEPTH-`WIDTH-1 && (width_count != 0));
+                        csw_n_next_write_en = (row_count-block_count_y*`BLOCK_HEIGHT != `BLOCK_HEIGHT);
                         csw_next_data_in = cne_n_data_out; 
     
                         cw_next_write_addr = block_index - 1;
@@ -769,7 +769,7 @@ module LBMSolverCache (
                         cw_next_data_in = ce_n_data_out; 
     
                         cnw_next_write_addr = block_index - `BLOCK_WIDTH - 1;
-                        cnw_n_next_write_en = (block_index >= `WIDTH && (width_count != 0));
+                        cnw_n_next_write_en = ((width_count != 0) && (index > `WIDTH-1));
                         cnw_next_data_in = cse_n_data_out;
     
     

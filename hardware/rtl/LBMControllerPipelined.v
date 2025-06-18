@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMController (
+module LBMControllerPipelined (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -229,6 +229,7 @@ module LBMController (
     wire [`DATA_WIDTH-1:0] u_y_array        [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] u_squared_array  [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] rho_array        [0:`RAMS_TO_ACCESS-1];
+    wire [`ADDRESS_WIDTH-1:0] newval_index_array        [0:`RAMS_TO_ACCESS-1];
 
 
     // Write-enable and status bits
@@ -263,7 +264,8 @@ module LBMController (
     wire in_collision_state_array  [0:`RAMS_TO_ACCESS-1];
     wire read_wait_array          [0:`RAMS_TO_ACCESS-1];
     wire zero_barrier_array [0:`RAMS_TO_ACCESS-1];
-    wire nv_ready_array [0:`RAMS_TO_ACCESS-1];
+    wire newval_ready_array [0:`RAMS_TO_ACCESS-1];
+
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
     wire [`RAMS_TO_ACCESS-1:0] is_bw;
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
@@ -278,7 +280,7 @@ module LBMController (
     
     // collider flags
     // wire c_busy;
-    // wire nv_ready;
+    // wire newval_ready;
     // wire v_d_ready;
         
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c0_next_data_in, c0_n_stored_data, c0_n_next_stored_data;
@@ -335,7 +337,7 @@ module LBMController (
 
     // wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
-    // assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
+    // assign collider_ready = newval_ready && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
     // assign in_collision_state = (sim_state == COLLIDE);
 
     genvar i;
@@ -343,7 +345,7 @@ module LBMController (
     for (i = 0; i < `RAMS_TO_ACCESS; i = i + 1) begin : g_solver
         wire [`ADDRESS_WIDTH-1:0] width_mod = (width_count + i) % `WIDTH;
 
-        LBMSolverParallel LBMSolverArray ( //potentially need to change the array data ins
+        LBMSolverParallelPipelined LBMSolverParallelPipelined ( //potentially need to change the array data ins
             .clk            (clk),
             .rst            (rst),
             .barriers       (barriers),
@@ -462,8 +464,9 @@ module LBMController (
             .in_collision_state (in_collision_state_array [i]),
             .next_sim_state     (next_sim_state_array     [i]),
             .zero_barrier       (zero_barrier_array       [i]),
-            .nv_ready           (nv_ready_array           [i]),
-            .read_wait          (read_wait_array          [i])
+            .newval_ready       (newval_ready_array       [i]),
+            .read_wait          (read_wait_array          [i]),
+            .newval_index       (newval_index_array       [i])
         );
 
 
@@ -542,7 +545,7 @@ module LBMController (
         assign is_bw[k] = (next_sim_state_array[k] == BOUNCE_WAIT);
         assign is_rw[k] = (read_wait_array[k]);
         assign is_zb[k] = (zero_barrier_array[k]);
-        assign is_nv[k] = (nv_ready_array[k]);
+        assign is_nv[k] = (newval_ready_array[k]);
         assign is_cs[k] = (in_collision_state_array[k]);
         assign is_cr[k] = (collider_ready_array[k]);
     end
@@ -554,7 +557,7 @@ module LBMController (
     wire all_bounce_wait = &is_bw;
     wire any_read_wait = |is_rw;
     wire any_zero_barrier = |is_zb;
-    wire all_nv_ready = &is_nv;
+    wire all_newval_ready = &is_nv;
 
     assign c0_next_write_en    = |c0_array_write_en;
     assign c0_n_next_write_en  = |c0_array_n_write_en;
@@ -599,7 +602,7 @@ module LBMController (
 
     //Instantiate Nishant's collider
 
-    //Update stream state
+    //Update state
     always @(posedge clk or negedge rst)
     begin
         if(!rst) 
@@ -703,11 +706,11 @@ module LBMController (
     end
 
 
-    //Stream state
+    //State Logic
     always @* begin
         c0_next_write_addr = 0;
         // c0_next_write_en = 0;
-        // c0_n_next_write_en = 0; TODO: should this be here @ kayvan
+        // c0_n_next_write_en = 0;
         c0_n_next_stored_data = 0;
         c0_n_read_from_write_address = 0;
 
@@ -1295,53 +1298,36 @@ module LBMController (
                     end
                 end
             end
-            COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
-            // wait for ram read
-            begin
-                if(ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1;
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-                end
-                else if(all_nv_ready)
-                begin
-                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
+            COLLIDE: begin
+                if(all_newval_ready) begin
+                    if(newval_index_array[0] + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin
                         next_sim_state = IDLE;
                         next_index = 0;
                         next_width_count = 0;
                         incr_step = 1;
                     end
-                    else
-                    begin
-                        next_sim_state = COLLIDE;
-                        next_index = index + `RAMS_TO_ACCESS;
-                        next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                    end 
-
-                    c0_next_write_addr = index;
-
-                    cn_next_write_addr = index;
-
-                    cne_next_write_addr = index;
-
-                    ce_next_write_addr = index;
-
-                    cse_next_write_addr = index;
-
-                    cs_next_write_addr = index;
-
-                    csw_next_write_addr = index;
-
-                    cw_next_write_addr = index;
-
-                    cnw_next_write_addr = index; 
+                    c0_next_write_addr = newval_index_array[0];
+                    cn_next_write_addr = newval_index_array[0];
+                    cne_next_write_addr = newval_index_array[0];
+                    ce_next_write_addr = newval_index_array[0];
+                    cse_next_write_addr = newval_index_array[0];
+                    cs_next_write_addr = newval_index_array[0];
+                    csw_next_write_addr = newval_index_array[0];
+                    cw_next_write_addr = newval_index_array[0];
+                    cnw_next_write_addr = newval_index_array[0];                     
                 end
-                else
-                begin
+                else if (ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1;
                     next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;  
+                end
+                else begin
+                    next_sim_state = COLLIDE;
+                    next_index = index + `RAMS_TO_ACCESS;
+                    next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
+                    next_ram_wait_count = `RAM_READ_WAIT;
                 end
             end
 

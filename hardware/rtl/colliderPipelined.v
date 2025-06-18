@@ -91,15 +91,23 @@ wire signed [15:0] round = 1 <<< 12;
 `DECLARE(s0)
 
 always @(posedge clk or negedge rst) begin
-    if (!rst || !en) begin
+    if (!rst) begin
         `RESET(s0)
     end else if(en) begin
+        newval_ready_s0 <= 1;
         omega_s0 <= omega; rho_s0 <=0; u_x_s0 <=0; u_y_s0 <=0; u_squared_s0 <=0;
         f_null_s0 <= f_null; f_n_s0 <= f_n; f_ne_s0 <= f_ne; f_e_s0 <= f_e;
         f_se_s0   <= f_se;   f_s_s0 <= f_s; f_sw_s0 <= f_sw; f_w_s0 <= f_w; f_nw_s0 <= f_nw;
-        newval_ready_s0 <= 1;
         collider_index_s0 <= collider_index;
         collider_width_count_s0 <= collider_width_count;
+    end
+    else begin
+        newval_ready_s0 <= 0; 
+        omega_s0 <= omega_s0; rho_s0 <= rho_s0; u_x_s0 <= u_x_s0; u_y_s0 <= u_y_s0; u_squared_s0 <= u_squared_s0;
+        f_null_s0 <= f_null_s0; f_n_s0 <= f_n_s0; f_ne_s0 <= f_ne_s0; f_e_s0 <= f_e_s0;
+        f_se_s0   <= f_se_s0;   f_s_s0 <= f_s_s0; f_sw_s0 <= f_sw_s0; f_w_s0 <= f_w_s0; f_nw_s0 <= f_nw_s0;
+        collider_index_s0 <= collider_index_s0;
+        collider_width_count_s0 <= collider_width_count_s0;
     end
 end
 
@@ -163,7 +171,7 @@ always @(posedge clk or negedge rst) begin
         rho_u_x_s3 <= rho_u_x_s2;
         rho_u_y_s3 <= rho_u_y_s2;
 
-        x2_product_s3 = (two - rho_s2) * (two - (rho_x1_product_s2 >>> 13));
+        x2_product_s3 <= (two - rho_s2) * (two - (rho_x1_product_s2 >>> 13));
     end
 end
 
