@@ -623,23 +623,25 @@ module LBMControllerMulti (
                 next_collider_wait_count_array[w] = w;
             end
             else if(next_sim_state == COLLIDE)
+            begin
                 if(collider_wait_count_array[w] == 0) begin
-                    for(int z = 0; z <`RAMS_TO_ACCESS; z++) begin
-                        f_null[z] = c0_n_data_out[(w*`DATA_WIDTH)+:`DATA_WIDTH];
+                    for(int z = 0; z < 4; z++) begin
+                        f_null[z] = c0_n_data_out[(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
 
-                        f_n   [z] = cn_n_data_out  [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_e   [z] = ce_n_data_out  [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_s   [z] = cs_n_data_out  [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_w   [z] = cw_n_data_out  [(w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_n   [z] = cn_n_data_out  [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_e   [z] = ce_n_data_out  [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_s   [z] = cs_n_data_out  [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_w   [z] = cw_n_data_out  [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
                 
                         // diagonals
-                        f_ne  [z] = cne_n_data_out [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_se  [z] = cse_n_data_out [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_sw  [z] = csw_n_data_out [(w*`DATA_WIDTH)+:`DATA_WIDTH];
-                        f_nw  [z] = cnw_n_data_out [(w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_ne  [z] = cne_n_data_out [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_se  [z] = cse_n_data_out [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_sw  [z] = csw_n_data_out [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_nw  [z] = cnw_n_data_out [(z*`RAMS_TO_ACCESS*`DATA_WIDTH+w*`DATA_WIDTH)+:`DATA_WIDTH];
                     end
                 end
                 next_collider_wait_count_array[w] = (collider_wait_count_array[w] == 0) ? `RAMS_TO_ACCESS : collider_wait_count_array[w] - 1;
+            end
             else
                 next_collider_wait_count_array[w] = collider_wait_count_array[w];
         end
