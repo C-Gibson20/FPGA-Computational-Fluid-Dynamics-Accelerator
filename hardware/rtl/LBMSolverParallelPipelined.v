@@ -321,16 +321,11 @@ module LBMSolverParallelPipelined (
             begin      
                 if(index >= `DEPTH-1-`WIDTH-1) // if streamed all cells, go to bounce stage
                 begin
-                    // next_step_count = step_count + 1;
-                    // next_index = 0;
-                    // next_width_count = 0;
                     next_sim_state = BOUNDARY;
                     // can go into bounce state without having to reset RAM wait, since we don't always read from RAM
                 end
                 else 
                 begin
-                    // next_index = index + 1;
-                    // next_width_count = (width_count == `WIDTH-1) ? 0 : (width_count + 1);
                     next_sim_state = STREAM;
                 end
                 if(index <= `DEPTH-1-`WIDTH-1 && barriers[index]==1'b0)

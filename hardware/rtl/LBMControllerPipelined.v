@@ -183,27 +183,6 @@ module LBMControllerPipelined (
     localparam COLLIDE          = 4'd10;
     localparam MEM_RESET        = 4'd11;
 
-
-
-    // wire [`ADDRESS_WIDTH-1:0] c0_array_addr     [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] c0_array_n_addr   [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cn_array_addr     [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cn_array_n_addr   [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cne_array_addr    [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cne_array_n_addr  [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] ce_array_addr     [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] ce_array_n_addr   [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cse_array_addr    [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cse_array_n_addr  [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cs_array_addr     [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cs_array_n_addr   [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] csw_array_addr    [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] csw_array_n_addr  [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cw_array_addr     [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cw_array_n_addr   [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cnw_array_addr    [0:`RAMS_TO_ACCESS-1];
-    // wire [`ADDRESS_WIDTH-1:0] cnw_array_n_addr  [0:`RAMS_TO_ACCESS-1];
-
     // Data-in buses
     wire [`DATA_WIDTH-1:0] c0_array_data_in     [0:`RAMS_TO_ACCESS-1];
     // wire [`DATA_WIDTH-1:0] c0_array_n_data_in   [0:`RAMS_TO_ACCESS-1];
@@ -230,6 +209,7 @@ module LBMControllerPipelined (
     wire [`DATA_WIDTH-1:0] u_squared_array  [0:`RAMS_TO_ACCESS-1];
     wire [`DATA_WIDTH-1:0] rho_array        [0:`RAMS_TO_ACCESS-1];
     wire [`ADDRESS_WIDTH-1:0] newval_index_array        [0:`RAMS_TO_ACCESS-1];
+    wire [`DATA_WIDTH-1:0] newval_width_count_array        [0:`RAMS_TO_ACCESS-1];
 
 
     // Write-enable and status bits
@@ -466,7 +446,8 @@ module LBMControllerPipelined (
             .zero_barrier       (zero_barrier_array       [i]),
             .newval_ready       (newval_ready_array       [i]),
             .read_wait          (read_wait_array          [i]),
-            .newval_index       (newval_index_array       [i])
+            .newval_index       (newval_index_array       [i]),
+            .newval_width_count (newval_width_count_array [i])
         );
 
 
@@ -1315,7 +1296,8 @@ module LBMControllerPipelined (
                     cs_next_write_addr = newval_index_array[0];
                     csw_next_write_addr = newval_index_array[0];
                     cw_next_write_addr = newval_index_array[0];
-                    cnw_next_write_addr = newval_index_array[0];                     
+                    cnw_next_write_addr = newval_index_array[0];   
+                    next_width_count = (newval_width_count_array[0]+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);                  
                 end
                 else if (ram_wait_count > 0) begin
                     next_ram_wait_count = ram_wait_count - 1;
@@ -1326,8 +1308,8 @@ module LBMControllerPipelined (
                 else begin
                     next_sim_state = COLLIDE;
                     next_index = index + `RAMS_TO_ACCESS;
-                    next_width_count = (width_count+`RAMS_TO_ACCESS >= `WIDTH-1) ? (`RAMS_TO_ACCESS+width_count)%(`WIDTH) : (width_count + `RAMS_TO_ACCESS);
                     next_ram_wait_count = `RAM_READ_WAIT;
+                    next_width_count = width_count;  
                 end
             end
 
