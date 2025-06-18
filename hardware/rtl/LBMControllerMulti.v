@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMController (
+module LBMControllerMulti (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -259,11 +259,11 @@ module LBMController (
     wire [`RAMS_TO_ACCESS-1:0]  cnw_array_write_en;
     wire [`RAMS_TO_ACCESS-1:0]  cnw_array_n_write_en;
 
+    reg  [`RAMS_TO_ACCESS-1:0] collider_wait_count_array [0:`RAMS_TO_ACCESS-1];
+    reg  [`RAMS_TO_ACCESS-1:0] next_collider_wait_count_array [0:`RAMS_TO_ACCESS-1];
     wire collider_ready_array     [0:`RAMS_TO_ACCESS-1];
-    wire in_collision_state_array  [0:`RAMS_TO_ACCESS-1];
     wire read_wait_array          [0:`RAMS_TO_ACCESS-1];
     wire zero_barrier_array [0:`RAMS_TO_ACCESS-1];
-    wire nv_ready_array [0:`RAMS_TO_ACCESS-1];
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
     wire [`RAMS_TO_ACCESS-1:0] is_bw;
     wire [`RAMS_TO_ACCESS-1:0] is_rw;
@@ -278,7 +278,7 @@ module LBMController (
     
     // collider flags
     // wire c_busy;
-    // wire nv_ready;
+    // wire nv_ready_array;
     // wire v_d_ready;
         
     reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c0_next_data_in, c0_n_stored_data, c0_n_next_stored_data;
@@ -335,7 +335,7 @@ module LBMController (
 
     // wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
-    // assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
+    // assign collider_ready = nv_ready_array && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
     // assign in_collision_state = (sim_state == COLLIDE);
 
     genvar i;
@@ -454,19 +454,86 @@ module LBMController (
             .cnw_n_write_en(cnw_array_n_write_en[i]),
 
             // ───────── collider results (unchanged) ─────────
-            .u_x                (u_x_array                [i]),
-            .u_y                (u_y_array                [i]),
-            .u_squared          (u_squared_array          [i]),
-            .rho                (rho_array                [i]),
-            .collider_ready     (collider_ready_array     [i]),
-            .in_collision_state (in_collision_state_array [i]),
             .next_sim_state     (next_sim_state_array     [i]),
             .zero_barrier       (zero_barrier_array       [i]),
-            .nv_ready           (nv_ready_array           [i]),
             .read_wait          (read_wait_array          [i])
         );
 
 
+    end
+    endgenerate
+
+
+    // ============================================================================
+    //  Multilane-collider signal arrays
+    // ============================================================================
+    localparam NUM_LANES = `RAMS_TO_ACCESS;
+
+    // ── distribution-function inputs to the collider (time-step n) --------------
+    wire [`DATA_WIDTH-1:0] f_null [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_n    [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_ne   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_e    [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_se   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_s    [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_sw   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_w    [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] f_nw   [NUM_LANES-1:0];
+//done
+    // ── new-value outputs --------------------------------------------------------
+    wire [`DATA_WIDTH-1:0] c_c0   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cn   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cne  [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_ce   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cse  [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cs   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_csw  [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cw   [NUM_LANES-1:0];
+    wire [`DATA_WIDTH-1:0] c_cnw  [NUM_LANES-1:0];
+//done
+    // ── handshake / status -------------------------------------------------------
+    wire c_busy    [NUM_LANES-1:0];
+    wire nv_ready_array  [NUM_LANES-1:0];
+    wire v_d_ready [NUM_LANES-1:0];
+//done
+    // ── macroscopic results ------------------------------------------------------
+//done
+    // ============================================================================
+    //  One collider per lane
+    // ============================================================================
+    genvar h;
+    generate
+    for (h = 0; h < NUM_LANES; h = h + 1) begin : g_collider_lane
+        collider u_coll (
+            .f_null      (f_null[h]),
+            .f_n         (f_n   [h]),
+            .f_ne        (f_ne  [h]),
+            .f_e         (f_e   [h]),
+            .f_se        (f_se  [h]),
+            .f_s         (f_s   [h]),
+            .f_sw        (f_sw  [h]),
+            .f_w         (f_w   [h]),
+            .f_nw        (f_nw  [h]),
+
+            .f_new_null  (c_c0 [h]),
+            .f_new_n     (c_cn [h]),
+            .f_new_ne    (c_cne[h]),
+            .f_new_e     (c_ce [h]),
+            .f_new_se    (c_cse[h]),
+            .f_new_s     (c_cs [h]),
+            .f_new_sw    (c_csw[h]),
+            .f_new_w     (c_cw [h]),
+            .f_new_nw    (c_cnw[h]),
+
+            .collider_busy (c_busy   [h]),
+            .newval_ready  (nv_ready_array [h]),
+            .axi_ready     (v_d_ready[h]),
+
+            .u_x           (u_x_array      [h]),
+            .u_y           (u_y_array      [h]),
+            .rho           (rho_array      [h]),
+            .u_squared     (u_squared_array[h])
+        );
     end
     endgenerate
 
@@ -480,60 +547,105 @@ module LBMController (
         u_y[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_y_array[j];
         u_squared[(j*`DATA_WIDTH)+:`DATA_WIDTH] = u_squared_array[j];
         rho[(j*`DATA_WIDTH)+:`DATA_WIDTH] = rho_array[j];
-        c0_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (c0_array_n_write_en[j] || c0_array_write_en[j])
-            ? c0_array_data_in[j]
-            : c0_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        // centre / rest
+        c0_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (c0_array_n_write_en[j] || c0_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_c0[j]              // NEW
+                                    : c0_array_data_in[j])
+        : c0_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north
-        cn_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cn_array_n_write_en[j]|| cn_array_write_en[j])
-            ? cn_array_data_in[j]
-            : cn_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cn_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cn_array_n_write_en[j] || cn_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cn[j]              // NEW
+                                    : cn_array_data_in[j])
+        : cn_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north-east
-        cne_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cne_array_n_write_en[j] || cne_array_write_en[j])
-            ? cne_array_data_in[j]
-            : cne_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cne_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cne_array_n_write_en[j] || cne_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cne[j]             // NEW
+                                    : cne_array_data_in[j])
+        : cne_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // east
-        ce_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (ce_array_n_write_en[j] || ce_array_write_en[j])
-            ? ce_array_data_in[j]
-            : ce_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        ce_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (ce_array_n_write_en[j] || ce_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_ce[j]              // NEW
+                                    : ce_array_data_in[j])
+        : ce_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south-east
-        cse_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cse_array_n_write_en[j] || cse_array_write_en[j])
-            ? cse_array_data_in[j]
-            : cse_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cse_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cse_array_n_write_en[j] || cse_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cse[j]             // NEW
+                                    : cse_array_data_in[j])
+        : cse_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south
-        cs_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cs_array_n_write_en[j] || cs_array_write_en[j])
-            ? cs_array_data_in[j]
-            : cs_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cs_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cs_array_n_write_en[j] || cs_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cs[j]              // NEW
+                                    : cs_array_data_in[j])
+        : cs_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // south-west
-        csw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (csw_array_n_write_en[j] || csw_array_write_en[j])
-            ? csw_array_data_in[j]
-            : csw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        csw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (csw_array_n_write_en[j] || csw_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_csw[j]             // NEW
+                                    : csw_array_data_in[j])
+        : csw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+
         // west
-        cw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cw_array_n_write_en[j] || cw_array_write_en[j])
-            ? cw_array_data_in[j]
-            : cw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cw_array_n_write_en[j] || cw_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cw[j]              // NEW
+                                    : cw_array_data_in[j])
+        : cw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
 
         // north-west
-        cnw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH]
-            = (cnw_array_n_write_en[j] || cnw_array_write_en[j])
-            ? cnw_array_data_in[j]
-            : cnw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+        cnw_next_data_in[(j*`DATA_WIDTH)+:`DATA_WIDTH] =
+        (cnw_array_n_write_en[j] || cnw_array_write_en[j]) ?
+            ((sim_state == COLLIDE) ? c_cnw[j]             // NEW
+                                    : cnw_array_data_in[j])
+        : cnw_n_stored_data[(j*`DATA_WIDTH)+:`DATA_WIDTH];
+
         end
     end
     endgenerate
+
+    // one procedural block per iteration
+    always @* begin
+    // rest
+        for(int w = 0; w <`RAMS_TO_ACCESS/4; w++) begin
+            if(next_sim_state == COLLIDE && sim_state != COLLIDE)
+            begin
+                next_collider_wait_count_array[w] = w;
+            end
+            else if(next_sim_state == COLLIDE)
+            begin
+                if(collider_wait_count_array[w] == 0) begin
+                    for(int z = 0; z < 4; z++) begin
+                        f_null[z] = c0_n_data_out[(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+
+                        f_n   [z] = cn_n_data_out  [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_e   [z] = ce_n_data_out  [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_s   [z] = cs_n_data_out  [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_w   [z] = cw_n_data_out  [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                
+                        // diagonals
+                        f_ne  [z] = cne_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_se  [z] = cse_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_sw  [z] = csw_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                        f_nw  [z] = cnw_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                    end
+                end
+                next_collider_wait_count_array[w] = (collider_wait_count_array[w] == 0) ? `RAMS_TO_ACCESS : collider_wait_count_array[w] - 1;
+            end
+            else
+                next_collider_wait_count_array[w] = collider_wait_count_array[w];
+        end
+    end
 
     //reductions
     genvar k;
@@ -543,12 +655,11 @@ module LBMController (
         assign is_rw[k] = (read_wait_array[k]);
         assign is_zb[k] = (zero_barrier_array[k]);
         assign is_nv[k] = (nv_ready_array[k]);
-        assign is_cs[k] = (in_collision_state_array[k]);
         assign is_cr[k] = (collider_ready_array[k]);
     end
     endgenerate
 
-    assign in_collision_state = |is_cs;
+    assign in_collision_state = (sim_state == COLLIDE);
     assign collider_ready = |is_cr;
     wire any_bounce_wait = |is_bw;
     wire all_bounce_wait = &is_bw;
@@ -622,6 +733,8 @@ module LBMController (
         end
         else 
         begin
+            for(int z = 0; z < `RAMS_TO_ACCESS; z++)
+                collider_wait_count_array[z] <= next_collider_wait_count_array[z];
             sim_state <= next_sim_state;
             index <= next_index;
             width_count <= next_width_count;
@@ -706,8 +819,6 @@ module LBMController (
     //Stream state
     always @* begin
         c0_next_write_addr = 0;
-        // c0_next_write_en = 0;
-        // c0_n_next_write_en = 0; TODO: should this be here @ kayvan
         c0_n_next_stored_data = 0;
         c0_n_read_from_write_address = 0;
 

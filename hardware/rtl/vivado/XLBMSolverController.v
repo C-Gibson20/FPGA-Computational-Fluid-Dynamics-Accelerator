@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMController (
+module LBMSolver (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -165,7 +165,8 @@ module LBMController (
     output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
     output wire collider_ready,
-    output wire in_collision_state
+    output wire in_collision_state,
+    output wire [31:0] step_countn
 
 );
 
@@ -329,9 +330,10 @@ module LBMController (
 
     reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    reg [15:0] step_count, next_step_count;
+    reg [31:0] step_count, next_step_count;
 
     reg incr_step;
+    assign step_countn = step_count;
 
     // wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
@@ -706,8 +708,6 @@ module LBMController (
     //Stream state
     always @* begin
         c0_next_write_addr = 0;
-        // c0_next_write_en = 0;
-        // c0_n_next_write_en = 0; TODO: should this be here @ kayvan
         c0_n_next_stored_data = 0;
         c0_n_read_from_write_address = 0;
 

@@ -22,7 +22,7 @@
 
 `include "def.vh" 
 
-module LBMSolverParallel (
+module LBMSolverParallelMulti (
 
     // TEMPORARILY MAKING THE STEP CONTROLLED VIA GPIO SO EASIER TO TEST
     input wire clk,
@@ -35,6 +35,7 @@ module LBMSolverParallel (
     input wire [`ADDRESS_WIDTH-1:0] index,
     input wire [`ADDRESS_WIDTH-1:0] width_count,
     input wire [2:0] ram_wait_count,
+    input reg [`RAMS_TO_ACCESS:0] collider_wait_count;
     // BRAM c0
     // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
@@ -159,7 +160,6 @@ module LBMSolverParallel (
     output wire [`DATA_WIDTH-1:0] rho,
     
     output wire collider_ready,
-    output wire in_collision_state,
     // output wire next_index,
     output reg [3:0] next_sim_state,
     output reg zero_barrier,
@@ -234,8 +234,7 @@ module LBMSolverParallel (
 
     wire [`DATA_WIDTH-1:0] c_c0,c_cn,c_cne,c_ce,c_cse,c_cs,c_csw,c_cw,c_cnw;
     
-    assign collider_ready = nv_ready && (sim_state == COLLIDE) && (ram_wait_count == 0); // ensure not waiting more on RAM
-    assign in_collision_state = (sim_state == COLLIDE);
+    // assign collider_ready = nv_ready && (sim_state == COLLIDE); // ensure not waiting more on RAM
     //Stores the 9 directions in their own RAM, I can't make each cell it's own block of memory, so instead I've decided to split the memory by direction
     //need two rams one for the current time step and one for the next time step
 
@@ -252,34 +251,34 @@ module LBMSolverParallel (
     // note to self: cx and cx_n are driven by the same ADDR, DIN ports. just called cx
 
     //Instantiate Nishant's collider
-    collider collider(
-        .omega(omega),
-        .f_null(c0_n_data_out),
-        .f_n(cn_n_data_out),
-        .f_ne(cne_n_data_out),
-        .f_e(ce_n_data_out),
-        .f_se(cse_n_data_out),
-        .f_s(cs_n_data_out),
-        .f_sw(csw_n_data_out),
-        .f_w(cw_n_data_out),
-        .f_nw(cnw_n_data_out),
-        .f_new_null(c_c0),
-        .f_new_n(c_cn),
-        .f_new_ne(c_cne),
-        .f_new_e(c_ce),
-        .f_new_se(c_cse),
-        .f_new_s(c_cs),
-        .f_new_sw(c_csw),
-        .f_new_w(c_cw),
-        .f_new_nw(c_cnw),
-        .collider_busy(c_busy),
-        .newval_ready(nv_ready),
-        .axi_ready(v_d_ready),
-        .u_x(u_x),
-        .u_y(u_y),
-        .rho(rho),
-        .u_squared(u_squared)
-    );
+    // collider collider(
+    //     .omega(omega),
+    //     .f_null(c0_n_data_out),
+    //     .f_n(cn_n_data_out),
+    //     .f_ne(cne_n_data_out),
+    //     .f_e(ce_n_data_out),
+    //     .f_se(cse_n_data_out),
+    //     .f_s(cs_n_data_out),
+    //     .f_sw(csw_n_data_out),
+    //     .f_w(cw_n_data_out),
+    //     .f_nw(cnw_n_data_out),
+    //     .f_new_null(c_c0),
+    //     .f_new_n(c_cn),
+    //     .f_new_ne(c_cne),
+    //     .f_new_e(c_ce),
+    //     .f_new_se(c_cse),
+    //     .f_new_s(c_cs),
+    //     .f_new_sw(c_csw),
+    //     .f_new_w(c_cw),
+    //     .f_new_nw(c_cnw),
+    //     .collider_busy(c_busy),
+    //     .newval_ready(nv_ready),
+    //     .axi_ready(v_d_ready),
+    //     .u_x(u_x),
+    //     .u_y(u_y),
+    //     .rho(rho),
+    //     .u_squared(u_squared)
+    // );
 
     //Update stream state
     // always @(posedge clk or negedge rst)
@@ -808,7 +807,7 @@ module LBMSolverParallel (
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
             begin
-                if(ram_wait_count == 0) begin
+                if(ram_wait_count == 0 && collider_wait_count == 0) begin
                     if(nv_ready)
 
                         begin
@@ -831,39 +830,39 @@ module LBMSolverParallel (
                             begin
                                 //c[0-z]*_addr [ -~]*
                                 c0_write_en = 1'b1;
-                                c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
+                                // c0_data_in = (barriers[index] == 1) ? 0 : c_c0;
 
                                 //c[0-z]*_addr [ -~]*
                                 cn_write_en = 1'b1;
-                                cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
+                                // cn_data_in = (barriers[index] == 1) ? 0 : c_cn;
 
                                 //c[0-z]*_addr [ -~]*
                                 cne_write_en = 1'b1;
-                                cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
+                                // cne_data_in = (barriers[index] == 1) ? 0 : c_cne;
 
                                 //c[0-z]*_addr [ -~]*
                                 ce_write_en = 1'b1;
-                                ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
+                                // ce_data_in = (barriers[index] == 1) ? 0 : c_ce;
 
                                 //c[0-z]*_addr [ -~]*
                                 cse_write_en = 1'b1;
-                                cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
+                                // cse_data_in = (barriers[index] == 1) ? 0 : c_cse;
 
                                 //c[0-z]*_addr [ -~]*
                                 cs_write_en = 1'b1;
-                                cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
+                                // cs_data_in = (barriers[index] == 1) ? 0 : c_cs;
 
                                 //c[0-z]*_addr [ -~]*
                                 csw_write_en = 1'b1;
-                                csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
+                                // csw_data_in = (barriers[index] == 1) ? 0 : c_csw;
 
                                 //c[0-z]*_addr [ -~]*
                                 cw_write_en = 1'b1;
-                                cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
+                                // cw_data_in = (barriers[index] == 1) ? 0 : c_cw;
 
                                 //c[0-z]*_addr [ -~]*
                                 cnw_write_en = 1'b1;
-                                cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
+                                // cnw_data_in = (barriers[index] == 1) ? 0 : c_cnw;
                             end
                         end
                     else

@@ -187,9 +187,11 @@ module LBMSolverPipelined (
     localparam COLLIDE          = 4'd8;
     localparam MEM_RESET        = 4'd9;
     
-    reg [15:0] width_count, next_width_count, newval_width_count;
+    reg [15:0] width_count, next_width_count;
+    wire [15:0] newval_width_count;
     reg [3:0] sim_state, next_sim_state;
-    reg [`ADDRESS_WIDTH-1:0] index, next_index, newval_index;
+    reg [`ADDRESS_WIDTH-1:0] index, next_index;
+    wire [`ADDRESS_WIDTH-1:0] newval_index;
     
     // collider flags
     wire c_busy;
@@ -246,7 +248,7 @@ module LBMSolverPipelined (
     // Add 1 cycle delay for RAM reads - Nishant
     // note to self: cx and cx_n are driven by the same ADDR, DIN ports. just called cx
 
-    assign collider_ready = newval_ready && (sim_state == COLLIDE) && (ram_wait_count == 0);
+    assign collider_ready = newval_ready;
     assign in_collision_state = (sim_state == COLLIDE);
     assign step_countn = step_count;
 
@@ -774,6 +776,22 @@ module LBMSolverPipelined (
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
             begin
+
+                if (ram_wait_count == 0) begin
+                    next_index = index + 1;
+                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                    next_sim_state = COLLIDE;
+                    next_ram_wait_count = `RAM_READ_WAIT;
+                    collider_en = 1;
+                end
+                else begin //ram_wait_count > 0
+                    next_ram_wait_count = ram_wait_count - 1; 
+                    next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;
+                    collider_en = 0;
+                end
+
                 if(newval_ready) 
                     begin
                         if(newval_index >= `WIDTH && newval_index <= `DEPTH-`WIDTH-1 && newval_width_count != 0 && newval_width_count != `WIDTH-1) begin // only do for inside the margin
@@ -814,7 +832,7 @@ module LBMSolverPipelined (
                             cnw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
                         end
 
-                        if(newval_index == `DEPTH-1) begin
+                        if(newval_index >= `DEPTH-1) begin
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = IDLE;
@@ -822,20 +840,6 @@ module LBMSolverPipelined (
                             collider_en = 0;
                         end
                     end
-                else if (ram_wait_count > 0) begin
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-                    collider_en = 0;
-                end
-                else begin // ram_wait_count == 0
-                        next_index = index + 1;
-                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                        next_sim_state = COLLIDE;
-                        next_ram_wait_count = `RAM_READ_WAIT;
-                        collider_en = 1;
-                end
             end
 
             MEM_RESET : begin
