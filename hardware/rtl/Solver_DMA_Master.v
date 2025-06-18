@@ -124,10 +124,6 @@
             end
 
             if(in_collision_state && collider_ready) begin
-                // ram_addr <= read_count;
-                // clocked_ram_din <= {rho, u_squared, u_x, u_y};
-                // ram_wen <= 1;
-                // read_count <= read_count + 1; // we write 64 bits to ram
                 read_count <= read_count + 1; // increment once all parallel blocks have been sent 
                 
             end 
@@ -204,10 +200,10 @@
             ram_addr = 0;
             // ram_din = {rho,u_squared,u_x,u_y};
             for (i = 0; i < N_PARALLEL_SOLVERS; i = i + 1) begin
-                ram_din[ (i*4+3)*DATA_WIDTH +: DATA_WIDTH ] = rho[ (i*DATA_WIDTH) +: DATA_WIDTH ];
-                ram_din[ (i*4+2)*DATA_WIDTH +: DATA_WIDTH ] = u_squared[ (i*DATA_WIDTH) +: DATA_WIDTH ];
-                ram_din[ (i*4+1)*DATA_WIDTH +: DATA_WIDTH ] = u_x[ (i*DATA_WIDTH) +: DATA_WIDTH ];
                 ram_din[ (i*4+0)*DATA_WIDTH +: DATA_WIDTH ] = u_y[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+1)*DATA_WIDTH +: DATA_WIDTH ] = u_x[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+2)*DATA_WIDTH +: DATA_WIDTH ] = u_squared[ (i*DATA_WIDTH) +: DATA_WIDTH ];
+                ram_din[ (i*4+3)*DATA_WIDTH +: DATA_WIDTH ] = rho[ (i*DATA_WIDTH) +: DATA_WIDTH ];
             end
         end
 
