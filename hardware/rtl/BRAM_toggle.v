@@ -19,26 +19,38 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
 module BRAM_toggle(
+    input wire m00_axis_aclk,
+    input wire m00_axis_aresetn,
+
     input wire chunk_transfer_ready,
     input wire chunk_compute_ready,
     
-    //from DDR_pixel if currently writing
-    input wire wen,
+    //write enable BRAMs
+    output reg wen,
     
     input wire [11:0] LBM_addr,
     input wire [11:0] DDR_addr,
     output reg [11:0] addr
     );
-    
-    always @* begin
-        if (chunk_transfer_ready) begin
-            addr <= DDR_addr;
+
+    always @(posedge m00_axis_aclk or negedge m00_axis_aresetn) begin
+        if (!m00_axis_aresetn) begin
+            addr <= 0;
+            wen  <= 0;
+        end 
+        else begin
+            wen <= 1;
+            if (chunk_transfer_ready) begin
+                addr <= DDR_addr;
+            end 
+            else if (chunk_compute_ready) begin
+                addr <= LBM_addr;
+            end 
+            else begin
+                wen <= 0;
+            end
         end
-        else if (chunk_compute_ready) begin 
-            addr <= LBM_addr;
-        end
-   end
+    end
     
 endmodule
