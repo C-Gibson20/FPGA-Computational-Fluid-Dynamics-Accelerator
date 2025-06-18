@@ -1,4 +1,4 @@
-module cache_toggle(
+module BRAM_toggle(
     input  wire m00_axis_aclk,
     input  wire m00_axis_aresetn,
 
