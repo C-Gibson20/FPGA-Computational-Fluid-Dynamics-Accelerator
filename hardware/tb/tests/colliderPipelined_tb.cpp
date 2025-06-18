@@ -44,30 +44,6 @@ TEST_F(ColliderPipelinedTestbench, AtEquilibrium_NoChange) {
     EXPECT_EQ(collider->f_new_nw,   collider->f_nw);
 }
 
-TEST_F(ColliderPipelinedTestbench, SmallEastwardSpeed) {
-    collider->f_null = 0x0E39; // 4/9
-    collider->f_n    = 0x038E; // 1/9
-    collider->f_s    = 0x038E; 
-    collider->f_e    = 0x0558; // ~0.167 (boosted east) 3/18
-    collider->f_w    = 0x01cb; // ~0.056 (reduced west) 1/18
-    collider->f_ne   = 0x00E4; // 1/36
-    collider->f_se   = 0x00E4;
-    collider->f_sw   = 0x00E4;
-    collider->f_nw   = 0x00E4;
-    runSimulation(21);
-    collider->eval();
-    EXPECT_NEAR(collider->f_new_null, 3514, 1);
-    EXPECT_NEAR(collider->f_new_n,     878, 1);
-    EXPECT_NEAR(collider->f_new_s,    878, 1);
-    EXPECT_NEAR(collider->f_new_e,   1127, 1);
-    EXPECT_NEAR(collider->f_new_w,    824, 1);
-    EXPECT_NEAR(collider->f_new_ne,   396, 1);
-    EXPECT_NEAR(collider->f_new_se,   396, 1);
-    EXPECT_NEAR(collider->f_new_sw,    93, 1);
-    EXPECT_NEAR(collider->f_new_nw,    93, 1);
-}
-
-
 TEST_F(ColliderPipelinedTestbench, StrongNorthwardSpeed) {
     collider->f_null = 0x0E38;
     collider->f_n    = 0x05C0; // Boosted north
@@ -181,6 +157,31 @@ TEST_F(ColliderPipelinedTestbench, the1daytest) {
     EXPECT_NEAR(collider->f_new_se,   304, 3);
     EXPECT_NEAR(collider->f_new_sw,   167, 3);
     EXPECT_NEAR(collider->f_new_nw,   166, 3);
+}
+
+TEST_F(ColliderPipelinedTestbench, SmallEastwardSpeed) {
+    collider->f_null = 0x0E39; // 4/9
+    collider->f_n    = 0x038E; // 1/9
+    collider->f_s    = 0x038E; 
+    collider->f_e    = 0x0558; // ~0.167 (boosted east) 3/18
+    collider->f_w    = 0x01cb; // ~0.056 (reduced west) 1/18
+    collider->f_ne   = 0x00E4; // 1/36
+    collider->f_se   = 0x00E4;
+    collider->f_sw   = 0x00E4;
+    collider->f_nw   = 0x00E4;
+    runSimulation(11);
+    collider->en = 0;
+    runSimulation(10);
+    collider->eval();
+    EXPECT_NEAR(collider->f_new_null, 3514, 1);
+    EXPECT_NEAR(collider->f_new_n,     878, 1);
+    EXPECT_NEAR(collider->f_new_s,    878, 1);
+    EXPECT_NEAR(collider->f_new_e,   1127, 1);
+    EXPECT_NEAR(collider->f_new_w,    824, 1);
+    EXPECT_NEAR(collider->f_new_ne,   396, 1);
+    EXPECT_NEAR(collider->f_new_se,   396, 1);
+    EXPECT_NEAR(collider->f_new_sw,    93, 1);
+    EXPECT_NEAR(collider->f_new_nw,    93, 1);
 }
 
 int main(int argc, char **argv) {

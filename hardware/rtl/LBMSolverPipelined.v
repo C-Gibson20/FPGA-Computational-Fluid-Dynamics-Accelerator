@@ -814,7 +814,7 @@ module LBMSolverPipelined (
                             cnw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
                         end
 
-                        if(newval_index == `DEPTH-1) begin
+                        if(newval_index >= `DEPTH-1) begin
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = IDLE;

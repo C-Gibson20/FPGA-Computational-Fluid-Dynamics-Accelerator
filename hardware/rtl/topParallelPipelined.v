@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `include "def.vh"
 
-module topParallel (
+module topParallelPipelined (
     input  wire clk,
     input  wire rst,
     input  wire en,
@@ -81,7 +81,7 @@ module topParallel (
     assign testing_c0_data_in = c0_data_in;
     assign testing_cs_n_data_in = cs_data_in;
     // Instantiate LBMSolver and connect RAM
-    LBMController lbm (
+    LBMControllerPipelined LBMControllerPipelined (
         .clk(clk),
         .rst(rst),
         .en(en),

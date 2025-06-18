@@ -1,12 +1,10 @@
 #include "test_bench.h"
-#include <fstream>
 
 unsigned int ticks = 0;
 
 class topParallelTestbench : public Testbench {
 protected:
     Vdut* topParallel;
-    std::ofstream logFile;
 
     void initializeInputs() override { 
         topParallel = top.get();
@@ -24,41 +22,8 @@ protected:
         topParallel->init_cse  = 0x00E4;
         topParallel->init_csw   = 0x00E4;
         topParallel->init_cnw   = 0x00E4;
-
-        logFile.open("u_squared_log.txt");
-        if (!logFile.is_open()) {
-            std::cerr << "Failed to open u_squared_log.txt" << std::endl;
-            exit(EXIT_FAILURE);
-        }
     }
 
-// ✅ override runSimulation in this subclass
-void runSimulation(int cycles) {
-        for (int i = 0; i < cycles; i++) {
-            if(i == 2){
-                topParallel->rst = 1;
-            }
-            for (int clk = 0; clk < 2; clk++) {
-                topParallel->eval();
-#ifndef __APPLE__
-                tfp->dump(2 * ticks + clk);
-#endif
-                topParallel->clk = !topParallel->clk;
-            }
-            ticks++;
-
-            // ✅ Log u_squared when valid
-            // if (topParallel->collider_ready && topParallel->in_collision_state) {
-            //     logFile << topParallel->u_squared << "\n";
-            // }
-
-            if (Verilated::gotFinish()) {
-                break;
-            }
-        }
-
-        logFile.close();
-    }
 };
 
 //Make sure to test this using a 50x50 grid or else it will fail
@@ -74,13 +39,15 @@ TEST_F(topParallelTestbench, Equilibrium) {
         topParallel->barriers.data()[w] = 0;
     }
 
-    for (int i = 0; i < 2500; i++) {
-        bool isBarrier = (100 <= i && i < 150) || (2350 < i && i <= 2400 ) || ((i+2) % 50 == 0) || ((i+3) % 50 == 0);
-        if (isBarrier) {
-            std::cout << "Barrier at " << i << std::endl;
-            setBarrierBit(i);
-        }
-    }
+    // for (int i = 0; i < 2500; i++) {
+    //     bool isBarrier = (100 <= i && i < 150) || (2350 < i && i <= 2400 ) || ((i+2) % 50 == 0) || ((i+3) % 50 == 0);
+    //     if (isBarrier) {
+    //         std::cout << "Barrier at " << i << std::endl;
+    //         setBarrierBit(i);
+    //     }
+    // }
+    runSimulation(2);
+    topParallel->rst = 1;
     runSimulation(50000);
 }
 
