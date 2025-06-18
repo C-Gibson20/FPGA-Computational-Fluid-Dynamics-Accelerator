@@ -1,12 +1,10 @@
 #include "test_bench.h"
-#include <fstream>
 
 unsigned int ticks = 0;
 
 class LBMCacheTopTestbench : public Testbench {
 protected:
     Vdut* LBMCacheTop;
-    std::ofstream logFile;
 
     void initializeInputs() override { 
         LBMCacheTop = top.get();
@@ -47,17 +45,10 @@ void runSimulation(int cycles) {
             }
             ticks++;
 
-            // ✅ Log u_squared when valid
-            // if (LBMCacheTop->collider_ready && LBMCacheTop->in_collision_state) {
-            //     logFile << LBMCacheTop->u_squared << "\n";
-            // }
-
             if (Verilated::gotFinish()) {
                 break;
             }
         }
-
-        logFile.close();
     }
 };
 
