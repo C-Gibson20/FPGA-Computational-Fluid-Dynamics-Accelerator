@@ -22,12 +22,6 @@ protected:
         top->init_cse  = 0x00E4;
         top->init_csw   = 0x00E4;
         top->init_cnw   = 0x00E4;
-
-        logFile.open("u_squared_log.txt");
-        if (!logFile.is_open()) {
-            std::cerr << "Failed to open u_squared_log.txt" << std::endl;
-            exit(EXIT_FAILURE);
-        }
     }
 
 // ✅ override runSimulation in this subclass
@@ -45,17 +39,10 @@ void runSimulation(int cycles) {
             }
             ticks++;
 
-            // ✅ Log u_squared when valid
-            // if (top->collider_ready && top->in_collision_state) {
-            //     logFile << top->u_squared << "\n";
-            // }
-
             if (Verilated::gotFinish()) {
                 break;
             }
         }
-
-        logFile.close();
     }
 };
 
@@ -79,7 +66,7 @@ TEST_F(TopTestbench, Equilibrium) {
             setBarrierBit(i);
         }
     }
-    runSimulation(100000);
+    runSimulation(50000);
     // EXPECT_EQ(top->testing_c0_data_in,0x0E38);
 }
 

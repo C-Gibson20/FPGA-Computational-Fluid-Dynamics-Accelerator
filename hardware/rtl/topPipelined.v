@@ -136,21 +136,4 @@ module topPipelined (
         .init_cnw(init_cnw)
     );
 
-    host_interface host_interface (
-        .clk(clk),
-        .rst(rst),
-        .GPIOi(GPIOi),
-        .collider_ready(collider_ready),
-        .u_x(u_x),
-        .u_y(u_y),
-        .rho(rho),
-        .in_collision_state(in_collision_state),
-        .GPIOux(GPIOux),
-        .GPIOuy(GPIOuy),
-        .GPIOrho(GPIOrho),
-        .u_squared(u_squared),
-        .GPIOu2(GPIOu2)
-    );
-
-
 endmodule

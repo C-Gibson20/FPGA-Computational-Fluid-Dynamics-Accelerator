@@ -187,9 +187,11 @@ module LBMSolverPipelined (
     localparam COLLIDE          = 4'd8;
     localparam MEM_RESET        = 4'd9;
     
-    reg [15:0] width_count, next_width_count, newval_width_count;
+    reg [15:0] width_count, next_width_count;
+    wire [15:0] newval_width_count;
     reg [3:0] sim_state, next_sim_state;
-    reg [`ADDRESS_WIDTH-1:0] index, next_index, newval_index;
+    reg [`ADDRESS_WIDTH-1:0] index, next_index;
+    wire [`ADDRESS_WIDTH-1:0] newval_index;
     
     // collider flags
     wire c_busy;
@@ -814,7 +816,7 @@ module LBMSolverPipelined (
                             cnw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
                         end
 
-                        if(newval_index == `DEPTH-1) begin
+                        if(newval_index >= `DEPTH-1) begin
                             next_index = 0;
                             next_width_count = 0;
                             next_sim_state = IDLE;
