@@ -252,7 +252,7 @@ module LBMSolverPipelined (
     assign in_collision_state = (sim_state == COLLIDE);
     assign step_countn = step_count;
 
-    //Instantiate Nishant's collider
+    //Instantiate Jeremy's collider
     colliderPipelined colliderPipelined(
         .clk(clk),
         .rst(rst),
@@ -776,22 +776,6 @@ module LBMSolverPipelined (
             // wait for ram read
             // NOTE: we only collide interior cells (leave margin of 1 layer where we don't collide)
             begin
-
-                if (ram_wait_count == 0) begin
-                    next_index = index + 1;
-                    next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
-                    next_sim_state = COLLIDE;
-                    next_ram_wait_count = `RAM_READ_WAIT;
-                    collider_en = 1;
-                end
-                else begin //ram_wait_count > 0
-                    next_ram_wait_count = ram_wait_count - 1; 
-                    next_sim_state = COLLIDE;
-                    next_index = index;
-                    next_width_count = width_count;
-                    collider_en = 0;
-                end
-
                 if(newval_ready) 
                     begin
                         if(newval_index >= `WIDTH && newval_index <= `DEPTH-`WIDTH-1 && newval_width_count != 0 && newval_width_count != `WIDTH-1) begin // only do for inside the margin
@@ -840,6 +824,20 @@ module LBMSolverPipelined (
                             collider_en = 0;
                         end
                     end
+                else if (ram_wait_count > 0) begin
+                    next_ram_wait_count = ram_wait_count - 1; 
+                    next_sim_state = COLLIDE;
+                    next_index = index;
+                    next_width_count = width_count;
+                    collider_en = 0;
+                end
+                else begin // ram_wait_count == 0
+                        next_index = index + 1;
+                        next_width_count = (width_count == `WIDTH-1) ? 0 : width_count + 1;
+                        next_sim_state = COLLIDE;
+                        next_ram_wait_count = `RAM_READ_WAIT;
+                        collider_en = 1;
+                end
             end
 
             MEM_RESET : begin
