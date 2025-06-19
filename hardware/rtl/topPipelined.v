@@ -13,11 +13,11 @@ module topPipelined (
     // is output to GPIOux,GPIOuy,GPIOrho
 
     
-    output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
-    output wire signed [15:0] GPIOux, 
-    output wire signed [15:0] GPIOuy, 
-    output wire signed [15:0] GPIOrho, 
-    output wire signed [15:0] GPIOu2, 
+    output reg signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
+    output reg signed [15:0] GPIOux, 
+    output reg signed [15:0] GPIOuy, 
+    output reg signed [15:0] GPIOrho, 
+    output reg signed [15:0] GPIOu2, 
     
     input wire [`DATA_WIDTH-1:0]        init_c0,
     input wire [`DATA_WIDTH-1:0]        init_cn,
@@ -60,6 +60,7 @@ module topPipelined (
     wire [`DATA_WIDTH-1:0] u_y;
     wire [`DATA_WIDTH-1:0] u_squared;
     wire [`DATA_WIDTH-1:0] rho;
+    wire [`DATA_WIDTH-1:0] step_countn;
 
     // Instantiate all 18 RAMs
     RAM_2500 #(.INIT_FILE("ram.mem")) c0     (.clk(clk), .addr(c0_addr),   .data_in(c0_data_in),   .write_en(c0_write_en),   .data_out(c0_data_out));
@@ -133,7 +134,15 @@ module topPipelined (
         .init_cs(init_cs),
         .init_csw(init_csw),
         .init_cw(init_cw),
-        .init_cnw(init_cnw)
+        .init_cnw(init_cnw),
+        .step_countn(step_countn)
     );
+
+    always @* begin
+        assign GPIOux = u_x;
+        assign GPIOuy = u_y;
+        assign GPIOrho = rho;
+        assign GPIOu2  = u_squared;
+    end
 
 endmodule
