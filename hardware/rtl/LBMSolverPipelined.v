@@ -423,6 +423,7 @@ module LBMSolverPipelined (
 
         next_index = index;
         next_width_count = width_count;
+        next_sim_state = sim_state;
 
         incr_step = 0;
         next_ram_wait_count = ram_wait_count;
