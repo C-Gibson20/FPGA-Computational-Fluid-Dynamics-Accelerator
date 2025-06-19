@@ -305,7 +305,7 @@ module LBMCacheTop
     LBMSolverCache u_solver (
         .clk                   (clk),
         .rst                   (rstn),
-        .barriers              (barriers),
+        .block_barriers              (barriers),
         .en                    (en),
         .step                  (step),
         .omega                 (omega),

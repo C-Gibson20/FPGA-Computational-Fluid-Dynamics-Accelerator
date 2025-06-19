@@ -949,39 +949,39 @@ module LBMSolverCache (
                         if(newval_index <= `DEPTH-`WIDTH-1 && newval_width_count != 0 && newval_width_count != `WIDTH-1) begin // only do for inside the margin
                             c0_next_write_addr = block_index;
                             c0_next_write_en = 1'b1;
-                            c0_next_data_in = (barriers[newval_index] == 1) ? 0 : c_c0;
+                            c0_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_c0;
 
                             cn_next_write_addr = block_index;
                             cn_next_write_en = 1'b1;
-                            cn_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cn;
+                            cn_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cn;
 
                             cne_next_write_addr = block_index;
                             cne_next_write_en = 1'b1;
-                            cne_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cne;
+                            cne_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cne;
 
                             ce_next_write_addr = block_index;
                             ce_next_write_en = 1'b1;
-                            ce_next_data_in = (barriers[newval_index] == 1) ? 0 : c_ce;
+                            ce_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_ce;
 
                             cse_next_write_addr = block_index;
                             cse_next_write_en = 1'b1;
-                            cse_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cse;
+                            cse_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cse;
 
                             cs_next_write_addr = block_index;
                             cs_next_write_en = 1'b1;
-                            cs_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cs;
+                            cs_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cs;
 
                             csw_next_write_addr = block_index;
                             csw_next_write_en = 1'b1;
-                            csw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_csw;
+                            csw_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_csw;
 
                             cw_next_write_addr = block_index;
                             cw_next_write_en = 1'b1;
-                            cw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cw;
+                            cw_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cw;
 
                             cnw_next_write_addr = block_index;
                             cnw_next_write_en = 1'b1;
-                            cnw_next_data_in = (barriers[newval_index] == 1) ? 0 : c_cnw;
+                            cnw_next_data_in = (block_barriers[newval_index] == 1) ? 0 : c_cnw;
                         end
                     end
                 end
