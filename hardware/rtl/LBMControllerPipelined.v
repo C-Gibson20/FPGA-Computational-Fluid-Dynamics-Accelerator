@@ -165,7 +165,8 @@ module LBMControllerPipelined (
     output reg [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] rho,
     
     output wire collider_ready,
-    output wire in_collision_state
+    output wire in_collision_state,
+    output wire [31:0] step_countn
 
 );
 
@@ -311,7 +312,7 @@ module LBMControllerPipelined (
 
     reg [2:0] ram_wait_count, next_ram_wait_count;
     
-    reg [15:0] step_count, next_step_count;
+    reg [15:0] step_count;
 
     reg incr_step;
 
