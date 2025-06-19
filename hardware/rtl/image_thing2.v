@@ -3,9 +3,13 @@
 module image_thing2 (
     input wire [31:0] addr_din,
     input wire clk,
-    output reg [`DEPTH-1:0] dout,
-    output reg[31:0]
+    output reg [2499:0] dout,
+    output reg ram_addr, 
+    output reg ram_wen, 
+    output reg ram_din
+    // this will use a RAM with a byte WEN
 );
+// 
 
 reg [`DEPTH-1:0] buffer;
 wire send_img;
