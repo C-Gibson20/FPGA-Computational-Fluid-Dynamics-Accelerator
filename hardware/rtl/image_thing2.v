@@ -3,7 +3,8 @@
 module image_thing2 (
     input wire [31:0] addr_din,
     input wire clk,
-    output reg [`DEPTH-1:0] dout
+    output reg [`DEPTH-1:0] dout,
+    output reg[31:0]
 );
 
 reg [`DEPTH-1:0] buffer;
