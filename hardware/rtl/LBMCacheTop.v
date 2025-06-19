@@ -60,8 +60,8 @@ module LBMCacheTop
     //  Internal nets
     //──────────────────────────────────────────────────────────────────────
     // Handshake between BRAM_ctrl ⇋ DDR_pixel_out
-    wire                   chunk_transfer_ready;
     wire                   chunk_compute_ready;
+    wire                   chunk_transfer_ready;
     wire                   wen;
     wire                   DDR_wen;
 

@@ -25,25 +25,25 @@ protected:
     }
 
 // ✅ override runSimulation in this subclass
-void runSimulation(int cycles) {
-        for (int i = 0; i < cycles; i++) {
-            if(i == 2){
-                LBMCacheTop->rstn = 1;
-            }
-            for (int clk = 0; clk < 2; clk++) {
-                LBMCacheTop->eval();
-#ifndef __APPLE__
-                tfp->dump(2 * ticks + clk);
-#endif
-                LBMCacheTop->clk = !LBMCacheTop->clk;
-            }
-            ticks++;
+// void runSimulation(int cycles) {
+//         for (int i = 0; i < cycles; i++) {
+//             if(i == 2){
+//                 LBMCacheTop->rstn = 1;
+//             }
+//             for (int clk = 0; clk < 2; clk++) {
+//                 LBMCacheTop->eval();
+// #ifndef __APPLE__
+//                 tfp->dump(2 * ticks + clk);
+// #endif
+//                 LBMCacheTop->clk = !LBMCacheTop->clk;
+//             }
+//             ticks++;
 
-            if (Verilated::gotFinish()) {
-                break;
-            }
-        }
-    }
+//             if (Verilated::gotFinish()) {
+//                 break;
+//             }
+//         }
+//     }
 };
 
 //Make sure to test this using a 50x50 grid or else it will fail
@@ -66,7 +66,10 @@ TEST_F(LBMCacheTopTestbench, Equilibrium) {
     //         setBarrierBit(i);
     //     }
     // }
-    runSimulation(50000);
+
+    runSimulation(2);
+    LBMCacheTop->rstn = 1;
+    runSimulation(100000);
 }
 
 int main(int argc, char **argv) {
