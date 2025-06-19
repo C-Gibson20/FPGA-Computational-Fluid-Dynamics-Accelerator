@@ -46,7 +46,7 @@ def setup_ui(canvas, polygons, lines, images, circles, rectangles,
     labels["images3"] = (font.render("as barriers.", True, (255, 255, 255)), (x, polygon_y + 165))
 
     # Save & Clear
-    Button(x, save_y, button_width, button_height, 'Save', lambda: send(canvas, host, port))
+    Button(x, save_y, button_width, button_height, 'Save', lambda: send(canvas)) #, host, port))
     Button(x, save_y + 50, button_width, button_height, 'Clear', lambda: clear_canvas(canvas, polygons, lines, images, circles, rectangles))
 
     return {

@@ -32,9 +32,10 @@ def embed_pygame_into_unity(python_title, unity_title, width=800, height=800, x=
         win32gui.SetWindowPos(hwnd_python, win32con.HWND_TOP,
                               x, y, width, height,
                               win32con.SWP_SHOWWINDOW |
-                              win32con.SWP_NOACTIVATE |
+                            #   win32con.SWP_NOACTIVATE |
                               win32con.SWP_FRAMECHANGED)
-
+        
         win32gui.BringWindowToTop(hwnd_python)
+        win32gui.SetFocus(hwnd_python)
     else:
         print("Could not find one or both windows")

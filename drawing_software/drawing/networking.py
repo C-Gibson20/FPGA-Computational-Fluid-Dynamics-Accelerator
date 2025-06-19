@@ -10,8 +10,20 @@ _client_socket = None
 
 def set_client_socket(host, port):
     global _client_socket
-    _client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    _client_socket.connect((host, port))
+
+    while True:
+        try:
+            # (Re)create a fresh socket on each attempt
+            _client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            _client_socket.connect((host, port))
+            print(f"[networking] Connected to {host}:{port}")
+            return
+
+        except socket.error as e:
+            # If the error is not a “would-block”/in-progress, report it
+            err = e.errno if hasattr(e, 'errno') else None
+            print(f"[networking] Connection failed: {e!r}.")
+            time.sleep(0.2)
 
 def save(canvas):
     timestamp = int(time.time())
@@ -56,14 +68,16 @@ def save(canvas):
 #     else:
 #         print("Failed to connect after retries")
 
-def send(canvas):
+def send(canvas, max_retries=3, retry_delay=4):
     data = save(canvas)
-    
-    try:
-        _client_socket.sendall(data)
-        print(f"Sent {len(data)} bytes")
-    except Exception as e:
-        raise RuntimeError(f"Failed to send data: {e}")
+    for _ in range(max_retries):
+        try:
+            _client_socket.sendall(data)
+            print(f"Sent {len(data)} bytes")
+            break
+        except Exception as e:
+            time.sleep(retry_delay)
+            raise RuntimeError(f"Failed to send data: {e}")
             
 def close():
     global _client_socket

@@ -10,9 +10,9 @@ bin_fp = open(out_fname, "wb")
 
 # Parameters
 height = 100                      # grid height
-width = 100                      # grid width
-viscosity = 0.0015                # viscosity
-omega = 1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
+width = 300                      # grid width
+viscosity = 0.015                # viscosity
+omega = 1.2 #1./(3*viscosity + 0.5)   # relaxation parameter (a function of viscosity)
 u0 = 0.1                         # initial in-flow speed (eastward)
 four9ths = 4./9.                 # a constant
 one9th   = 1./9.                 # a constant

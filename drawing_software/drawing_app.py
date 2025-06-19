@@ -2,7 +2,7 @@ import sys
 import pygame
 import ctypes
 import math
-import networking
+import drawing.networking
 
 pygame.init()
 
@@ -14,10 +14,6 @@ from drawing.embed import embed_pygame_into_unity
 
 HOST = '192.168.2.99'
 PORT = 9005
-networking.set_client_socket(HOST, PORT)
-
-MAX_RETRIES = 3
-RETRY_DELAY = 2  # seconds
 
 python_win_title = "BarrierDrawingApplication"
 unity_win_title = "Fluid_Simulation_Test"
@@ -37,7 +33,9 @@ set_screen(screen)
 pygame.display.set_caption(python_win_title)
 pygame.display.flip() # force window creation
 
-embed_pygame_into_unity(python_win_title, unity_win_title)
+drawing.networking.set_client_socket(HOST, PORT)
+
+# embed_pygame_into_unity(python_win_title, unity_win_title)
 
 #append all classes here
 lines = [{"points": [], "width": 0}]
@@ -88,7 +86,6 @@ input_box3 = layout["input_boxes"]["rect_w"]
 input_box4 = layout["input_boxes"]["rect_h"]
 labels = layout["labels"]
 
-
 while True:
     screen.fill((30, 30, 30))
     for obj in objects: obj.process()
@@ -99,7 +96,7 @@ while True:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            networking.close()
+            drawing.networking.close()
             pygame.quit()
             sys.exit()
         for box in input_box1: box.handle_event(event)
