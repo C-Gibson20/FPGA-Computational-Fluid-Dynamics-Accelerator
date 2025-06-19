@@ -262,6 +262,7 @@ module LBMControllerMulti (
     reg  [`RAMS_TO_ACCESS-1:0] collider_wait_count_array [0:`RAMS_TO_ACCESS-1];
     reg  [`RAMS_TO_ACCESS-1:0] next_collider_wait_count_array [0:`RAMS_TO_ACCESS-1];
     wire collider_ready_array     [0:`RAMS_TO_ACCESS-1];
+    reg collider_done;
     wire read_wait_array          [0:`RAMS_TO_ACCESS-1];
     wire zero_barrier_array [0:`RAMS_TO_ACCESS-1];
     wire [2:0] next_sim_state_array [0:`RAMS_TO_ACCESS-1];
@@ -490,6 +491,16 @@ module LBMControllerMulti (
     wire [`DATA_WIDTH-1:0] c_csw  [NUM_LANES-1:0];
     wire [`DATA_WIDTH-1:0] c_cw   [NUM_LANES-1:0];
     wire [`DATA_WIDTH-1:0] c_cnw  [NUM_LANES-1:0];
+
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_c0_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cn_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cne_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_ce_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cse_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cs_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_csw_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cw_big;
+    wire [`DATA_WIDTH*`RAMS_TO_ACCESS-1:0] c_cnw_big;
 //done
     // ── handshake / status -------------------------------------------------------
     wire c_busy    [NUM_LANES-1:0];
@@ -537,6 +548,29 @@ module LBMControllerMulti (
     end
     endgenerate
 
+    genvar q;
+    generate
+        for(q = 0; q < 4; q++) begin
+            // rest / centre
+            c_c0_big [(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // north
+            c_cn_big [(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // north-east
+            c_cne_big[(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // east
+            c_ce_big [(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // south-east
+            c_cse_big[(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // south
+            c_cs_big [(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // south-west
+            c_csw_big[(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // west
+            c_cw_big [(q*`DATA_WIDTH)+:`DATA_WIDTH];
+            // north-west
+            c_cnw_big[(q*`DATA_WIDTH)+:`DATA_WIDTH];            
+        end
+    endgenerate
     genvar j;
     generate
     for (j = 0; j < `RAMS_TO_ACCESS; j = j + 1) begin : g_variable_assign
@@ -617,6 +651,8 @@ module LBMControllerMulti (
     // one procedural block per iteration
     always @* begin
     // rest
+        collider_done = 0;
+
         for(int w = 0; w <`RAMS_TO_ACCESS/4; w++) begin
             if(next_sim_state == COLLIDE && sim_state != COLLIDE)
             begin
@@ -638,6 +674,9 @@ module LBMControllerMulti (
                         f_se  [z] = cse_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
                         f_sw  [z] = csw_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
                         f_nw  [z] = cnw_n_data_out [(z+w*`DATA_WIDTH)+:`DATA_WIDTH];
+                    end
+                    if(w == `RAMS_TO_ACCESS/4 - 1) begin
+                        collider_done = 1;
                     end
                 end
                 next_collider_wait_count_array[w] = (collider_wait_count_array[w] == 0) ? `RAMS_TO_ACCESS : collider_wait_count_array[w] - 1;
@@ -735,6 +774,17 @@ module LBMControllerMulti (
         begin
             for(int z = 0; z < `RAMS_TO_ACCESS; z++)
                 collider_wait_count_array[z] <= next_collider_wait_count_array[z];
+            if(in_collision_state) begin
+                c_c0_big  <= c_c0_big  >> `DATA_WIDTH*4;
+                c_cn_big  <= c_cn_big  >> `DATA_WIDTH*4;
+                c_cne_big <= c_cne_big >> `DATA_WIDTH*4;
+                c_ce_big  <= c_ce_big  >> `DATA_WIDTH*4;
+                c_cse_big <= c_cse_big >> `DATA_WIDTH*4;
+                c_cs_big  <= c_cs_big  >> `DATA_WIDTH*4;
+                c_csw_big <= c_csw_big >> `DATA_WIDTH*4;
+                c_cw_big  <= c_cw_big  >> `DATA_WIDTH*4;
+                c_cnw_big <= c_cnw_big >> `DATA_WIDTH*4;
+            end
             sim_state <= next_sim_state;
             index <= next_index;
             width_count <= next_width_count;
@@ -1415,7 +1465,7 @@ module LBMControllerMulti (
                     next_index = index;
                     next_width_count = width_count;
                 end
-                else if(all_nv_ready)
+                else if(collider_done)
                 begin
                     if(index + `RAMS_TO_ACCESS >= `DEPTH-1)
                     begin

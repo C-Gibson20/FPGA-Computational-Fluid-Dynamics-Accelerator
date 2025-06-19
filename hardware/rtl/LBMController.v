@@ -754,8 +754,8 @@ module LBMController (
                 if(step >= step_count) begin
                     next_sim_state = STREAM;
                     next_ram_wait_count = `RAM_READ_WAIT;
-                    next_index = 0;
-                    next_width_count = 0;
+                    next_index = `WIDTH+1;
+                    next_width_count = 1;
                 end
                 else
                     next_sim_state = IDLE;
@@ -794,7 +794,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
                 end  
-                else if(index+`RAMS_TO_ACCESS >= `DEPTH-1) 
+                else if(index+`RAMS_TO_ACCESS >= `DEPTH-1-`WIDTH-1) 
                 begin
                     next_sim_state = BOUNCE;
                     next_index = 0;
@@ -896,10 +896,10 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
 
-                    if(index + `RAMS_TO_ACCESS >= `DEPTH-1) 
+                    if(index+`RAMS_TO_ACCESS >= `DEPTH-1-`WIDTH-1) 
                     begin
-                        next_index = 0;
-                        next_width_count = 0;
+                        next_index = 2*`WIDTH+2;
+                        next_width_count = 2;
                         next_sim_state = BOUNCE;
                         
                     end
@@ -1084,7 +1084,7 @@ module LBMController (
                     cnw_next_write_addr = index - 1 - `WIDTH;
                     cnw_n_read_from_write_address = 1'b1;
                 end
-                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1) 
+                else if(index + `RAMS_TO_ACCESS >= `DEPTH-1-2*`WIDTH-2) 
                 begin
                     next_sim_state = ZERO_BOUNCE;
                     next_index = 0;

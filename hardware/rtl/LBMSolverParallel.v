@@ -540,7 +540,7 @@ module LBMSolverParallel (
                     begin
                         // next_index = `WIDTH + 1;
                         // next_width_count = 1;
-                        next_sim_state = BOUNDARY;
+                        next_sim_state = BOUNCE;
                         
                     end
                     else
@@ -552,97 +552,97 @@ module LBMSolverParallel (
                 end
             end
 
-            BOUNDARY:
-            begin
-                if(ram_wait_count == 0) begin
-                    if(index <= `DEPTH - `WIDTH - 2)
-                    begin
-                        if(index == 2*`WIDTH -2) begin // NE corner
-                            // csw_next_write_addr = `WIDTH - 1; 
-                            csw_n_write_en = 1;
-                            // cs_next_write_addr = `WIDTH - 2;
-                            cs_n_write_en = 1;
-                            // cw_write_addr = 2*`WIDTH - 1;
-                            cw_n_write_en = 1;
+            // BOUNDARY:
+            // begin
+            //     if(ram_wait_count == 0) begin
+            //         if(index <= `DEPTH - `WIDTH - 2)
+            //         begin
+            //             if(index == 2*`WIDTH -2) begin // NE corner
+            //                 // csw_next_write_addr = `WIDTH - 1; 
+            //                 csw_n_write_en = 1;
+            //                 // cs_next_write_addr = `WIDTH - 2;
+            //                 cs_n_write_en = 1;
+            //                 // cw_write_addr = 2*`WIDTH - 1;
+            //                 cw_n_write_en = 1;
 
-                            csw_data_in = csw_data_out;
-                            cs_data_in = cs_data_out;
-                            cw_data_in = cw_data_out;
-                        end
-                        else if (index == `DEPTH - `WIDTH - 2) begin // SE corner
-                            // cnw_write_addr = `DEPTH - 1; 
-                            cnw_n_write_en = 1;
-                            // cn_write_addr = `DEPTH - 2; 
-                            cn_n_write_en = 1;
-                            // cw_write_addr = `DEPTH - `WIDTH - 1; 
-                            cw_n_write_en = 1;
+            //                 csw_data_in = csw_data_out;
+            //                 cs_data_in = cs_data_out;
+            //                 cw_data_in = cw_data_out;
+            //             end
+            //             else if (index == `DEPTH - `WIDTH - 2) begin // SE corner
+            //                 // cnw_write_addr = `DEPTH - 1; 
+            //                 cnw_n_write_en = 1;
+            //                 // cn_write_addr = `DEPTH - 2; 
+            //                 cn_n_write_en = 1;
+            //                 // cw_write_addr = `DEPTH - `WIDTH - 1; 
+            //                 cw_n_write_en = 1;
 
-                            cnw_data_in = cnw_data_out;
-                            cn_data_in = cn_data_out;
-                            cw_data_in = cw_data_out;
+            //                 cnw_data_in = cnw_data_out;
+            //                 cn_data_in = cn_data_out;
+            //                 cw_data_in = cw_data_out;
                             
-                        end
-                        else if (index == `DEPTH - 2*`WIDTH + 1) begin // SW corner
-                            // cne_write_addr = `DEPTH - `WIDTH; 
-                            cne_n_write_en = 1;
-                            // cn_write_addr = `DEPTH - `WIDTH+1; 
-                            cn_n_write_en = 1;
-                            // ce_write_addr = `DEPTH - 2*`WIDTH; 
-                            ce_n_write_en = 1;
+            //             end
+            //             else if (index == `DEPTH - 2*`WIDTH + 1) begin // SW corner
+            //                 // cne_write_addr = `DEPTH - `WIDTH; 
+            //                 cne_n_write_en = 1;
+            //                 // cn_write_addr = `DEPTH - `WIDTH+1; 
+            //                 cn_n_write_en = 1;
+            //                 // ce_write_addr = `DEPTH - 2*`WIDTH; 
+            //                 ce_n_write_en = 1;
 
-                            cne_data_in = cne_data_out;
-                            cn_data_in = cn_data_out;
-                            ce_data_in = ce_data_out;
+            //                 cne_data_in = cne_data_out;
+            //                 cn_data_in = cn_data_out;
+            //                 ce_data_in = ce_data_out;
 
-                        end
-                        else if(index == `WIDTH + 1) begin // NW corner
-                            // cse_write_addr = 0;
-                            cse_n_write_en = 1;
-                            // cs_write_addr = 1;
-                            cs_n_write_en = 1;
-                            // ce_write_addr = `WIDTH;
-                            ce_n_write_en = 1;
+            //             end
+            //             else if(index == `WIDTH + 1) begin // NW corner
+            //                 // cse_write_addr = 0;
+            //                 cse_n_write_en = 1;
+            //                 // cs_write_addr = 1;
+            //                 cs_n_write_en = 1;
+            //                 // ce_write_addr = `WIDTH;
+            //                 ce_n_write_en = 1;
 
-                            cse_data_in = cse_data_out;
-                            cs_data_in = cs_data_out;
-                            ce_data_in = ce_data_out;
+            //                 cse_data_in = cse_data_out;
+            //                 cs_data_in = cs_data_out;
+            //                 ce_data_in = ce_data_out;
                             
-                        end
-                        else if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
-                            // cs_write_addr = index - `WIDTH;
-                            cs_n_write_en = 1;
-                            cs_data_in = cs_data_out;
-                        end
-                        else if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
-                            // cn_write_addr = index - `WIDTH;
-                            cn_n_write_en = 1;
-                            cn_data_in = cn_data_out;
-                        end
-                        else if(width_count == 1) begin // left edge
-                            // ce_write_addr = index - 1;
-                            ce_n_write_en = 1;
-                            ce_data_in = ce_data_out;
-                        end
-                        else if(width_count == `WIDTH - 2) begin // right edge 
-                            // cw_write_addr = index + 1;
-                            cw_n_write_en = 1;
-                            cw_data_in = cw_data_out;
-                        end
+            //             end
+            //             else if(`WIDTH + 1 < index && index < 2*`WIDTH -2) begin // top edge
+            //                 // cs_write_addr = index - `WIDTH;
+            //                 cs_n_write_en = 1;
+            //                 cs_data_in = cs_data_out;
+            //             end
+            //             else if(`DEPTH - 2*`WIDTH + 1 < index && index < `DEPTH - `WIDTH - 2) begin // bottom edge
+            //                 // cn_write_addr = index - `WIDTH;
+            //                 cn_n_write_en = 1;
+            //                 cn_data_in = cn_data_out;
+            //             end
+            //             else if(width_count == 1) begin // left edge
+            //                 // ce_write_addr = index - 1;
+            //                 ce_n_write_en = 1;
+            //                 ce_data_in = ce_data_out;
+            //             end
+            //             else if(width_count == `WIDTH - 2) begin // right edge 
+            //                 // cw_write_addr = index + 1;
+            //                 cw_n_write_en = 1;
+            //                 cw_data_in = cw_data_out;
+            //             end
                         
-                        next_sim_state = BOUNDARY;
-                    end
-                    else
-                    begin
-                        next_sim_state = BOUNCE;
-                    end
-                end
+            //             next_sim_state = BOUNDARY;
+            //         end
+            //         else
+            //         begin
+            //             next_sim_state = BOUNCE;
+            //         end
+            //     end
 
-            end
+            // end
             BOUNCE:
             begin
                 // note to self: this stage reads from cx_n and writes to cx_n
             
-                if(index <= `DEPTH-1 && barriers[index] == 1'b1 ) // RAM read, so need to wait for RAM...
+                if(index <= `DEPTH-1 && barriers[index] == 1'b1 ) // double inside margin
                 begin
                     read_wait = 1'b1;
                     next_sim_state = BOUNCE_WAIT;
@@ -670,7 +670,7 @@ module LBMSolverParallel (
             BOUNCE_WAIT:
             begin
                 if(ram_wait_count == 0) begin
-                    if(index <= `DEPTH-1)
+                    if(width_count >= 2 && width_count < `WIDTH-2 && index <= `DEPTH-1-`WIDTH-2 && index > `WIDTH)
                     begin
                         if(barriers[index] == 1'b1)
                         begin

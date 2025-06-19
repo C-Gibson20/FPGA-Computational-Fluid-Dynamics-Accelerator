@@ -488,6 +488,7 @@ module LBMSolverCache (
                 else
                 begin
                     next_sim_state = STREAM;
+                    chunk_transfer_ready = 1;
                 end
             end
 
@@ -571,6 +572,7 @@ module LBMSolverCache (
                 else 
                 begin
                     next_sim_state = STREAM_WAIT;
+                    chunk_transfer_ready = 1;
                 end
             end
 
@@ -725,6 +727,7 @@ module LBMSolverCache (
                 else
                 begin
                     next_sim_state = BOUNCE;
+                    chunk_transfer_ready = 1;
                 end
             end
 
@@ -806,6 +809,7 @@ module LBMSolverCache (
                 else
                 begin
                     next_sim_state = BOUNCE_WAIT;
+                    chunk_transfer_ready = 1;
                 end
             end
 
@@ -881,8 +885,10 @@ module LBMSolverCache (
                         cnw_next_data_in = 16'b0;
                     end
                 end
-                else
+                else begin
                     next_sim_state = ZERO_BOUNCE;
+                    chunk_transfer_ready = 1;
+                end
             end
         COLLIDE: //needs to be multiple stages or else this won't be clocked very fast
             // wait for ram read
@@ -973,6 +979,7 @@ module LBMSolverCache (
                 else
                 begin
                     next_sim_state = COLLIDE;
+                    chunk_transfer_ready = 1;
                 end
             end
 
@@ -1055,6 +1062,7 @@ module LBMSolverCache (
                 else
                 begin
                     next_sim_state = MEM_RESET;
+                    chunk_transfer_ready = 1;
                 end
             end
 
