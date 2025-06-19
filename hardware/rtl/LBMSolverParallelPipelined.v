@@ -35,8 +35,8 @@ module LBMSolverParallelPipelined (
     input wire [`ADDRESS_WIDTH-1:0] index,
     input wire [15:0] width_count,
     input wire [2:0] ram_wait_count,
-    output reg [15:0] newval_width_count,
-    output reg [`ADDRESS_WIDTH-1:0] newval_index,
+    output wire [15:0] newval_width_count,
+    output wire [`ADDRESS_WIDTH-1:0] newval_index,
     // BRAM c0
     // output reg  [`ADDRESS_WIDTH-1:0]    c0_addr,
     output reg  [`DATA_WIDTH-1:0]       c0_data_in, 
@@ -165,7 +165,7 @@ module LBMSolverParallelPipelined (
     // output wire next_index,
     output reg [3:0] next_sim_state,
     output reg zero_barrier,
-    output reg newval_ready,
+    output wire newval_ready,
     output reg read_wait
 
 );

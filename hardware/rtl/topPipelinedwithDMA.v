@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `include "def.vh"
 
-module topPipelined (
+module topPipelinedwithDMA (
     input  wire clk,
     input  wire rst,
     input  wire en,
@@ -13,11 +13,7 @@ module topPipelined (
     // is output to GPIOux,GPIOuy,GPIOrho
 
     
-    output reg signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
-    output reg signed [15:0] GPIOux, 
-    output reg signed [15:0] GPIOuy, 
-    output reg signed [15:0] GPIOrho, 
-    output reg signed [15:0] GPIOu2, 
+    output wire signed [15:0] testing_cs_n_data_in, //for unit tests allowing me to test values for signals not exposed to the top layer
     
     input wire [`DATA_WIDTH-1:0]        init_c0,
     input wire [`DATA_WIDTH-1:0]        init_cn,
@@ -31,7 +27,14 @@ module topPipelined (
 
     
     output wire collider_ready,
-    output wire in_collision_state
+    output wire in_collision_state,
+
+    // DMA
+    output wire m00_axis_tvalid,
+    output wire [63:0] m00_axis_tdata,
+    output wire [7:0] m00_axis_tstrb,
+    output wire  m00_axis_tlast,
+    input wire m00_axis_tready
 
 );
 
@@ -60,7 +63,11 @@ module topPipelined (
     wire [`DATA_WIDTH-1:0] u_y;
     wire [`DATA_WIDTH-1:0] u_squared;
     wire [`DATA_WIDTH-1:0] rho;
-    wire [`DATA_WIDTH-1:0] step_countn;
+
+    wire [11:0] ram_addr;
+    wire [63:0] ram_din, ram_dout;
+    wire [15:0] step_countn;
+    wire ram_wen;
 
     // Instantiate all 18 RAMs
     RAM_2500 #(.INIT_FILE("ram.mem")) c0     (.clk(clk), .addr(c0_addr),   .data_in(c0_data_in),   .write_en(c0_write_en),   .data_out(c0_data_out));
@@ -96,6 +103,7 @@ module topPipelined (
         .rst(rst),
         .en(en),
         .step(step),
+        .step_countn(step_countn),
         .barriers(barriers),
         .omega(omega),
         .testing_cs_n_data_in(testing_cs_n_data_in),
@@ -134,15 +142,46 @@ module topPipelined (
         .init_cs(init_cs),
         .init_csw(init_csw),
         .init_cw(init_cw),
-        .init_cnw(init_cnw),
-        .step_countn(step_countn)
+        .init_cnw(init_cnw)
     );
 
-    always @* begin
-        assign GPIOux = u_x;
-        assign GPIOuy = u_y;
-        assign GPIOrho = rho;
-        assign GPIOu2  = u_squared;
-    end
+    Solver_DMA_Master #(
+        .DATA_WIDTH(`DATA_WIDTH),
+        .DEPTH(`DEPTH),
+        .ADDRESS_WIDTH(`ADDRESS_WIDTH),
+        .C_M00_AXIS_TDATA_WIDTH(64),
+        .C_M00_AXIS_START_COUNT(32),
+        .N_PARALLEL_SOLVERS(1)
+    ) solver_dma_master_inst (
+        .u_x(u_x),
+        .u_y(u_y),
+        .rho(rho),
+        .u_squared(u_squared),
+        .in_collision_state(in_collision_state),
+        .collider_ready(collider_ready),
+        .ram_dout(ram_dout),
+        .ram_din(ram_din),
+        .ram_wen(ram_wen),
+        .ram_addr(ram_addr),
+        .m00_axis_aclk(clk),
+        .m00_axis_aresetn(rst),
+        .m00_axis_tvalid(m00_axis_tvalid),
+        .m00_axis_tdata(m00_axis_tdata),
+        .m00_axis_tstrb(m00_axis_tstrb),
+        .m00_axis_tlast(m00_axis_tlast),
+        .m00_axis_tready(m00_axis_tready)
+    );
+
+    // Instantiate RAM_2500
+    RAM_2500 #(
+        .DATA_WIDTH(16),  // Using same width as AXI stream
+        .ADDRESS_WIDTH(12)
+    ) ram_inst123 (
+        .clk(clk),                 // Using same clock as AXI interface
+        .addr(ram_addr),
+        .data_in(ram_din),
+        .write_en(ram_wen),
+        .data_out(ram_dout)
+    );
 
 endmodule
