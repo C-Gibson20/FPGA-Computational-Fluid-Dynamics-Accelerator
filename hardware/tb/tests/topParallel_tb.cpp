@@ -29,15 +29,15 @@ protected:
 //Make sure to test this using a 50x50 grid or else it will fail
 TEST_F(topParallelTestbench, Equilibrium) {
 
-    auto setBarrierBit = [&](int i) {
-        int word = i >> 5;        // divide by 32
-        int bit  = i &  31;       // mod 32
-        topParallel->barriers.data()[word] |= (1U << bit);
-    };
+    // auto setBarrierBit = [&](int i) {
+    //     int word = i >> 5;        // divide by 32
+    //     int bit  = i &  31;       // mod 32
+    //     topParallel->barriers.data()[word] |= (1U << bit);
+    // };
 
-    for (int w = 0; w < (2500+31)/32; ++w) {
-        topParallel->barriers.data()[w] = 0;
-    }
+    // for (int w = 0; w < (2500+31)/32; ++w) {
+    //     topParallel->barriers.data()[w] = 0;
+    // }
 
     // for (int i = 0; i < 2500; i++) {
     //     bool isBarrier = (100 <= i && i < 150) || (2350 < i && i <= 2400 ) || ((i+2) % 50 == 0) || ((i+3) % 50 == 0);
