@@ -69,7 +69,7 @@ TEST_F(LBMCacheTopTestbench, Equilibrium) {
 
     runSimulation(2);
     LBMCacheTop->rstn = 1;
-    runSimulation(100000);
+    runSimulation(150000);
 }
 
 int main(int argc, char **argv) {

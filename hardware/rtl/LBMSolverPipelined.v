@@ -196,7 +196,6 @@ module LBMSolverPipelined (
     // collider flags
     wire c_busy;
     wire newval_ready;
-    wire v_d_ready;
         
     reg [`DATA_WIDTH-1:0] c0_next_data_in;
     reg c0_next_write_en, c0_n_next_write_en;
