@@ -150,7 +150,7 @@ This project was developed as part of the **Year 2 Electronic Design Project** f
 * Hardware/software co-design (FPGA + host)
 * Real-time networking and protocol design
 * GPU rendering and interaction design
-* Agile project methodology (5-week sprint-based delivery)
+* Agile project methodology 
 
 <br>
 
